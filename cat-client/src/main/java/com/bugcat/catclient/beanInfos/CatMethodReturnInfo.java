@@ -1,6 +1,7 @@
 package com.bugcat.catclient.beanInfos;
 
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 
 import java.lang.reflect.Type;
 
@@ -8,7 +9,7 @@ import java.lang.reflect.Type;
  * 方法返回参数类型
  * @author bugcat
  * */
-public class CatMethodsReturnInfo {
+public class CatMethodReturnInfo {
     
     private String name;    //参数的类名称
     private boolean simple; //是否为简单对象：String、基本数据类型+包装类
@@ -16,7 +17,7 @@ public class CatMethodsReturnInfo {
     private Type type;      //参数的Type
 
  
-    public CatMethodsReturnInfo(Class clazz, Type type) {
+    public CatMethodReturnInfo(Class clazz, Type type) {
         this.clazz = clazz;
         this.name = clazz.getSimpleName().toUpperCase();
         this.type = type;

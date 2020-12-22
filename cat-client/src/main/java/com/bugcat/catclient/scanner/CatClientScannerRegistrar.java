@@ -5,7 +5,8 @@ import com.bugcat.catclient.annotation.EnableCatClient;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -72,7 +73,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         try {
             Class<? extends CatDefaultConfiguration> configClass = annoAttrs.getClass("defaults");
             config = configClass.newInstance();
-            CatToosUtil.registerBean(CatDefaultConfiguration.class, config);
+            CatClientUtil.registerBean(CatDefaultConfiguration.class, config);
         } catch ( Exception e ) {
             log.error("初始化CatDefaultConfiguration异常", e);
             return;
@@ -114,8 +115,8 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         }
         
         
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatToosUtil.class);
-        registry.registerBeanDefinition(CatToosUtil.class.getSimpleName(), builder.getBeanDefinition());
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
+        registry.registerBeanDefinition(CatClientUtil.class.getSimpleName(), builder.getBeanDefinition());
         
     }
     

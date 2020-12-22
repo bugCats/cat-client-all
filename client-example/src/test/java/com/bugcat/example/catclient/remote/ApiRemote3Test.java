@@ -4,19 +4,14 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.utils.CatHttpUtil;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
 import com.bugcat.example.dto.PageInfo;
-import com.bugcat.example.dto.ResponseEntity;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
-
-import static org.junit.Assert.*;
-
 
 
 /**
@@ -30,7 +25,7 @@ public class ApiRemote3Test {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
     }
-    static ApiRemote3 remote = CatToosUtil.proxy(ApiRemote3.class, prop);
+    static ApiRemote3 remote = CatClientUtil.proxy(ApiRemote3.class, prop);
 
 
     @Test

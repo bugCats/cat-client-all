@@ -5,8 +5,7 @@ import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
-import com.bugcat.catclient.utils.CatHttpUtil;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
 import com.bugcat.example.dto.PageInfo;
@@ -40,7 +39,7 @@ public class ApiRemote1Test {
 //        prop.put(CatDefaultConfiguration.class, configuration);
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
     }
-    static ApiRemote1 remote = CatToosUtil.proxy(ApiRemote1.class, prop);
+    static ApiRemote1 remote = CatClientUtil.proxy(ApiRemote1.class, prop);
     
     
     @Test

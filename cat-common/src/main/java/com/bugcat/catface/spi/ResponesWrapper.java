@@ -1,4 +1,4 @@
-package com.bugcat.catclient.spi;
+package com.bugcat.catface.spi;
 
 import com.alibaba.fastjson.TypeReference;
 import org.springframework.http.ResponseEntity;

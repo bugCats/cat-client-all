@@ -1,15 +1,15 @@
 package com.bugcat.catserver.scanner;
 
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.annotation.EnableCatServer;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
-import com.bugcat.catserver.utils.CatToosUtil;
+import com.bugcat.catserver.utils.CatServerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.AutowireCandidateQualifier;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ResourceLoaderAware;
@@ -90,8 +90,8 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         }
         
         
-        BeanDefinitionBuilder catToosUtil = BeanDefinitionBuilder.genericBeanDefinition(CatToosUtil.class);
-        registry.registerBeanDefinition(CatToosUtil.class.getSimpleName(), catToosUtil.getBeanDefinition());
+        BeanDefinitionBuilder catToosUtil = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
+        registry.registerBeanDefinition(CatServerUtil.class.getSimpleName(), catToosUtil.getBeanDefinition());
         
         BeanDefinitionBuilder catServerInitBean = BeanDefinitionBuilder.genericBeanDefinition(CatServerInitBean.class);
         catServerInitBean.addPropertyValue("catServerList", catServerList);
@@ -124,7 +124,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
             AbstractBeanDefinition definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
             if( definition == null ){
-                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatToosUtil.class);
+                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
                 definition = builder.getBeanDefinition();
                 registry.registerBeanDefinition(beanName, definition);
             }

@@ -2,8 +2,7 @@ package com.bugcat.example.catclient.token;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import com.bugcat.catclient.utils.CatHttpUtil;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.ResponseEntity;
 import org.junit.Test;
@@ -21,7 +20,7 @@ public class TokenRemoteTest {
         prop.put("demo.username", "bugcat");
         prop.put("demo.pwd", "[密码]");
     }
-    static TokenRemote remote = CatToosUtil.proxy(TokenRemote.class, prop);
+    static TokenRemote remote = CatClientUtil.proxy(TokenRemote.class, prop);
  
 
     

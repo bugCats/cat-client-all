@@ -3,9 +3,10 @@ package com.bugcat.catclient.spi;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
-import com.bugcat.catclient.beanInfos.CatMethodsReturnInfo;
+import com.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Constructor;
@@ -47,7 +48,7 @@ public class DefaultResultHandler extends ResultProcessor {
             return null;
         }
         
-        CatMethodsReturnInfo returnInfo = methodInfo.getReturnInfo();
+        CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 
         ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
         
@@ -118,7 +119,7 @@ public class DefaultResultHandler extends ResultProcessor {
     /**
      * 将 String 强制转换 clazz对应的简单对象
      */
-    protected static Object toSimpleBean(String str, CatMethodsReturnInfo returnInfo) {
+    protected static Object toSimpleBean(String str, CatMethodReturnInfo returnInfo) {
         
         String returnName = returnInfo.getName();
 

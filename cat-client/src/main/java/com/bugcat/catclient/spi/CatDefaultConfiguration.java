@@ -3,7 +3,8 @@ package com.bugcat.catclient.spi;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.spi.ResponesWrapper;
 
 
 /**
@@ -67,7 +68,7 @@ public class CatDefaultConfiguration {
         if( http == null ){
             synchronized ( this ){
                 if( http == null ){
-                    http = CatToosUtil.getBean(CatHttp.class);
+                    http = CatClientUtil.getBean(CatHttp.class);
                 }
             }
         }

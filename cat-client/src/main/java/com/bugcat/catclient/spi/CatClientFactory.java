@@ -15,6 +15,7 @@ public class CatClientFactory {
     private CatDefaultConfiguration config;
     
     
+    
     /**
      * http 类
      * 单例
@@ -42,9 +43,14 @@ public class CatClientFactory {
     }
 
     
+    /**
+     * 设置默认值对象
+     * */
     public final void setDefaultConfiguration(CatDefaultConfiguration config){
         this.config = config;
     }
+    
+    
     
     
     
@@ -58,7 +64,6 @@ public class CatClientFactory {
     protected CatHttp catHttp(){
         return config.catHttp();
     }
-    
     
     /**
      * 得到http发送类类型

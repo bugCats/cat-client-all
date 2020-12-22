@@ -6,7 +6,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.spi.CatHttp;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
@@ -59,10 +60,9 @@ public class SendProcessor {
         this.path = methodInfo.getHost() + param.getPath();
 
         this.notes = new JSONObject();
-        for(Map.Entry<String, Object> entry : methodInfo.getNotes().entrySet()){
-            Object value = entry.getValue();
+        methodInfo.getNotes().forEach((key, value) -> {
             if ( value != null && value instanceof String ) {
-                Matcher matcher = CatToosUtil.keyPat2.matcher((String) value);
+                Matcher matcher = CatClientUtil.keyPat2.matcher((String) value);
                 if( matcher.find()  ){
                     String argsTmpl = matcher.group(1);
                     int start = argsTmpl.indexOf(".");
@@ -70,16 +70,16 @@ public class SendProcessor {
                         String argName = argsTmpl.substring(0, start);
                         Object argObj = param.getArgMap().get(argName);
                         Expression exp = CatToosUtil.parser.parseExpression(argsTmpl.substring(start + 1));
-                        notes.put(entry.getKey(), exp.getValue(argObj));
+                        notes.put(key, exp.getValue(argObj));
                     } else {    //简单参数
                         Object argObj = param.getArgMap().get(argsTmpl);
-                        notes.put(entry.getKey(), argObj);
+                        notes.put(key, argObj);
                     }
-                    continue;
+                    return;
                 }
             }
-            notes.put(entry.getKey(), value);
-        }
+            notes.put(key, value);            
+        });
         
         
         this.requestType = methodInfo.getRequestType();

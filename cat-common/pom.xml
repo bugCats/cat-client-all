@@ -9,9 +9,10 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.bugcat</groupId>
-	<artifactId>cat-server</artifactId>
+	<artifactId>cat-common</artifactId>
 	<packaging>jar</packaging>
-	<description>http服务端</description>
+	<description>公共代码部分</description>
+
 
 	<properties>
 		<java.version>1.8</java.version>		
@@ -21,19 +22,7 @@
 
 	
 	<dependencies>
-
-
-		<dependency>
-			<groupId>com.bugcat</groupId>
-			<artifactId>cat-common</artifactId>
-		</dependency>
 		
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -45,27 +34,21 @@
 			<artifactId>spring-web</artifactId>
 			<scope>compile</scope>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<scope>compile</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>3.1.0</version>
-			<scope>provided</scope>
-		</dependency>
+		
 		
 		<!-- fastjson -->
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
 			<scope>compile</scope>
-		</dependency>
-
+        </dependency>
+		
 	</dependencies>
 
 

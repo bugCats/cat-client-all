@@ -1,7 +1,7 @@
 package com.bugcat.example.dto;
 
 import com.alibaba.fastjson.TypeReference;
-import com.bugcat.catclient.spi.ResponesWrapper;
+import com.bugcat.catface.spi.ResponesWrapper;
 
 import java.lang.reflect.Type;
 

@@ -2,7 +2,7 @@ package com.bugcat.catserver.handler;
 
 import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.spi.CatInterceptor;
-import com.bugcat.catserver.utils.CatToosUtil;
+import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -40,7 +40,7 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
                 if( CatInterceptor.class.equals(clazz) ){
                     handers.add(CatInterceptor.instance);
                 } else {
-                    handers.add(CatToosUtil.getBeanOfType(clazz));
+                    handers.add(CatServerUtil.getBeanOfType(clazz));
                 }
             }
             handers.sort(Comparator.comparingInt(CatInterceptor::getOrder));

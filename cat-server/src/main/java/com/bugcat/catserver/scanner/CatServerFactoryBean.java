@@ -1,8 +1,9 @@
 package com.bugcat.catserver.scanner;
 
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.handler.CatMethodInterceptor;
-import com.bugcat.catserver.utils.CatToosUtil;
+import com.bugcat.catserver.utils.CatServerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -97,7 +98,7 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
                 if ( interMethods != null ) {  //如果方法上有 CatMethod
                     
                     CatMethodInterceptor interceptor = new CatMethodInterceptor(catServerInfo, interMethods);//代理方法=aop
-                    CatToosUtil.addInitBean(interceptor);
+                    CatServerUtil.addInitBean(interceptor);
                     return interceptor;
 
                 } else {

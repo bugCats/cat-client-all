@@ -1,11 +1,8 @@
 package com.bugcat.catserver.beanInfos;
 
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.spi.CatInterceptor;
-import com.bugcat.catserver.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CatServerInfo {
 

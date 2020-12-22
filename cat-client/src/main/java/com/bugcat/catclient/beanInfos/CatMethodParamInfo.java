@@ -1,13 +1,14 @@
 package com.bugcat.catclient.beanInfos;
 
 
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 
 /**
  * 解析方法上的入参信息
  * @author bugcat
  * */
-public class CatMethodsParamInfo {
+public class CatMethodParamInfo {
 
     
     private String name;    //参数名
@@ -20,7 +21,7 @@ public class CatMethodsParamInfo {
      * @param index 参数索引位置
      * @param pclazz 参数数据类型
      * */
-    public CatMethodsParamInfo(String name, int index, Class pclazz) {
+    public CatMethodParamInfo(String name, int index, Class pclazz) {
         this.name = name;
         this.index = index;
         this.simple = CatToosUtil.isSimpleClass(pclazz);

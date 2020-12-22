@@ -2,7 +2,7 @@ package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
-import com.bugcat.catclient.spi.ResponesWrapper;
+import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 

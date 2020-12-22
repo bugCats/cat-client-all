@@ -3,8 +3,8 @@ package com.bugcat.catclient.beanInfos;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
-import com.bugcat.catclient.spi.ResponesWrapper;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 
 import java.util.Properties;

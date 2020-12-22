@@ -3,20 +3,115 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	
     <groupId>com.bugcat</groupId>
 	<artifactId>cat-client-all</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
 	<name>cat-client-all</name>
 	<description>猫脸</description>
-    <version>1.0.0</version>
-    <packaging>pom</packaging>
 
+	
 	<properties>
+
 		<java.version>1.8</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		
+		<cat-version>${project.version}</cat-version>
+		
+		<spring-boot>1.5.18.RELEASE</spring-boot>
+		
 	</properties>
+	
+	
+	
+	<dependencyManagement>
+		<dependencies>
+			
+			<dependency>
+				<groupId>com.bugcat</groupId>
+				<artifactId>cat-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.bugcat</groupId>
+				<artifactId>cat-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.bugcat</groupId>
+				<artifactId>cat-client-http</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.bugcat</groupId>
+				<artifactId>cat-server</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			
+			
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-parent</artifactId>
+				<version>${spring-boot}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>1.7.25</version>
+			</dependency>
+
+			<!-- fastjson -->
+			<dependency>
+				<groupId>com.alibaba</groupId>
+				<artifactId>fastjson</artifactId>
+				<version>1.2.31</version>
+			</dependency>
+
+			<!-- http 相关 -->
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>4.5</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpmime</artifactId>
+				<version>4.3.5</version>
+			</dependency>
+			
+		</dependencies>
+	</dependencyManagement>
 
 	<modules>
+		<module>cat-common</module>
 		<module>cat-client</module>
 		<module>cat-client-http</module>
+		<module>cat-server</module>
 	</modules>
-
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<optimize>true</optimize>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
 </project>

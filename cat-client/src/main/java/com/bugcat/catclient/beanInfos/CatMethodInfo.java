@@ -5,7 +5,7 @@ import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.annotation.CatNote;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.web.bind.annotation.*;
@@ -39,10 +39,10 @@ public class CatMethodInfo {
     private int connect;
     private int socket;
 
-    private Map<String, CatMethodsParamInfo> params;             //除了SendProcessor、PathVariable以外，其他的参数map => 参数名:参数对象信息
-    private Map<String, CatMethodsParamInfo> pathParamIndexMap;  //出现在url上的参数(@PathVariable)map => 参数名:参数对象信息
+    private Map<String, CatMethodParamInfo> params;             //除了SendProcessor、PathVariable以外，其他的参数map => 参数名:参数对象信息
+    private Map<String, CatMethodParamInfo> pathParamIndexMap;  //出现在url上的参数(@PathVariable)map => 参数名:参数对象信息
     
-    private CatMethodsReturnInfo returnInfo;  //方法返回参数对象
+    private CatMethodReturnInfo returnInfo;  //方法返回参数对象
     
     private Integer handlerIndex = null;    //SendProcessor 在参数列表中出现的索引
     
@@ -137,18 +137,18 @@ public class CatMethodInfo {
                 if(pathParamIndexMap == null){
                     pathParamIndexMap = new HashMap<>();
                 }
-                pathParamIndexMap.put(pathParam, new CatMethodsParamInfo(pname, i, pclazz));
+                pathParamIndexMap.put(pathParam, new CatMethodParamInfo(pname, i, pclazz));
             }
                 
             if(SendProcessor.class.isAssignableFrom(parameter.getType())){//这个参数是SendProcessor，不绑定到参数列表中
                 handlerIndex = Integer.valueOf(i);
             } else {
-                params.put(pname, new CatMethodsParamInfo(pname, i, pclazz));
+                params.put(pname, new CatMethodParamInfo(pname, i, pclazz));
             }
         }
 
         //方法返回对象
-        returnInfo = new CatMethodsReturnInfo(method.getReturnType(), method.getGenericReturnType());
+        returnInfo = new CatMethodReturnInfo(method.getReturnType(), method.getGenericReturnType());
 
         return true;
     }
@@ -178,7 +178,7 @@ public class CatMethodInfo {
         //处理url上的参数 =>  /api/{uid}
         String path = value;
         if( pathParamIndexMap != null ) {//填充 url 上的参数 
-            for ( Map.Entry<String, CatMethodsParamInfo> entry : pathParamIndexMap.entrySet() ){
+            for ( Map.Entry<String, CatMethodParamInfo> entry : pathParamIndexMap.entrySet() ){
                 path = path.replace("{" + entry.getKey() + "}", CatToosUtil.toStringIfBlank(args[entry.getValue().getIndex()], "").toString());
             }
         }
@@ -186,7 +186,7 @@ public class CatMethodInfo {
         
         // 将入参数组args，转换成： 参数名->入参    此时argMap中一定不包含SendProcessor
         Map<String, Object> argMap = new HashMap<>();
-        for ( Map.Entry<String, CatMethodsParamInfo> entry : params.entrySet() ){
+        for ( Map.Entry<String, CatMethodParamInfo> entry : params.entrySet() ){
             argMap.put(entry.getKey(), args[entry.getValue().getIndex()]);  // entry.getValue().getIndex()=该参数，在方法上出现的索引值
         }
         param.setArgMap(argMap);
@@ -194,7 +194,7 @@ public class CatMethodInfo {
         Object arg = null;
         if( params.size() == 1 ){//如果入参仅一个
             Map.Entry<String, Object> entry = argMap.entrySet().iterator().next();
-            CatMethodsParamInfo paramInfo = params.get(entry.getKey());
+            CatMethodParamInfo paramInfo = params.get(entry.getKey());
             if( paramInfo.isSimple() ){//为String、基本数据类型、包装类
                 arg = argMap;
             } else {//是对象，将value值返回，在下一步再将对象转换成键值对
@@ -243,7 +243,7 @@ public class CatMethodInfo {
     public int getSocket () {
         return socket;
     }
-    public CatMethodsReturnInfo getReturnInfo () {
+    public CatMethodReturnInfo getReturnInfo () {
         return returnInfo;
     }
     public boolean isPostJson() {

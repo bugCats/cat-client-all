@@ -4,17 +4,16 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.18.RELEASE</version>
+		<groupId>com.bugcat</groupId>
+		<artifactId>cat-client-all</artifactId>
+		<version>1.0.0</version>
 		<relativePath/>
 	</parent>
+	
 	<groupId>com.bugcat</groupId>
 	<artifactId>cat-client-http</artifactId>
-	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<description>cat-client的http插件，可以配合cat-client使用，可以自行实现com.bugcat.catclient.spi.CatHttp接口</description>
-	
 	
 	
 	<properties>
@@ -23,29 +22,40 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
+	
+	
 	<dependencies>
 
+		
 		<dependency>
 			<groupId>com.bugcat</groupId>
 			<artifactId>cat-client</artifactId>
-			<version>1.0.0</version>
 		</dependency>
         
+		
         <!-- http 相关 -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-			<scope>provided</scope>
-			<version>4.5</version>
+			<scope>compile</scope>
         </dependency>
+		
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-			<scope>provided</scope>
-			<version>4.3.5</version>
+			<scope>compile</scope>
         </dependency>
 		
 	</dependencies>
 
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+	
 </project>

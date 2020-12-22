@@ -2,7 +2,7 @@ package com.bugcat.example.catclient.token;
 
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.utils.CatToosUtil;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.ResponseEntity;
 
 public class TokenSendProcessor extends SendProcessor {
@@ -35,7 +35,7 @@ public class TokenSendProcessor extends SendProcessor {
             return info.getToken(System.currentTimeMillis());
         }
         
-        private TokenRemote tokenRemote = CatToosUtil.getBean(TokenRemote.class);
+        private TokenRemote tokenRemote = CatClientUtil.getBean(TokenRemote.class);
         private long keepTime;
         private String value;
         

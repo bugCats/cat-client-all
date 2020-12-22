@@ -1,6 +1,6 @@
 package com.bugcat.catserver.scanner;
 
-import com.bugcat.catserver.utils.CatToosUtil;
+import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -41,7 +41,7 @@ public class CatServerInitBean implements InitializingBean {
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
 
-        RequestMappingHandlerMapping mapper = CatToosUtil.getBean(RequestMappingHandlerMapping.class);
+        RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( BeanInfo info : beanInfos ){
             for ( Map.Entry<Class, Set<StandardMethodMetadata>> entry : info.superMap.entrySet() ) {
                 Set<StandardMethodMetadata> interMethods = entry.getValue();
@@ -75,7 +75,7 @@ public class CatServerInitBean implements InitializingBean {
         
         public BeanInfo(Class clazz){
 
-            this.bean = CatToosUtil.getBeanOfType(clazz);
+            this.bean = CatServerUtil.getBeanOfType(clazz);
 
             List<Class> inters = new ArrayList<>();
             Class superClass = clazz;
