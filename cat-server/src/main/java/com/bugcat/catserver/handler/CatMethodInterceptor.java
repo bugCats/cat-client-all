@@ -37,8 +37,8 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
             Class<? extends CatInterceptor>[] handerList = catServerInfo.getHanders();
             handers = new ArrayList<>(handerList.length);
             for(Class<? extends CatInterceptor> clazz : handerList) {
-                if( CatInterceptor.Defualt.class.equals(clazz) ){
-                    handers.add(CatInterceptor.Defualt.instance);
+                if( CatInterceptor.class.equals(clazz) ){
+                    handers.add(CatInterceptor.instance);
                 } else {
                     handers.add(CatToosUtil.getBeanOfType(clazz));
                 }
@@ -59,6 +59,7 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());
 
+        Throwable exception = null;
         Object respObj = null;
 
         try {
@@ -75,14 +76,26 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
             
             respObj = methodProxy.invokeSuper(target, args);
             point.result = respObj;
-            
-        } catch ( Exception ex ) {
-            point.exception = ex;
-        } finally {
+
+
             for(int i = active.size() - 1; i >= 0; i -- ){
                 CatInterceptor hander = active.get(i);
                 hander.after(point);
             }
+            
+        } catch ( Throwable ex ) {
+            
+            exception = ex;
+            
+        } finally {
+            
+            if( exception != null ){
+                for(int i = active.size() - 1; i >= 0; i -- ){
+                    CatInterceptor hander = active.get(i);
+                    hander.exception(point, exception);
+                } 
+            }
+            
         }
         return respObj;
     }

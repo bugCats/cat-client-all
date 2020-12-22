@@ -24,9 +24,6 @@ public final class CatInterceptPoint {
     private final Map<String, Object> attrMap = new HashMap<>();
 
     protected Object result;        // after    正常执行有值
-
-    protected Exception exception;  // after    出现异常有值
-
     
     public CatInterceptPoint(HttpServletRequest request, HttpServletResponse response,
                              Object target, Method method, List<StandardMethodMetadata> interMethods, Object[] args) {
@@ -94,13 +91,6 @@ public final class CatInterceptPoint {
     }
     public Object getResult() {
         return result;
-    }
-
-    public Exception getException() {
-        return exception;
-    }
-    public void setException(Exception exception) {
-        this.exception = exception;
     }
 
     

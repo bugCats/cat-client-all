@@ -24,6 +24,6 @@ public @interface CatServer {
     /**
      * 拦截器
      * */
-    Class<? extends CatInterceptor>[] handers() default CatInterceptor.Defualt.class;
+    Class<? extends CatInterceptor>[] handers() default CatInterceptor.class;
     
 }
