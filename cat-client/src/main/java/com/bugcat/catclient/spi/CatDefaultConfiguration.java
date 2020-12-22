@@ -3,6 +3,7 @@ package com.bugcat.catclient.spi;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catclient.utils.CatToosUtil;
 
 
 /**
@@ -70,7 +71,7 @@ public class CatDefaultConfiguration {
                         Class clazz = Class.forName("com.bugcat.catclient.utils.CatHttpUtil");
                         http = (CatHttp) clazz.newInstance();
                     } catch ( Exception e ) {
-                        return null;
+                        return CatToosUtil.getBean(CatHttp.class);
                     }
                 }
             }
