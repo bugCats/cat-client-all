@@ -1,0 +1,20 @@
+app:
+  name: cat-client
+
+server:
+  port: 8010
+
+spring:
+  main:
+    banner-mode: "off"
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      
+      
+demo.remoteApi: http://127.0.0.1:8010  
+
+
+core-server.remoteApi: http://127.0.0.1:8012

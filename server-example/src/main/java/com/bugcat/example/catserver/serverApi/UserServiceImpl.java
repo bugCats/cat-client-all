@@ -1,0 +1,79 @@
+package com.bugcat.example.catserver.serverApi;
+
+
+import com.alibaba.fastjson.JSONObject;
+import com.bugcat.catserver.annotation.CatServer;
+import com.bugcat.example.api.UserService;
+import com.bugcat.example.api.vi.UserPageVi;
+import com.bugcat.example.api.vi.UserSaveVi;
+import com.bugcat.example.api.vo.PageInfo;
+import com.bugcat.example.api.vo.ResponseEntity;
+import com.bugcat.example.api.vo.UserInfo;
+import io.swagger.annotations.Api;
+
+import java.util.Arrays;
+
+
+/**
+ * 
+ * 结合客户端完整示例
+ * 
+ * 通过[com.bugcat.example.catclient.serverApi.ServerApiController]这个类发起调用
+ * 
+ * 
+ * 
+ * 
+ * 通过示例可以发现:
+ *  
+ *  客户端自动注入UserService，可以像是用普通Service类一样，直接执行UserService.userPage等方法
+ *  
+ *  服务端实现UserService，可以像普通Service一样，实现抽象方法，然后就可以被客户端调用
+ *  
+ * 
+ * @CatServer 也可以当作普通的Controller，在swagger上调用
+ * 
+ * */
+@Api(tags = "用户操作实现类")
+@CatServer(handers = UserInterceptor.class)
+public class UserServiceImpl implements UserService {
+
+
+    @Override
+    public ResponseEntity<PageInfo<UserInfo>> userPage(UserPageVi vi) {
+        System.out.println("userPage >>> " + JSONObject.toJSONString(vi));
+
+        UserInfo info = new UserInfo();
+        info.setUid("666");
+        info.setName("bugcat");
+        info.setRemark("这是调用服务端userPage接口返回");
+
+        PageInfo<UserInfo> page = new PageInfo<>(vi.getPageNum(), vi.getCount(), 1);
+        page.setList(Arrays.asList(info));
+        
+        return ResponseEntity.ok(page);
+    }
+
+    @Override
+    public UserInfo userInfo(String uid) {
+        System.out.println("userInfo >>> " + uid);
+
+        UserInfo info = new UserInfo();
+        info.setUid("666");
+        info.setName("bugcat");
+        info.setRemark("这是调用服务端userInfo接口返回");
+
+        return info;
+    }
+
+    @Override
+    public ResponseEntity<Void> userSave(UserSaveVi vi) {
+        System.out.println("userSave >>> " + JSONObject.toJSONString(vi));
+        return ResponseEntity.ok(null);
+    }
+
+    @Override
+    public ResponseEntity<Void> status(String userId, String status) {
+        System.out.println("userSave >>> userId=" + userId + ", status=" + status);
+        return ResponseEntity.ok(null);
+    }
+}
