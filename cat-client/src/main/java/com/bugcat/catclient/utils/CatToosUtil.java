@@ -87,8 +87,8 @@ public class CatToosUtil implements ApplicationContextAware {
         attr.put("beanName", inter.getSimpleName());
         attr.put("config", config);
         CatClientInfo clientInfo = new CatClientInfo(attr, prop);
-        T bean = CatClientInfoFactoryBean.registerCatClients(inter, clientInfo, prop);
-        catClinetMap.put(inter, bean);
+        T bean = CatClientInfoFactoryBean.createCatClients(inter, clientInfo, prop);
+        registerBean(inter, bean);
         return bean;
     }
     

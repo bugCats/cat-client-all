@@ -67,12 +67,7 @@ public class CatDefaultConfiguration {
         if( http == null ){
             synchronized ( this ){
                 if( http == null ){
-                    try {
-                        Class clazz = Class.forName("com.bugcat.catclient.utils.CatHttpUtil");
-                        http = (CatHttp) clazz.newInstance();
-                    } catch ( Exception e ) {
-                        return CatToosUtil.getBean(CatHttp.class);
-                    }
+                    http = CatToosUtil.getBean(CatHttp.class);
                 }
             }
         }

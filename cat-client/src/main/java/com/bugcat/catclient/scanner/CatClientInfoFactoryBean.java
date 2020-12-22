@@ -44,14 +44,14 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     protected T createInstance() throws Exception {
-        return registerCatClients(clazz, catClientInfo, prop);
+        return createCatClients(clazz, catClientInfo, prop);
     }
 
     
     /**
      * 解析interface方法，生成动态代理类
      */
-    public final static <T> T registerCatClients (Class<T> clazz, CatClientInfo catClientInfo, Properties prop) {
+    public final static <T> T createCatClients(Class<T> clazz, CatClientInfo catClientInfo, Properties prop) {
 
         
         Map<String, Map<String, Method>> methodMap = new HashMap<>();

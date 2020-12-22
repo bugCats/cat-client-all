@@ -116,12 +116,19 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
      * */
     private void registerCatServer(Class<?>[] classes, BeanDefinitionRegistry registry) {
         for ( Class<?> clazz : classes ){
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-            AbstractBeanDefinition definition = builder.getRawBeanDefinition();
+
             StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(clazz);
-            AnnotationAttributes attr = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
-            CatServerInfo info = beanDefinition(attr, definition);
-            registry.registerBeanDefinition(info.getBeanName(), definition);
+            AnnotationAttributes attributes = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
+            String value = attributes.getString("value");
+            String beanName = CatToosUtil.defaultIfBlank(value, CatToosUtil.uncapitalize(clazz.getSimpleName()));
+
+            AbstractBeanDefinition definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
+            if( definition == null ){
+                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatToosUtil.class);
+                definition = builder.getBeanDefinition();
+                registry.registerBeanDefinition(beanName, definition);
+            }
+            beanDefinition(attributes, definition);
         }
     }
 

@@ -14,6 +14,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.Map;
  * http请求工具类，可替换成其他形式
  * @author bugcat
  * */
+@Component
 public class CatHttpUtil implements CatHttp {
 	
 	private static final int socketTimeout = 10000;
