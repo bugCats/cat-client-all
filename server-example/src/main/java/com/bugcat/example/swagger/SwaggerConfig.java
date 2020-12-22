@@ -1,5 +1,6 @@
 package com.bugcat.example.swagger;
 
+import com.bugcat.catserver.annotation.CatServer;
 import io.swagger.annotations.Api;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -11,6 +12,8 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableSwagger2
@@ -26,14 +29,21 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
-
+//                .apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
                 
-                // 如果把 @Api 放在实现类上，需要通过这种方式才能扫描得到
-//                .apis(input -> {
-//                    Class<?> beanType = input.getHandlerMethod().getBeanType();
-//                    return beanType.isAnnotationPresent(Api.class);
-//                })
+                /**
+                 * 如果把 @Api 放在interface上，并且需要兼容RequestHandlerSelectors.withClassAnnotation(Api.class)
+                 * apis方法需要改成这样
+                 * */
+                .apis(input -> {
+                    Class<?> beanType = input.getHandlerMethod().getBeanType();
+                    if( beanType.isAnnotationPresent(Api.class) ){
+                        return true;
+                    } else if( beanType.isAnnotationPresent(CatServer.class) ){
+                        return Arrays.stream(beanType.getInterfaces()).anyMatch(clazz -> clazz.isAnnotationPresent(Api.class));
+                    }
+                    return false;
+                })
                 
                 .paths(PathSelectors.any())
                 .build();
