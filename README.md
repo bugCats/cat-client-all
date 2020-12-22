@@ -27,12 +27,12 @@
      │                                                 │         
      │                                                 │ 
      └──────────────  Service interface                │                                 
-	                             │                         │
-	                             │                         │   
-	                             └─────────────────────────┤   
-	                                                       │
+	                       │                       │
+	                       │                       │   
+	                       └───────────────────────┤   
+	                                               │
                                                        │
-	                                                 Service 实现类
+	                                          Service 实现类
 ```
 
 
@@ -45,7 +45,7 @@
 
 如果`FeignClient`+`Controller`也想和`dubbo`一样，需要解决如何通过interface来定义一个Controller，
 
-于是，cat-server来了...
+于是，`cat-server`来了...
 
 
 
