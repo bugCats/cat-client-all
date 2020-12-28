@@ -2,8 +2,8 @@ package com.bugcat.example.catclient.remote;
 
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.example.dto.Demo;
-import com.bugcat.example.dto.PageInfo;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 
 /**
  * 呆毛2，异常plus版

@@ -59,12 +59,11 @@ public class CatHttpUtil implements CatHttp {
                 url = url + urlEncoded(params, "?", "");
             }
             HttpGet httpget = new HttpGet(new String(url.getBytes(), charset));
-            
-			headers.putAll(CatHttpUtil.formHeader);
-			for (Map.Entry<String, String> en : headers.entrySet()) {
-				httpget.setHeader(en.getKey(), en.getValue().toString());
-			}
-            
+
+			Map<String, String> head = new HashMap<>(CatHttpUtil.formHeader);
+			head.putAll(headers);
+			head.forEach((key, value) -> httpget.setHeader(key, value.toString()));
+			
             httpget.setConfig(getRequestConfig(ints));
             httpclient = HttpClients.createDefault();
             response = httpclient.execute(httpget);
@@ -72,7 +71,7 @@ public class CatHttpUtil implements CatHttp {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 return EntityUtils.toString(entity, charset);
             } else {
-                throw new Exception("http请求异常！" + response.getStatusLine().getStatusCode());
+                throw new Exception("http请求异常！" + response.getStatusLine().toString());
             }
         } catch (Exception e) {
             throw e;
@@ -87,10 +86,9 @@ public class CatHttpUtil implements CatHttp {
 		try {
 			HttpPost httpPost = new HttpPost(url);
 
-			headers.putAll(CatHttpUtil.formHeader);
-			for(Map.Entry<String, String> map : headers.entrySet()){
-				httpPost.setHeader(map.getKey(), map.getValue().toString());
-			}
+			Map<String, String> head = new HashMap<>(CatHttpUtil.formHeader);
+			head.putAll(headers);
+			head.forEach((key, value) -> httpPost.setHeader(key, value.toString()));
 			if ( params != null && params.size() > 0 ) {
 				List<BasicNameValuePair> datas = new ArrayList<>(params.size());
 				for (Map.Entry<String, Object> map : params.entrySet()) {
@@ -129,16 +127,15 @@ public class CatHttpUtil implements CatHttp {
 		}
 	}
 
-	public String jsonPost(String url, String jsonStr, Map<String, String> hearders, int... ints) throws Exception {
+	public String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws Exception {
 		CloseableHttpClient httpclient = null;
 		CloseableHttpResponse response = null;
 		try {
 	
 			HttpPost httpPost = new HttpPost(url);
-			hearders.putAll(CatHttpUtil.jsonpHeader);
-			for (Map.Entry<String, String> map : hearders.entrySet()) {
-				httpPost.addHeader(map.getKey(), map.getValue());
-			}
+			Map<String, String> head = new HashMap<>(CatHttpUtil.jsonpHeader);
+			head.putAll(headers);
+			head.forEach((key, value) -> httpPost.setHeader(key, value.toString()));
 			StringEntity se = new StringEntity(jsonStr, charset);
 			se.setContentEncoding(charset);
 			httpPost.setEntity(se);
@@ -150,7 +147,7 @@ public class CatHttpUtil implements CatHttp {
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                 return EntityUtils.toString(entity, charset);
             } else {
-                throw new Exception("http请求异常！" + response.getStatusLine().getStatusCode());
+                throw new Exception("http请求异常！" + response.getStatusLine().toString());
             }
 		} catch (Exception e) {
 			throw e;

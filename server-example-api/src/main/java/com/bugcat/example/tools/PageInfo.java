@@ -1,7 +1,4 @@
-package com.bugcat.example.api.vo;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+package com.bugcat.example.tools;
 
 import java.util.List;
 
@@ -10,36 +7,30 @@ import java.util.List;
  * 分页对象
  * @author bugcat
  */
-@ApiModel
 public class PageInfo<T> {
 	/**
 	 * 总记录数
 	 */
-	@ApiModelProperty("总记录数")
 	private long total;
 	
 	/**
 	 * 起始条数
 	 */
-    @ApiModelProperty("起始条数")
 	private int pageNum;
 
 	/**
 	 * 每页显示的数量
 	 */
-    @ApiModelProperty("每页显示的数量")
 	private int count;
 
 	/**
 	 * 当前结果集合
 	 */
-    @ApiModelProperty("当前结果集合")
 	private List<T> list;
 
 	/**
 	 * 总页数
 	 */
-    @ApiModelProperty("总页数")
 	private Integer pages;
 
 	

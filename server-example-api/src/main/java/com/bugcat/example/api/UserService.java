@@ -5,9 +5,10 @@ import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
-import com.bugcat.example.api.vo.PageInfo;
-import com.bugcat.example.api.vo.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 import com.bugcat.example.api.vo.UserInfo;
+import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -29,32 +30,29 @@ import org.springframework.web.bind.annotation.*;
 //@FeignClient
 
 @Api(tags = "用户操作api")
-@CatClient(host = "${core-server.remoteApi}", connect = 3000, socket = 3000)
+@CatClient(host = "${core-server.remoteApi}", wrapper = ResponseEntityWrapper.class, connect = 3000, socket = 3000)
 public interface UserService {
     
-    
-    @ResponseBody
     @ApiOperation("分页查询用户")
     @CatMethod(value = "/user/userPage")
     ResponseEntity<PageInfo<UserInfo>> userPage(@ModelAttribute UserPageVi vi);
 
 
-    
+
     @ApiOperation("根据用户id查询用户信息")
     @CatMethod(value = "/user/get/{uid}", method = RequestMethod.GET)
-    UserInfo userInfo(@PathVariable("uid") String uid);
+    UserInfo userInfo(@PathVariable("uid") @RequestBody @RequestParam("status") String uid);
 
-    
-    
+
+
     @ApiOperation("编辑用户")
     @CatMethod(value = "/user/save", method = RequestMethod.POST)
-    ResponseEntity<Void> userSave(@RequestBody UserSaveVi vi);
+    ResponseEntity<Void> userSave(@RequestBody UserSaveVi vi) throws Exception;
 
 
-    
 
     @ApiOperation("设置用户状态")
     @CatMethod(value = "/user/status", method = RequestMethod.GET)
-    ResponseEntity<Void> status(@RequestParam("uid") String userId, @RequestParam("status") String status);
+    Void status(@RequestParam("uid") String userId, @RequestParam("status") String status);
 
 }

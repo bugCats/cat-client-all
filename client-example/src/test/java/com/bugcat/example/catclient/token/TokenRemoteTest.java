@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.ResponseEntity;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 

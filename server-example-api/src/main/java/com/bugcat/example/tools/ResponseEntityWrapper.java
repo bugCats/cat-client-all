@@ -1,4 +1,4 @@
-package com.bugcat.example.dto;
+package com.bugcat.example.tools;
 
 import com.alibaba.fastjson.TypeReference;
 import com.bugcat.catface.spi.ResponesWrapper;
@@ -33,7 +33,7 @@ public class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity> {
      */
     @Override
     public void checkValid(ResponseEntity obj) {
-        if(ResponseEntity.succ.equals(obj.getErrCode())){
+        if( ResponseEntity.succ.equals(obj.getErrCode())){
             //正常
         } else {
             //业务异常，可以直接继续抛出，在公共的异常处理类中，统一处理
@@ -41,8 +41,20 @@ public class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity> {
         }
     }
 
+    
     @Override
     public Object getValue(ResponseEntity obj) {
         return obj.getData();
+    }
+
+
+    @Override
+    public ResponseEntity createEntry(Object value) {
+        return ResponseEntity.ok(value);
+    }
+
+    @Override
+    public ResponseEntity createEntry(Exception ex) {
+        return ResponseEntity.fail("-1", ex.getMessage());
     }
 }

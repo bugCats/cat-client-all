@@ -6,10 +6,11 @@ import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.example.api.UserService;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
-import com.bugcat.example.api.vo.PageInfo;
-import com.bugcat.example.api.vo.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 import com.bugcat.example.api.vo.UserInfo;
-import io.swagger.annotations.Api;
+import com.bugcat.example.tools.ResponseEntityWrapper;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Arrays;
 
@@ -33,7 +34,7 @@ import java.util.Arrays;
  * @CatServer 也可以当作普通的Controller，在swagger上调用
  * 
  * */
-@CatServer(handers = UserInterceptor.class)
+@CatServer(handers = UserInterceptor.class, wrapper = ResponseEntityWrapper.class)
 public class UserServiceImpl implements UserService {
 
 
@@ -65,14 +66,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<Void> userSave(UserSaveVi vi) {
+    public ResponseEntity<Void> userSave(@RequestParam("name") UserSaveVi vi) {
         System.out.println("userSave >>> " + JSONObject.toJSONString(vi));
         return ResponseEntity.ok(null);
     }
 
     @Override
-    public ResponseEntity<Void> status(String userId, String status) {
+    public Void status(String userId, String status) {
         System.out.println("userSave >>> userId=" + userId + ", status=" + status);
-        return ResponseEntity.ok(null);
+        return null;
     }
 }

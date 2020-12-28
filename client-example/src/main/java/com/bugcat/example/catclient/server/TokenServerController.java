@@ -1,14 +1,10 @@
 package com.bugcat.example.catclient.server;
 
 
-import com.alibaba.fastjson.JSONObject;
 import com.bugcat.example.dto.Demo;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.TreeMap;
 
 
 /**

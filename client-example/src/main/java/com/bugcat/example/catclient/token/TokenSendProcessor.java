@@ -3,7 +3,7 @@ package com.bugcat.example.catclient.token;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.utils.CatClientUtil;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.ResponseEntity;
 
 public class TokenSendProcessor extends SendProcessor {
 

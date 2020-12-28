@@ -6,8 +6,8 @@ import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.example.catserver.DemoService;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
-import com.bugcat.example.dto.PageInfo;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,7 +24,7 @@ import java.util.List;
  * 
  * */
 @Api(tags = "服务端API - 继承类")
-@CatServer
+//@CatServer
 public class ApiRemoteImplExt extends ApiRemoteImpl {
 
 

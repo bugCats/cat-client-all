@@ -56,6 +56,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         log.info("catServer 服务端启用...");
 
+        
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatServer.class.getName()));
 
         Class<?>[] classes = annoAttrs.getClassArray("classes");

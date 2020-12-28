@@ -1,6 +1,8 @@
 package com.bugcat.example.swagger;
 
 import com.bugcat.catserver.annotation.CatServer;
+import com.bugcat.catserver.scanner.CatServerInitBean;
+import com.bugcat.catserver.utils.CatServerUtil;
 import io.swagger.annotations.Api;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,7 +42,12 @@ public class SwaggerConfig {
                     if( beanType.isAnnotationPresent(Api.class) ){
                         return true;
                     } else if( beanType.isAnnotationPresent(CatServer.class) ){
-                        return Arrays.stream(beanType.getInterfaces()).anyMatch(clazz -> clazz.isAnnotationPresent(Api.class));
+                        Object bean = CatServerUtil.getBeanOfType(beanType);
+                        Class<?>[] interfaces = bean.getClass().getInterfaces();
+                        boolean b = Arrays.stream(interfaces)
+                                .filter(inter -> inter.getSimpleName().contains(CatServerInitBean.bridgeName))
+                                .anyMatch(clazz -> clazz.isAnnotationPresent(Api.class));
+                        return b;
                     }
                     return false;
                 })

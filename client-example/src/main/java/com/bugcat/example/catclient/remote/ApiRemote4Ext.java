@@ -4,8 +4,10 @@ import com.bugcat.catclient.annotation.CatClient;
 
 /**
  * 
- * 呆毛1，基础版
- * 单元测试类 @link com.bugcat.example.catclient.remote.ApiRemote1Test
+ * 呆毛4，继承
+ *
+ * 
+ * 单元测试类 @link com.bugcat.example.catclient.remote.ApiRemote4Test
  *
  * @author: bugcat
  * */

@@ -6,8 +6,8 @@ import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.example.catserver.DemoService;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
-import com.bugcat.example.dto.PageInfo;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -17,12 +17,13 @@ import java.util.List;
 /**
  * 加上注解@CatServer，该类等同于一个RestController
  * 但是 url、入参、请求方式，全部在interface中定义
- * 可以同时实现多个interface，但是不建议！
- * 如果多个interface中包含相同的url，会启动失败！当然，就算是一般情况有相同的url也是启动失败
+ * 
+ * 可以同时实现多个interface，但是<b>不建议！</b>
+ * 如果多个interface中包含相同的方法、或者url，会启动失败！当然，就算是一般情况有相同的url也是启动失败
  *
  * @author bugcat
  * */
-@CatServer
+//@CatServer
 public class ApiRemoteImpl implements ApiRemote1, ApiRemote2 {
 
     

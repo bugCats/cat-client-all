@@ -69,6 +69,9 @@ public class CatToosUtil {
     }
 
     public static String signature(Method method){
+        return signature(method.getName(), method);
+    }
+    public static String signature(String name, Method method){
         StringBuilder sbr = new StringBuilder(300);
         Type[] types = method.getGenericParameterTypes();
         if( types != null && types.length > 0 ){
@@ -77,6 +80,6 @@ public class CatToosUtil {
             }
             sbr.deleteCharAt(0);
         }
-        return method.getName() + "([" + sbr.toString() + "])";
+        return name + "([" + sbr.toString() + "])";
     }
 }

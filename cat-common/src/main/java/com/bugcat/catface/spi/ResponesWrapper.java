@@ -1,6 +1,7 @@
 package com.bugcat.catface.spi;
 
 import com.alibaba.fastjson.TypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Type;
@@ -25,7 +26,7 @@ public abstract class ResponesWrapper<T> {
     /**
      * 响应包裹类map
      * */
-    protected final static Map<Class, ResponesWrapper> wrapperMap = new HashMap<>();
+    private final static Map<Class, ResponesWrapper> wrapperMap = new HashMap<>();
 
     
     public final static ResponesWrapper getResponesWrapper(Class<? extends ResponesWrapper> clazz){
@@ -72,7 +73,15 @@ public abstract class ResponesWrapper<T> {
      * */
     public abstract Object getValue(T obj);
     
-    
+    /**
+     * 构建
+     * */
+    public abstract T createEntry(Object value);
+
+    /**
+     * 构建
+     * */
+    public abstract T createEntry(Exception ex);
     
     
     /**
@@ -93,32 +102,14 @@ public abstract class ResponesWrapper<T> {
         public Object getValue(Object obj) {
             return null;
         }
-    }
-    
-    
-    
-    /**
-     * 举个栗子
-     * */
-    private final static class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity>{
         @Override
-        public Class<ResponseEntity> getWrapperClass() {
-            return ResponseEntity.class;
+        public Object createEntry(Object value) {
+            return null;
         }
-
         @Override
-        public <M> TypeReference getWrapperType(Type type) {
-            return new TypeReference<ResponseEntity<M>>(type){};
-        }
-
-        @Override
-        public void checkValid(ResponseEntity obj) throws Exception {
-            
-        }
-
-        @Override
-        public Object getValue(ResponseEntity obj) {
-            return obj.getBody();
+        public Object createEntry(Exception ex) {
+            return null;
         }
     }
+    
 }

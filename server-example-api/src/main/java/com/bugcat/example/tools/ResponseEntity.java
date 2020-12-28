@@ -1,4 +1,4 @@
-package com.bugcat.example.api.vo;
+package com.bugcat.example.tools;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

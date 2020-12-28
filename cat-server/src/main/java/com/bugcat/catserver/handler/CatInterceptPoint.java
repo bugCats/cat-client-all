@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class CatInterceptPoint {
@@ -16,22 +15,30 @@ public final class CatInterceptPoint {
     private final HttpServletResponse response;
     private final Object target;    //访问的对象
     private final Method method;    //访问的方法
-    private final List<StandardMethodMetadata> interMethods;    //对应的interface的方法
+    private final StandardMethodMetadata interMethod;    //对应的interface的方法
     private final Object[] args;
 
+    
+    // 注解属性
     private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>();
     
+    
+    //自定义属性
     private final Map<String, Object> attrMap = new HashMap<>();
-
+    
+    
+    //响应结果
     protected Object result;        // after    正常执行有值
     
+    
+    
     public CatInterceptPoint(HttpServletRequest request, HttpServletResponse response,
-                             Object target, Method method, List<StandardMethodMetadata> interMethods, Object[] args) {
+                             Object target, Method method, StandardMethodMetadata interMethod, Object[] args) {
         this.request = request;
         this.response = response;
         this.target = target;
         this.method = method;
-        this.interMethods = interMethods;
+        this.interMethod = interMethod;
         this.args = args;
     }
     
@@ -39,19 +46,15 @@ public final class CatInterceptPoint {
     public Map<String, Object> getAnnotations(Class annotationClass){
         Map<String, Object> attr = annAttrMap.get(annotationClass);
         if( attr == null ){
-            Map<String, Object> tmp = new HashMap<>();
-            for( StandardMethodMetadata metadata : interMethods ){
-                Map<String, Object> map = metadata.getAnnotationAttributes(annotationClass.getName());
-                if( map != null ){
-                    tmp.putAll(map);
-                }
+            Map<String, Object> map = interMethod.getAnnotationAttributes(annotationClass.getName());
+            if( map != null ){
+                map = new HashMap<>();
             }
-            attr = Collections.unmodifiableMap(tmp);
+            attr = Collections.unmodifiableMap(map);
             annAttrMap.put(annotationClass, attr);
         }
         return attr;
     }
-    
     
     public CatInterceptPoint putAttr(String name, Object value){
         attrMap.put(name, value);
@@ -61,17 +64,14 @@ public final class CatInterceptPoint {
     public <T> T getAttr(String name, Class<T> clazz){
         return (T) attrMap.get(name);
     }
-    
     public <T> T getAttr(String name, T defaultValue){
         return (T) attrMap.getOrDefault(name, defaultValue);
     }
     
     
-
     public Map<String, Object> getAttrMap() {
         return attrMap;
     }
-    
     
     public HttpServletRequest getRequest() {
         return request;

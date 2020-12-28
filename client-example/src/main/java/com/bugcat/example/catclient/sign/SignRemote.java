@@ -4,7 +4,7 @@ import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.annotation.CatNote;
 import com.bugcat.example.dto.DemoDTO;
-import com.bugcat.example.dto.ResponseEntity;
+import com.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMethod;
 

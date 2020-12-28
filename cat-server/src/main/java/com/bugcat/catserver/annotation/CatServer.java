@@ -1,6 +1,7 @@
 package com.bugcat.catserver.annotation;
 
 
+import com.bugcat.catface.spi.ResponesWrapper;
 import com.bugcat.catserver.spi.CatInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -20,6 +21,11 @@ public @interface CatServer {
      * */
     String value() default "";
 
+
+    /**
+     * 统一的响应实体类包裹对象
+     * */
+    Class<? extends ResponesWrapper> wrapper() default ResponesWrapper.Default.class;
     
     /**
      * 拦截器

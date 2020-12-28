@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.bugcat.example.api.UserService;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
-import com.bugcat.example.api.vo.PageInfo;
-import com.bugcat.example.api.vo.ResponseEntity;
+import com.bugcat.example.tools.PageInfo;
+import com.bugcat.example.tools.ResponseEntity;
 import com.bugcat.example.api.vo.UserInfo;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,17 +51,23 @@ public class ServerApiController {
 
     @GetMapping("/test/userSave")
     public void userSave(){
-        UserSaveVi vi = new UserSaveVi();
-        vi.setName("bugcat");
-        vi.setEmail("972245132@qq.com");
-        ResponseEntity<Void> status = userService.userSave(vi);
-        System.out.println(JSONObject.toJSONString(status));
+        try {
+            
+            UserSaveVi vi = new UserSaveVi();
+            vi.setName("bugcat");
+            vi.setEmail("972245132@qq.com");
+            ResponseEntity<Void> status = userService.userSave(vi);
+            System.out.println(JSONObject.toJSONString(status));
+            
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
     }
     
 
     @GetMapping("/test/status")
     public void status(){
-        ResponseEntity<Void> status = userService.status("6666", "1");
+        Void status = userService.status("6666", "1");
         System.out.println(JSONObject.toJSONString(status));
     }
     
