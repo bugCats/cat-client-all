@@ -8,6 +8,15 @@
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<description>服务器示例</description>
+
+	<developers>
+		<developer>
+			<id>bugCats</id>
+			<name>bugcat</name>
+			<email>972245132@qq.com</email>
+			<url>https://github.com/bugCats/cat-client-all</url>
+		</developer>
+	</developers>
 	
 	
 	<properties>

@@ -14,6 +14,14 @@
 	<packaging>jar</packaging>
 	<description>http客户端</description>
 
+	<developers>
+		<developer>
+			<id>bugCats</id>
+			<name>bugcat</name>
+			<email>972245132@qq.com</email>
+			<url>https://github.com/bugCats/cat-client-all</url>
+		</developer>
+	</developers>
 
 	<properties>
 		<java.version>1.8</java.version>		

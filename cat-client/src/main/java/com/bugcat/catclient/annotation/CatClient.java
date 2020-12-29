@@ -2,12 +2,10 @@ package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
-import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
-
 
 
 /**
@@ -50,11 +48,6 @@ public @interface CatClient {
      * */
     Class fallback() default Object.class;
     
-    
-    /**
-     * 统一的响应实体类包裹对象
-     * */
-    Class<? extends ResponesWrapper> wrapper() default ResponesWrapper.Default.class;
     
     
     /**

@@ -1,12 +1,16 @@
 package com.bugcat.catclient.beanInfos;
 
+import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
+import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.catface.spi.ResponesWrapper;
-import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.type.StandardAnnotationMetadata;
 
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -36,10 +40,9 @@ public class CatClientInfo {
     
     public CatClientInfo(AnnotationAttributes attr, Properties prop){
 
-        CatDefaultConfiguration config = (CatDefaultConfiguration) attr.get("config");
+        CatDefaultConfiguration config = CatClientUtil.getBean(CatDefaultConfiguration.class);
         
-        String beanName = attr.getString("value");
-        this.beanName = CatToosUtil.defaultIfBlank(beanName, CatToosUtil.uncapitalize(attr.getString("beanName")));
+        this.beanName = attr.getString("value");
         
         String host = attr.getString("host");
         this.host = prop.getProperty(host);
@@ -79,6 +82,37 @@ public class CatClientInfo {
         
     }
 
+    
+    public static AnnotationAttributes getAttributes(Class inter) {
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+        AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatClient.class.getName()));
+        Map<String, Object> wrapper = responesWrap(inter);
+        if( wrapper != null ){
+            client.put("wrapper", wrapper.get("value"));
+        } else {
+            client.put("wrapper", CatDefaultConfiguration.wrapper);
+        }
+        return client;
+    }
+    
+    
+    private static Map<String, Object> responesWrap(Class inter){
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+        Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
+        if( wrapper == null ){
+            for ( Class clazz : inter.getInterfaces() ) {
+                wrapper = responesWrap(clazz);
+                if( wrapper != null ){
+                    return wrapper;
+                }
+            }
+        }
+        return wrapper;
+    }
+ 
+
+
+    
     
     public String getBeanName() {
         return beanName;

@@ -175,6 +175,7 @@ public class CatMethodInfo {
 
         CatParameter param = new CatParameter();
         
+        
         //处理url上的参数 =>  /api/{uid}
         String path = value;
         if( pathParamIndexMap != null ) {//填充 url 上的参数 
@@ -184,12 +185,14 @@ public class CatMethodInfo {
         }
         param.setPath(path);
         
+        
         // 将入参数组args，转换成： 参数名->入参    此时argMap中一定不包含SendProcessor
         Map<String, Object> argMap = new HashMap<>();
-        for ( Map.Entry<String, CatMethodParamInfo> entry : params.entrySet() ){
-            argMap.put(entry.getKey(), args[entry.getValue().getIndex()]);  // entry.getValue().getIndex()=该参数，在方法上出现的索引值
-        }
+        params.forEach((key, value) -> {
+            argMap.put(key, args[value.getIndex()]);  // entry.getValue().getIndex()=该参数，在方法上出现的索引值
+        });
         param.setArgMap(argMap);
+        
         
         Object arg = null;
         if( params.size() == 1 ){//如果入参仅一个
@@ -204,6 +207,7 @@ public class CatMethodInfo {
             arg = argMap;
         }
         param.setValue(arg);
+        
         
         return param;
     }

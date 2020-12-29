@@ -1,7 +1,6 @@
 package com.bugcat.catclient.beanInfos;
 
 
-import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 
 /**

@@ -56,7 +56,7 @@
 
 **cat-client**：猫脸客户端
 
-使用方式类似于`FeignClient`。如果要切换成`cat-client`，仅需要修改启动类注解，和interface上的注解，其他不变；
+使用方式类似于`FeignClient`。如果要切换成`cat-client`，仅需要修改启动类注解，和interface上的注解，其他几乎不变；
   
 + 轻量级，只要是Spring项目，都可以使用。仅额外需要引入fastjson；
 + 支持高度的自由扩展：
@@ -82,13 +82,23 @@
 
 使用interface定义Controller *(可以通过类似被`@FeignClient`标记的interface，和它的`实现类`，直接构成服务端)*
 
-搭配`FeignClient`、或者`cat-client`，可以实现如同`dubbo`框架 *(客户端与服务器通过interface耦合：客户端注入interface，服务端实现interface)* 风格
 
++ 生成的Controller，支持swagger
++ 可以为每个生成的Controller，单独配置拦截器链
++ 生成的Controller，可以当作成一个普通的Service组件
++ 可以为Controller响应，自动加上包装类（效果与作用和CatClient的拆包相反）
+
+搭配`FeignClient`、或者`cat-client`，可以实现如同`dubbo`框架 *(客户端与服务器通过interface耦合：客户端注入interface，服务端实现interface)* 风格
 
 
 <br><br>
 
+**cat-server-swagger** 猫脸服务端swagger插件
 
+按需求引用。如果不需要生成swagger文档，可以忽略
+
+
+<br><br>
 
 **client-example**：客户端示例
 

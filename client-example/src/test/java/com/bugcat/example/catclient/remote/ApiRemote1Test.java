@@ -25,18 +25,6 @@ public class ApiRemote1Test {
     static Properties prop = new Properties();
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-        CatDefaultConfiguration configuration = new CatDefaultConfiguration(){
-            @Override
-            public int socket() {
-                return 30000;
-            }
-
-            @Override
-            public int connect() {
-                return 30000;
-            }
-        };
-//        prop.put(CatDefaultConfiguration.class, configuration);
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
     }
     static ApiRemote1 remote = CatClientUtil.proxy(ApiRemote1.class, prop);

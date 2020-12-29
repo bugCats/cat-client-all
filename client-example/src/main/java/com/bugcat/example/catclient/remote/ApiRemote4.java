@@ -2,10 +2,12 @@ package com.bugcat.example.catclient.remote;
 
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
 import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
+import com.bugcat.example.tools.ResponseEntityWrapper;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author: bugcat
  * */
+@CatResponesWrapper(ResponseEntityWrapper.class)
 public interface ApiRemote4 {
     
 

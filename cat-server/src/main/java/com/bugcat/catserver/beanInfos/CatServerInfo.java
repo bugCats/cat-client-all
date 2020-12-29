@@ -1,9 +1,13 @@
 package com.bugcat.catserver.beanInfos;
 
+import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.catface.spi.ResponesWrapper;
-import com.bugcat.catface.utils.CatToosUtil;
+import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.spi.CatInterceptor;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.type.StandardAnnotationMetadata;
+
+import java.util.Map;
 
 public class CatServerInfo {
 
@@ -15,8 +19,8 @@ public class CatServerInfo {
 
     
     public CatServerInfo(AnnotationAttributes attr) {
-        String beanName = attr.getString("value");
-        this.beanName = CatToosUtil.defaultIfBlank(beanName, CatToosUtil.uncapitalize(attr.getString("beanName")));
+        
+        this.beanName = attr.getString("value");
 
         //响应包裹类，如果是ResponesWrapper.default，代表没有设置
         Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
@@ -25,6 +29,35 @@ public class CatServerInfo {
         this.handers = (Class<? extends CatInterceptor>[]) attr.getClassArray("handers");
     }
 
+    
+    
+    public static AnnotationAttributes getAttributes(Class inter) {
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+        AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
+        Map<String, Object> wrapper = responesWrap(inter);
+        if( wrapper != null ){
+            client.put("wrapper", wrapper.get("value"));
+        } else {
+            client.put("wrapper", ResponesWrapper.Default.class);
+        }
+        return client;
+    }
+
+    private static Map<String, Object> responesWrap(Class inter){
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+        Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
+        if( wrapper == null ){
+            for ( Class clazz : inter.getInterfaces() ) {
+                wrapper = responesWrap(clazz);
+                if( wrapper != null ){
+                    return wrapper;
+                }
+            }
+        }
+        return wrapper;
+    }
+    
+    
 
     public String getBeanName() {
         return beanName;

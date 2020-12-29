@@ -14,6 +14,15 @@
 	<name>server-example</name>
 	<description>服务端呆毛</description>
 
+	<developers>
+		<developer>
+			<id>bugCats</id>
+			<name>bugcat</name>
+			<email>972245132@qq.com</email>
+			<url>https://github.com/bugCats/cat-client-all</url>
+		</developer>
+	</developers>
+
 	
 	<properties>
 		<java.version>1.8</java.version>
@@ -35,12 +44,19 @@
 			<artifactId>server-example-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.bugcat</groupId>
+			<artifactId>cat-server-swagger</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		
 		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -51,19 +67,19 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.31</version>
+			<version>1.2.31</version>
         </dependency>
         
         <!-- http 相关 -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5</version>
+			<version>4.5</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>4.3.5</version>
+			<version>4.3.5</version>
         </dependency>
 
 		<!-- swagger 文档类 -->

@@ -3,7 +3,6 @@ package com.bugcat.catserver.scanner;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.annotation.EnableCatServer;
-import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,12 +54,10 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 
         log.info("catServer 服务端启用...");
-
         
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatServer.class.getName()));
 
         Class<?>[] classes = annoAttrs.getClassArray("classes");
-
         if( classes.length > 0 ){
             
             log.info("catServer 服务端数量：" + classes.length );
@@ -86,30 +83,30 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
             }
             log.info("catServer 服务端数量：" + scanner.definitions.size() );
             for ( AbstractBeanDefinition definition : scanner.definitions ) {
-                registerCatServer(definition, registry);
+                beanDefinition(definition);
             }
         }
+
         
+        BeanDefinitionBuilder catServerUtil = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
+        registry.registerBeanDefinition(CatServerUtil.class.getSimpleName(), catServerUtil.getBeanDefinition());
         
-        BeanDefinitionBuilder catToosUtil = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
-        registry.registerBeanDefinition(CatServerUtil.class.getSimpleName(), catToosUtil.getBeanDefinition());
         
         BeanDefinitionBuilder catServerInitBean = BeanDefinitionBuilder.genericBeanDefinition(CatServerInitBean.class);
         catServerInitBean.addPropertyValue("catServerList", catServerList);
         catServerInitBean.addPropertyValue("registry", registry);
         registry.registerBeanDefinition(CatServerInitBean.class.getSimpleName(), catServerInitBean.getBeanDefinition());
 
-    }
-
-
-    /**
-     * 注册工厂
-     * */
-    private void registerCatServer(AbstractBeanDefinition definition, BeanDefinitionRegistry registry) {
-
-        AnnotationMetadata beanMetadata = ((AnnotatedBeanDefinition) definition).getMetadata();
-        AnnotationAttributes attr = AnnotationAttributes.fromMap(beanMetadata.getAnnotationAttributes(CatServer.class.getName()));
-        beanDefinition(attr, definition);
+        
+        try {
+            // swagger扫描
+            Class swagger = Class.forName("com.bugcat.catserver.utils.CatSwaggerScanner");
+            BeanDefinitionBuilder catProvider = BeanDefinitionBuilder.genericBeanDefinition(swagger);
+            catProvider.getBeanDefinition().setPrimary(true);
+            registry.registerBeanDefinition(swagger.getSimpleName(), catProvider.getBeanDefinition());
+        } catch ( Exception e ) {
+            
+        }
     }
     
     /**
@@ -117,25 +114,19 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
      * */
     private void registerCatServer(Class<?>[] classes, BeanDefinitionRegistry registry) {
         for ( Class<?> clazz : classes ){
-
-            StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(clazz);
-            AnnotationAttributes attributes = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
-            String value = attributes.getString("value");
-            String beanName = CatToosUtil.defaultIfBlank(value, CatToosUtil.uncapitalize(clazz.getSimpleName()));
-
+            CatServer server = clazz.getAnnotation(CatServer.class);
+            String beanName = CatToosUtil.defaultIfBlank(server.value(), CatToosUtil.uncapitalize(clazz.getSimpleName()));
             AbstractBeanDefinition definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
             if( definition == null ){
-                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
-                definition = builder.getBeanDefinition();
+                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+                definition = builder.getRawBeanDefinition();
                 registry.registerBeanDefinition(beanName, definition);
             }
-            beanDefinition(attributes, definition);
+            beanDefinition(definition);
         }
     }
 
-
-
-    private CatServerInfo beanDefinition(AnnotationAttributes attributes, AbstractBeanDefinition definition){
+    private String beanDefinition(AbstractBeanDefinition definition){
 
         String className = definition.getBeanClassName();   //扫描到的interface类名
         
@@ -148,17 +139,14 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * 但是此时 className 为String字符串，在其他类中却可以用Class属性接收！
          * 只能说[org.springframework.beans.PropertyValue]很强大吧
          * */
-        attributes.put("beanName", className.substring(className.lastIndexOf(".") + 1));
-        CatServerInfo catServerInfo = new CatServerInfo(attributes);
         catServerList.add(className);
 
         definition.setBeanClass(CatServerFactoryBean.class);    //FactoryBean类型
-        definition.getPropertyValues().addPropertyValue("catServerInfo", catServerInfo);      //FactoryBean属性
         definition.getPropertyValues().addPropertyValue("clazz", className);    //FactoryBean属性
         definition.setPrimary(true);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
         
-        return catServerInfo;
+        return className;
     }
     
     
@@ -191,8 +179,8 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
             /**
              * @CatServer 注解包含了 元注解@Component
-             * 在执行自定义扫描时，CatServer类已经被Spring扫描了，使用了默认工厂！
-             * 此时需要将之前扫描的BeanDefinition获取到，
+             * 在执行自定义扫描时，CatServer类已经被Spring扫描了，使用了默认FactoryBean！
+             * 此时需要将之前扫描的BeanDefinition获取到，重新设置FactoryBean
              * */
             BeanDefinitionRegistry registry = super.getRegistry();
             BeanDefinition definition = registry.getBeanDefinition(beanName);

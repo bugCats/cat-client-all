@@ -23,7 +23,8 @@ import java.util.List;
  *
  * @author bugcat
  * */
-//@CatServer
+
+@CatServer
 public class ApiRemoteImpl implements ApiRemote1, ApiRemote2 {
 
     

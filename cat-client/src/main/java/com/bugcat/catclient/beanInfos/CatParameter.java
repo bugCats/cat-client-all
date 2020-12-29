@@ -5,11 +5,14 @@ import com.bugcat.catclient.spi.CatHttp;
 
 import java.util.Map;
 
+
 /**
+ * 每次http请求解析后的参数对象
  * 多例
  * @author bugcat
  * */
 public class CatParameter {
+    
     
     private String path;    //真实url，PathVariable已经处理
     private Object value;   //经过处理之后的有效参数

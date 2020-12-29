@@ -4,7 +4,6 @@ import com.bugcat.catserver.scanner.CatServerInitBean;
 import org.springframework.asm.*;
 import org.springframework.cglib.core.ReflectUtils;
 
-import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,8 +11,7 @@ import java.util.Map;
 public class CatAsm implements Opcodes {
     
     private ClassLoader classLoader;
-
-
+    
     public CatAsm(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
@@ -24,15 +22,18 @@ public class CatAsm implements Opcodes {
      */
     public Class enhancer(Class inter, Class warp) throws Exception {
 
+        String className = className(inter);
+
+        try { return classLoader.loadClass(className); } catch ( Exception ex ) { }
+
+        ClassReader cr = new ClassReader(inter.getName());
+        ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
+
         Map<String, Method> methodMap = new HashMap<>();
         Method[] methods = inter.getMethods();
         for ( Method method : methods ) {
             methodMap.put(method.getName(), method);
         }
-        
-        ClassReader cr = new ClassReader(inter.getName());
-        ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-        
         
         CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, methodMap, warp);
         cr.accept(catServer, ClassReader.EXPAND_FRAMES);
@@ -43,8 +44,7 @@ public class CatAsm implements Opcodes {
 //        fos.write(newbs);
 //        fos.close();
 
-        Class gen = ReflectUtils.defineClass(className(inter), newbs, classLoader);
-        
+        Class gen = ReflectUtils.defineClass(className, newbs, classLoader);
         return gen;
     }
 
@@ -65,6 +65,7 @@ public class CatAsm implements Opcodes {
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             super.visit(version, access, className(inter).replace(".", "/"), signature, superName, new String[]{inter.getName().replace(".", "/")});
         }
+        
         
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
@@ -132,4 +133,5 @@ public class CatAsm implements Opcodes {
     private final static String className(Class inter){
         return (inter.getName() + CatServerInitBean.bridgeName);
     }
+
 }

@@ -1,19 +1,12 @@
 package com.bugcat.catclient.utils;
 
-import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,12 +69,8 @@ public class CatClientUtil implements ApplicationContextAware {
             config = new CatDefaultConfiguration();
             registerBean(CatDefaultConfiguration.class, config);
         }
-        CatClient catClient = inter.getAnnotation(CatClient.class);
-        AnnotationAttributes attr = (AnnotationAttributes) AnnotationUtils.getAnnotationAttributes(catClient);
         ToosProperty prop = new ToosProperty(properties);
-        attr.put("beanName", inter.getSimpleName());
-        attr.put("config", config);
-        CatClientInfo clientInfo = new CatClientInfo(attr, prop);
+        CatClientInfo clientInfo = CatClientInfoFactoryBean.buildClientInfo(inter, prop);
         T bean = CatClientInfoFactoryBean.createCatClients(inter, clientInfo, prop);
         registerBean(inter, bean);
         return bean;

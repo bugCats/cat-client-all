@@ -13,14 +13,20 @@ import com.bugcat.catface.spi.ResponesWrapper;
  * */
 public class CatDefaultConfiguration {
     
+    
+    // 初始值
     public static final Class wrapper = ResponesWrapper.Default.class;
+    public static final RequestLogs logs = RequestLogs.Def;
     public static final Integer socket = 0;
     public static final Integer connect = 0;
-    public static final RequestLogs logs = RequestLogs.Def;
 
 
+    
+    
+    
     private CatHttp http;
     private ResultProcessor resultHandler;
+    
     
     
     public CatDefaultConfiguration(){}
@@ -69,6 +75,14 @@ public class CatDefaultConfiguration {
             synchronized ( this ){
                 if( http == null ){
                     http = CatClientUtil.getBean(CatHttp.class);
+                    if( http == null ){ // 一般这种情况为使用main方法调用
+                        try {
+                            Class<?> clazz = Class.forName("com.bugcat.catclient.utils.CatHttpUtil");
+                            http = (CatHttp) clazz.newInstance();
+                        } catch ( Exception ex ) {
+                            
+                        }
+                    }
                 }
             }
         }

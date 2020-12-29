@@ -13,7 +13,6 @@ import org.springframework.web.servlet.ModelAndView;
 public class CatServerApplication {
 
 	public static void main(String[] args) {
-        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "F:\\tmp");
         SpringApplication app = new SpringApplication(CatServerApplication.class);
         app.run(args);
 	}

@@ -20,11 +20,13 @@ import java.util.List;
  * 没错！支持继承！
  * 子类重写父类方法之后，就实现了api升级！
  * 
+ * 但是<b>不建议！</b>
+ * 
  * @author bugcat
  * 
  * */
 @Api(tags = "服务端API - 继承类")
-//@CatServer
+@CatServer
 public class ApiRemoteImplExt extends ApiRemoteImpl {
 
 

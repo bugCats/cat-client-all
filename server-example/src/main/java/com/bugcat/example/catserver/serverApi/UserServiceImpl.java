@@ -6,10 +6,9 @@ import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.example.api.UserService;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
+import com.bugcat.example.api.vo.UserInfo;
 import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
-import com.bugcat.example.api.vo.UserInfo;
-import com.bugcat.example.tools.ResponseEntityWrapper;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Arrays;
@@ -34,7 +33,7 @@ import java.util.Arrays;
  * @CatServer 也可以当作普通的Controller，在swagger上调用
  * 
  * */
-@CatServer(handers = UserInterceptor.class, wrapper = ResponseEntityWrapper.class)
+@CatServer(handers = UserInterceptor.class)
 public class UserServiceImpl implements UserService {
 
 

@@ -2,7 +2,6 @@ package com.bugcat.catclient.scanner;
 
 import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.EnableCatClient;
-import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.CatDefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
@@ -65,21 +64,26 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
      * */
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+
+        log.info("catclient 客户端启用...");
+        
         
         // 这个类AnnotationScannerRegistrar，通过@EnableCatClient注解上使用@Import加载
         // metadata就是被@EnableCatClient注解的对象，即：启动类
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
 
         try {
+            /**
+             * 全局默认配置
+             * */
             Class<? extends CatDefaultConfiguration> configClass = annoAttrs.getClass("defaults");
             config = configClass.newInstance();
             CatClientUtil.registerBean(CatDefaultConfiguration.class, config);
-        } catch ( Exception e ) {
-            log.error("初始化CatDefaultConfiguration异常", e);
+        } catch ( Exception ex ) {
+            log.error("初始化CatDefaultConfiguration异常", ex);
             return;
         }
-        log.info("catclient 客户端启用...");
-        
+
         
         Class<?>[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
@@ -108,30 +112,20 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             if( scanner.holders == null ){
                 scanner.holders = new HashSet<>();
             }
+            
             log.info("catclient 客户端数量：" + scanner.holders.size() );
             for ( BeanDefinitionHolder holder : scanner.holders ){
-                registerCatClient(holder, registry);
+                GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
+                beanDefinition(definition);
             }
         }
         
-        
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
-        registry.registerBeanDefinition(CatClientUtil.class.getSimpleName(), builder.getBeanDefinition());
+        BeanDefinitionBuilder catClientUtil = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
+        registry.registerBeanDefinition(CatClientUtil.class.getSimpleName(), catClientUtil.getBeanDefinition());
         
     }
     
     
-    /**
-     * 扫描注解注册
-     * */
-    private void registerCatClient(BeanDefinitionHolder holder, BeanDefinitionRegistry registry) {
-        
-        GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
-
-        AnnotationMetadata beanMetadata = ((AnnotatedBeanDefinition) definition).getMetadata();
-        AnnotationAttributes attr = AnnotationAttributes.fromMap(beanMetadata.getAnnotationAttributes(CatClient.class.getName()));
-        beanDefinition(attr, definition);
-    }
 
     
     /**
@@ -139,17 +133,21 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
      * */
     private void registerCatClient(Class<?>[] classes, BeanDefinitionRegistry registry) {
         for ( Class<?> clazz : classes ){
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-            AbstractBeanDefinition definition = builder.getRawBeanDefinition();
-            StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(clazz);
-            AnnotationAttributes attr = new AnnotationAttributes(metadata.getAnnotationAttributes(CatClient.class.getName()));
-            CatClientInfo info = beanDefinition(attr, definition);
-            registry.registerBeanDefinition(info.getBeanName(), definition);
+            CatClient client = clazz.getAnnotation(CatClient.class);
+            String beanName = CatToosUtil.defaultIfBlank(client.value(), CatToosUtil.uncapitalize(clazz.getSimpleName()));
+            AbstractBeanDefinition definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
+            if( definition == null ){
+                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+                definition = builder.getRawBeanDefinition();
+                registry.registerBeanDefinition(beanName, definition);
+            }
+            beanDefinition(definition);
         }
     }
     
     
-    private CatClientInfo beanDefinition(AnnotationAttributes attr, AbstractBeanDefinition definition){
+    
+    private String beanDefinition(AbstractBeanDefinition definition){
 
         String className = definition.getBeanClassName();   //扫描到的interface类名
         
@@ -162,26 +160,22 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * 注意，此时className为String字符串，在其他类中却可以用Class属性接收！
          * 只能说[org.springframework.beans.PropertyValue]很强大吧
          * */
-        attr.put("beanName", className.substring(className.lastIndexOf(".") + 1));
-        attr.put("config", config); //全局的默认配置
-        
-        CatClientInfo catClientInfo = new CatClientInfo(attr, prop);
         
         // 注册FactoryBean工厂，
         // 自动注入，会根据interface，从Spring容器中获取到对应的组件，这需要FactoryBean支持
         // interface -> interface工厂 -> interface实现类 -> 自动注入
         // FactoryBean 的生命周期，早于Spring容器，无法使用自动注入，因此需要使用ioc反射，将对象赋值给FactoryBean
         definition.setBeanClass(CatClientInfoFactoryBean.class);    //FactoryBean类型
-        definition.getPropertyValues().addPropertyValue("catClientInfo", catClientInfo);      //FactoryBean属性
         definition.getPropertyValues().addPropertyValue("prop", prop);    //FactoryBean属性
         definition.getPropertyValues().addPropertyValue("clazz", className);    //FactoryBean属性
         definition.setPrimary(true);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
         
-        return catClientInfo;
+        return className;
     }
     
 
+    
     private static class EnvironmentProperty extends Properties {
         
         private Environment environment;
@@ -213,8 +207,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         public CatClientScanner(BeanDefinitionRegistry registry) {
             super(registry);
         }
-
-
+        
         @Override
         protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
             holders = super.doScan(basePackages);   //得到所有标记了@CatClient的interface

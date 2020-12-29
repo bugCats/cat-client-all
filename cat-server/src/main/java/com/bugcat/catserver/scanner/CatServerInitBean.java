@@ -48,11 +48,12 @@ public class CatServerInitBean implements InitializingBean {
 
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( BeanInfo info : beanInfos ){
+            
             info.thisMethods.forEach((sign, metadata) -> {
 
                 Method method = metadata.getIntrospectedMethod();
-                Method superMethod = info.superMethods.get(bridgeName + method.getName());
-                if( superMethod != null ){
+                Method bridgeMethod = info.bridgeMethods.get(bridgeName + method.getName());
+                if( bridgeMethod != null ){
 
                     Map<String, Object> attr = metadata.getAnnotationAttributes(annName);
                     RequestMappingInfo mappingInfo = RequestMappingInfo
@@ -65,7 +66,7 @@ public class CatServerInitBean implements InitializingBean {
                             .build();
 
                     mapper.unregisterMapping(mappingInfo);
-                    mapper.registerMapping(mappingInfo, info.bean, superMethod); // 注册映射处理
+                    mapper.registerMapping(mappingInfo, info.bean, bridgeMethod); // 注册映射处理
                 }  
                 
             });
@@ -80,17 +81,17 @@ public class CatServerInitBean implements InitializingBean {
         private Object bean;
         
         private Map<String, StandardMethodMetadata> thisMethods = new HashMap<>();
-        private Map<String, Method> superMethods = new HashMap<>();
+        private Map<String, Method> bridgeMethods = new HashMap<>();
         
         public BeanInfo(Class clazz){
 
             this.bean = CatServerUtil.getBeanOfType(clazz);
-            Class thisClazz = bean.getClass();
             
-            
-            Class superClass = thisClazz;
+            Class thisClazz = bean.getClass(); //cglib动态生成的class
+                        
             List<Class> inters = new ArrayList<>();
-            
+
+            Class superClass = thisClazz;
             while ( superClass != Object.class ) {
                 for ( Class inter : superClass.getInterfaces() ) {
                     inters.add(inter);
@@ -99,22 +100,18 @@ public class CatServerInitBean implements InitializingBean {
                 level = level + 1;
             }
 
-            for( Class inter : thisClazz.getInterfaces() ){
-                if( inter.getSimpleName().contains(bridgeName) ){
-                    Method[] methods = inter.getMethods();
-                    for(Method method : methods){
-                        superMethods.put(method.getName(), method);
-                    }
-                }
-            }
-            
-            for ( Class inter : inters ){
+            for( Class inter : inters ){
+                boolean isBridge = inter.getSimpleName().contains(bridgeName);
                 Method[] methods = inter.getMethods();
-                for(Method method : methods){
-                    StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                    Map<String, Object> attr = metadata.getAnnotationAttributes(annName);
-                    if( attr != null){
-                        thisMethods.put(CatToosUtil.signature(method), metadata);
+                for( Method method : methods ){
+                    if( isBridge && method.getName().contains(bridgeName) ) {
+                        bridgeMethods.put(method.getName(), method);
+                    } else {
+                        StandardMethodMetadata metadata = new StandardMethodMetadata(method);
+                        Map<String, Object> attr = metadata.getAnnotationAttributes(annName);
+                        if( attr != null){
+                            thisMethods.putIfAbsent(CatToosUtil.signature(method), metadata);
+                        }       
                     }
                 }
             }

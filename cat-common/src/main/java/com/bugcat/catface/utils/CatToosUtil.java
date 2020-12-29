@@ -1,6 +1,5 @@
 package com.bugcat.catface.utils;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 

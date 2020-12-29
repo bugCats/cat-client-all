@@ -3,6 +3,7 @@ package com.bugcat.example.catclient.remote;
 import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
 import com.bugcat.example.tools.PageInfo;
@@ -29,7 +30,8 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author: bugcat
  * */
-@CatClient(host = "${demo.remoteApi}", wrapper = ResponseEntityWrapper.class)
+@CatResponesWrapper(ResponseEntityWrapper.class)
+@CatClient(host = "${demo.remoteApi}")
 public interface ApiRemote3 {
 
 

@@ -4,13 +4,13 @@ import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInterceptor;
-import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
@@ -30,8 +30,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     // interface的class
     private Class<T> clazz;
 
-    // interface 上 @CatClient注解信息
-    private CatClientInfo catClientInfo;
     
     
     private Properties prop;
@@ -45,18 +43,24 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     protected T createInstance() throws Exception {
-        return createCatClients(clazz, catClientInfo, prop);
+        CatClientInfo clientInfo = buildClientInfo(clazz, prop);
+        return createCatClients(clazz, clientInfo, prop);
     }
 
+
+    public final static CatClientInfo buildClientInfo(Class inter, Properties prop) {
+        AnnotationAttributes attributes = CatClientInfo.getAttributes(inter);
+        CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
+        return clientInfo;
+    }
+    
     
     /**
      * 解析interface方法，生成动态代理类
      */
     public final static <T> T createCatClients(Class<T> clazz, CatClientInfo catClientInfo, Properties prop) {
-
         
         Map<String, Map<String, Method>> methodMap = new HashMap<>();
-        
         
         /**
          * 是否使用了 fallback
@@ -118,6 +122,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         enhancer.setSuperclass(catClientInfo.getFallback());
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
+        enhancer.setClassLoader(ClassLoader.getSystemClassLoader());
         Object obj = enhancer.create();
         return (T) obj;
     }
@@ -134,12 +139,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         this.clazz = clazz;
     }
     
-    public CatClientInfo getCatClientInfo() {
-        return catClientInfo;
-    }
-    public void setCatClientInfo(CatClientInfo catClientInfo) {
-        this.catClientInfo = catClientInfo;
-    }
 
     public Properties getProp() {
         return prop;

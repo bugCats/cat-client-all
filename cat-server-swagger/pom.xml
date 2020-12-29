@@ -11,9 +11,9 @@
 	</parent>
 	
 	<groupId>com.bugcat</groupId>
-	<artifactId>cat-client-http</artifactId>
+	<artifactId>cat-server-swagger</artifactId>
 	<packaging>jar</packaging>
-	<description>cat-client的http插件，可以配合cat-client使用，可以自行实现com.bugcat.catclient.spi.CatHttp接口</description>
+	<description>cat-server的swagger插件</description>
 
 	<developers>
 		<developer>
@@ -24,35 +24,18 @@
 		</developer>
 	</developers>
 	
-	<properties>
-		<java.version>1.8</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-	</properties>
-
-	
-	
 	<dependencies>
 
 		
 		<dependency>
 			<groupId>com.bugcat</groupId>
-			<artifactId>cat-client</artifactId>
+			<artifactId>cat-server</artifactId>
 		</dependency>
-        
-		
-        <!-- http 相关 -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-			<scope>compile</scope>
-        </dependency>
-		
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-			<scope>compile</scope>
-        </dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+		</dependency>
 		
 	</dependencies>
 
