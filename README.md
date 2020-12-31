@@ -1,3 +1,65 @@
+**Define Controller through feign-interface**
+
+
+<br>
+
+*feign-interface:*
+
+```java
+public interface UserService {
+    
+    @PostMapping("/user/userPage")
+    ResponseEntity<PageInfo<UserInfo>> userPage(@ModelAttribute UserPageVi vi);
+
+    @GetMapping("/user/get/{uid}")
+    UserInfo userInfo(@PathVariable("uid") String uid, @RequestParam("type") String type);
+
+    @PostMapping("/user/userSave")
+    ResponseEntity<Void> userSave(@RequestBody UserSaveVi vi);
+    
+}
+```
+
+<br>
+
+**example：**
+
+```java
+@CatServer(handers = UserInterceptor.class)
+public class UserServiceImpl implements UserService {
+
+    @Override
+    public ResponseEntity<PageInfo<UserInfo>> userPage(UserPageVi vi) {
+        return null;
+    }
+
+    @Override
+    public UserInfo userInfo(String uid, String type) {
+    	System.out.println("uid=" + uid + " type=" + type);
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<Void> userSave(UserSaveVi vi) {
+        return null;
+    }
+}
+```
+
+> UserServiceImpl => Controller 
+
+> curl 'http://ip:port/user/get/666?type=cat', console print 'uid=666 type=cat'
+
+
+
+<br>
+
+<s>散装英语尽力了</s>
+
+<br>
+
+
+
 **使用interface定义Controller**
 
 <br>
