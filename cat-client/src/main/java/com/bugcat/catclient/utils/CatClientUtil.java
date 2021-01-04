@@ -6,6 +6,7 @@ import com.bugcat.catclient.spi.CatDefaultConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.util.Map;
 import java.util.Properties;
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
  *
  * @author bugcat
  * */
+@ComponentScan("com.bugcat.catclient")
 public class CatClientUtil implements ApplicationContextAware {
 
     

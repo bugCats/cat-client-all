@@ -5,6 +5,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.util.Map;
 import java.util.Queue;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author bugcat
  * */
+@ComponentScan("com.bugcat.catserver")
 public class CatServerUtil implements ApplicationContextAware, InitializingBean{
 
 
