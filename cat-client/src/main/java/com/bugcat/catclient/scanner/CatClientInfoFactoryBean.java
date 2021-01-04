@@ -122,7 +122,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         enhancer.setSuperclass(catClientInfo.getFallback());
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
-        enhancer.setClassLoader(ClassLoader.getSystemClassLoader());
         Object obj = enhancer.create();
         return (T) obj;
     }
