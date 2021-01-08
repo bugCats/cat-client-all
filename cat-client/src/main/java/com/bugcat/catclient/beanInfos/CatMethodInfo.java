@@ -73,10 +73,11 @@ public class CatMethodInfo {
         if( notes != null && notes.length > 0 ){
             for ( CatNote note : notes ) {
                 String value = CatToosUtil.defaultIfBlank(note.value(), "");
+                String key = CatToosUtil.isBlank(note.key()) ? value : note.key();
                 if( value.startsWith("${") ){
-                    this.notes.put(note.key(), prop.getProperty(value));
+                    this.notes.put(key, prop.getProperty(value));
                 } else {
-                    this.notes.put(note.key(), value);
+                    this.notes.put(key, value);
                 }
             }   
         }

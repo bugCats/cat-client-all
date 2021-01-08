@@ -19,15 +19,16 @@ import java.util.Properties;
  * */
 public class ApiRemote2Test {
 
-
-
-    static Properties prop = new Properties();
+    private static ApiRemote2 remote;
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
-    }
-    static ApiRemote2 remote = CatClientUtil.proxy(ApiRemote2.class, prop);
 
+        Properties prop = new Properties();
+        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        remote = CatClientUtil.proxy(ApiRemote2.class, prop);
+    }
+    
+    
 
     @Test
     public void demo1() throws Exception {

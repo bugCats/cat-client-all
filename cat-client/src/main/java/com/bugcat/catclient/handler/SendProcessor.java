@@ -30,24 +30,24 @@ public class SendProcessor {
     private CatMethodInfo methodInfo;
     private CatHttp catHttp;
     
-    protected String methodName;  //api方法名
-    protected String path;        //url地址     eg： https://blog.csdn.net/qq_41399429
-    protected JSONObject notes;    //其他自定义参数、标记
-    protected RequestMethod requestType;    //请求方式
-    
-    
+    private String methodName;  //api方法名
+    private RequestMethod requestType;    //请求方式
+    private boolean postJson = false;
+
     protected int connect;
     protected int socket;
-    
+
     protected Map<String, String> headerMap = new HashMap<>();  //  请求头信息
-    
-    protected boolean postJson = false;
+    protected JSONObject notes;    //其他自定义参数、标记
+
+    protected String path;        //url地址     eg： https://blog.csdn.net/qq_41399429
+
     protected Map<String, Object> keyValueParam;  //键值对
 
     protected String reqStr;      //请求参数
     protected String respStr;     //响应参数
 
-
+    
     /**
      * 1、设置公共参数
      * */
@@ -126,7 +126,7 @@ public class SendProcessor {
     /**
      * 3、发送http
      * */
-    public String httpSend() throws Exception{
+    public String httpSend() throws CatHttpException {
         
         Map<String, Object> logInfo = new LinkedHashMap<>();
         logInfo.put("time", System.currentTimeMillis());
@@ -146,12 +146,12 @@ public class SendProcessor {
                     }
                     break;
             }
-        } catch ( Exception e ) {
+        } catch ( CatHttpException ex ) {
 
-            logInfo.put("err", CatToosUtil.defaultIfBlank(e.getMessage(), "null"));
+            logInfo.put("err", CatToosUtil.defaultIfBlank(ex.getMessage(), "null"));
             hasErr = true;
             
-            throw e;
+            throw ex;
             
         } finally {
 
@@ -170,6 +170,19 @@ public class SendProcessor {
         return respStr;
     }
     
+    
+    
+    public void reset(){
+        this.notes = null;
+        this.headerMap.clear();  //  请求头信息
+        this.path = null;
+        this.keyValueParam = null;
+        this.reqStr = null;
+        this.respStr = null;
+    }
+    
+    
+    
     /**
      * 判断是否为 json post
      * */
@@ -177,6 +190,7 @@ public class SendProcessor {
         return postJson;
     }
 
+    
     
     public Map<String, Object> beanToMap(Object bean){
         if( bean == null ){
@@ -186,16 +200,19 @@ public class SendProcessor {
         return transform(value);
     }
     
+    
     /**
      * 将普通map，转换成form形式
      * */
-    protected final Map<String, Object> transform(Object value){
+    private Map<String, Object> transform(Object value){
         Map<String, Object> result = new HashMap<>();
         for(Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()){
             transform(result, entry.getKey(), entry.getValue());
         }
         return result;
     }
+    
+    
     private void transform(Map<String, Object> result, String parName, Object value){
         if( value == null ) {
             return;
@@ -218,16 +235,25 @@ public class SendProcessor {
             ((List)tmp).add(value);
         }
     }
-
     
     
-    protected final boolean printInLog(boolean hasErr) {
+    private boolean printInLog(boolean hasErr) {
         return methodInfo.inLog(hasErr);
     }
-    protected final boolean printOutLog(boolean hasErr) {
+    
+    private boolean printOutLog(boolean hasErr) {
         return methodInfo.outLog(hasErr);
     }
 
+    
+    
+    public RequestMethod getRequestType() {
+        return requestType;
+    }
+
+    public JSONObject getNotes() {
+        return notes;
+    }
 
     public String getReqStr () {
         return reqStr;

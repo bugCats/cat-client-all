@@ -1,7 +1,9 @@
 package com.bugcat.catclient.utils;
 
+import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.spi.CatHttp;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -51,7 +53,7 @@ public class CatHttpUtil implements CatHttp {
         formHeader.put("Content-Type", "application/x-www-form-urlencoded");
     }
 
-	public String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws Exception {
+	public String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
         CloseableHttpClient httpclient = null;
         CloseableHttpResponse response = null;
         try {
@@ -73,14 +75,16 @@ public class CatHttpUtil implements CatHttp {
             } else {
                 throw new Exception("http请求异常！" + response.getStatusLine().toString());
             }
-        } catch (Exception e) {
-            throw e;
+        } catch (Exception ex) {
+			throwException(response, ex);
         } finally {
             closeAll(response, httpclient);
         }
+        return null;
     }
     
-	public String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws Exception{
+    
+	public String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException{
 		CloseableHttpClient httpclient = null;
 		CloseableHttpResponse response = null;
 		try {
@@ -120,14 +124,15 @@ public class CatHttpUtil implements CatHttp {
             } else {
                 throw new Exception("http请求异常！" + response.getStatusLine().toString());
             }
-		} catch (Exception e) {
-		    throw e;
+		} catch (Exception ex) {
+			throwException(response, ex);
 		} finally {
 			closeAll(response, httpclient);
 		}
+		return null;
 	}
 
-	public String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws Exception {
+	public String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws CatHttpException {
 		CloseableHttpClient httpclient = null;
 		CloseableHttpResponse response = null;
 		try {
@@ -149,13 +154,17 @@ public class CatHttpUtil implements CatHttp {
             } else {
                 throw new Exception("http请求异常！" + response.getStatusLine().toString());
             }
-		} catch (Exception e) {
-			throw e;
+		} catch (Exception ex) {
+			throwException(response, ex);
 		} finally {
 			closeAll(response, httpclient);
 		}
+		return null;
 	}
 
+	
+	
+	
 	private static RequestConfig getRequestConfig(int[] ints) {
 		if (ints == null || ints.length != 2) {
 			ints = new int[] { socketTimeout, connectTimeout };
@@ -224,4 +233,13 @@ public class CatHttpUtil implements CatHttp {
 		}
 	}
 
+
+	/**
+	 * 抛出异常
+	 * */
+	private static void throwException(HttpResponse response, Throwable throwable) throws CatHttpException {
+		Integer status = response != null && response.getStatusLine() != null ? response.getStatusLine().getStatusCode() : null;
+		throw new CatHttpException(status, throwable);
+	}
+	
 }

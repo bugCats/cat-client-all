@@ -1,5 +1,7 @@
 package com.bugcat.catclient.spi;
 
+import com.bugcat.catclient.handler.CatHttpException;
+
 import java.util.Map;
 
 
@@ -14,10 +16,10 @@ import java.util.Map;
 public interface CatHttp {
 
 
-    String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws Exception;
+    String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException;
 
-    String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws Exception;
+    String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException;
 
-    String jsonPost(String url, String jsonStr, Map<String, String> hearders, int... ints) throws Exception;
+    String jsonPost(String url, String jsonStr, Map<String, String> hearders, int... ints) throws CatHttpException;
 
 }

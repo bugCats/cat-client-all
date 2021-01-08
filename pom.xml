@@ -124,6 +124,7 @@
 		<module>cat-common</module>
 		<module>cat-client</module>
 		<module>cat-client-http</module>
+		<module>cat-client-cloud</module>
 		<module>cat-server</module>
 		<module>cat-server-swagger</module>
 	</modules>

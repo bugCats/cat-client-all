@@ -1,8 +1,10 @@
 package com.bugcat.example.catclient.token;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.example.tools.ResponseEntity;
 
 public class TokenSendProcessor extends SendProcessor {
@@ -16,9 +18,9 @@ public class TokenSendProcessor extends SendProcessor {
 
 
         //使用note，标记是否需要添加签名
-        String need = (String) notes.getOrDefault("needToken", "true");
+        String need = notes.getString("needToken");
         
-        if("true".equals(need)){
+        if( CatToosUtil.isNotBlank(need)){
             String token = TokenInfo.getToken();
             headerMap.put("token", token);
             

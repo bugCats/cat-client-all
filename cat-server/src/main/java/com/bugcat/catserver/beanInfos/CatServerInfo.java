@@ -17,8 +17,7 @@ public class CatServerInfo {
     
     private Class<? extends CatInterceptor>[] handers;
 
-    
-    public CatServerInfo(AnnotationAttributes attr) {
+    private CatServerInfo(AnnotationAttributes attr) {
         
         this.beanName = attr.getString("value");
 
@@ -29,9 +28,16 @@ public class CatServerInfo {
         this.handers = (Class<? extends CatInterceptor>[]) attr.getClassArray("handers");
     }
 
+
     
+
+    public final static CatServerInfo buildServerInfo(Class inter) {
+        AnnotationAttributes attributes = CatServerInfo.getAttributes(inter);
+        CatServerInfo serverInfo = new CatServerInfo(attributes);
+        return serverInfo;
+    }
     
-    public static AnnotationAttributes getAttributes(Class inter) {
+    private static AnnotationAttributes getAttributes(Class inter) {
         StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
         AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
         Map<String, Object> wrapper = responesWrap(inter);

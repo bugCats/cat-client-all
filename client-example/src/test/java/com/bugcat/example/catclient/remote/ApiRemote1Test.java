@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.spi.CatDefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
@@ -21,13 +20,15 @@ import java.util.Properties;
  * */
 public class ApiRemote1Test {
     
+    private static ApiRemote1 remote;
     
-    static Properties prop = new Properties();
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
+        
+        Properties prop = new Properties();
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        remote = CatClientUtil.proxy(ApiRemote1.class, prop);
     }
-    static ApiRemote1 remote = CatClientUtil.proxy(ApiRemote1.class, prop);
     
     
     @Test

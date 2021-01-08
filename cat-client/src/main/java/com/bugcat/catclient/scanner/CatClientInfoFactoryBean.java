@@ -3,14 +3,15 @@ package com.bugcat.catclient.scanner;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
-import com.bugcat.catclient.beanInfos.CatMethodInterceptor;
+import com.bugcat.catclient.handler.CatMethodInterceptor;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
@@ -26,14 +27,10 @@ import java.util.Properties;
  * */
 public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     
-    
     // interface的class
     private Class<T> clazz;
-
-    
     
     private Properties prop;
-
 
     @Override
     public Class<?> getObjectType() {
@@ -43,16 +40,12 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     protected T createInstance() throws Exception {
-        CatClientInfo clientInfo = buildClientInfo(clazz, prop);
+        CatClientInfo clientInfo = CatClientInfo.buildClientInfo(clazz, prop);
         return createCatClients(clazz, clientInfo, prop);
     }
 
 
-    public final static CatClientInfo buildClientInfo(Class inter, Properties prop) {
-        AnnotationAttributes attributes = CatClientInfo.getAttributes(inter);
-        CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
-        return clientInfo;
-    }
+
     
     
     /**
@@ -80,7 +73,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                 }
             }
         }
-
+        
         Class[] interfaces = new Class[]{clazz};
 
         CallbackHelper helper = new CallbackHelper(catClientInfo.getFallback(), interfaces) {
@@ -104,7 +97,11 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                     
                     CatMethodInfo methodInfo = new CatMethodInfo();
                     methodInfo.parse(method, catClientInfo, prop);
-                    return new CatMethodInterceptor(catClientInfo, methodInfo);//代理方法=aop
+                    
+                    CatClientMethodInterceptor interceptor = new CatClientMethodInterceptor(catClientInfo, methodInfo);//代理方法=aop
+                    CatClientUtil.addInitBean(interceptor);
+                    
+                    return interceptor;//代理方法=aop
 
                 } else {
                     return new MethodInterceptor() {    //默认方法
@@ -126,6 +123,31 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         return (T) obj;
     }
 
+    
+    /**
+     * 动态代理 方法链接器
+     * */
+    private static final class CatClientMethodInterceptor implements MethodInterceptor, InitializingBean {
+
+        private CatClientInfo catClientInfo;
+        private CatMethodInfo methodInfo;
+        private CatMethodInterceptor interceptor;
+
+        public CatClientMethodInterceptor(CatClientInfo catClientInfo, CatMethodInfo methodInfo){
+            this.catClientInfo = catClientInfo;
+            this.methodInfo = methodInfo;
+        }
+
+        @Override
+        public void afterPropertiesSet() throws Exception {
+            interceptor = CatClientUtil.getBean(catClientInfo.getInterceptor());
+        }
+
+        @Override
+        public Object intercept(Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+            return interceptor.intercept(catClientInfo, methodInfo, target, method, args, methodProxy);
+        }
+    }
 
 
     /***************************这些属性通过IOC注入进来，因此get set方法不能少*********************************/

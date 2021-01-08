@@ -1,9 +1,10 @@
 package com.bugcat.catclient.beanInfos;
 
 import com.bugcat.catclient.annotation.CatClient;
+import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
-import com.bugcat.catclient.spi.CatDefaultConfiguration;
+import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.catface.spi.ResponesWrapper;
@@ -32,15 +33,17 @@ public class CatClientInfo {
     
     private CatClientFactory factory;   //处理类
     
+    private Class<? extends CatMethodInterceptor> interceptor;      //动态代理拦截器类
+    
     private Class fallback;                 //http异常处理类
     private boolean fallbackMod = false;    //是否启用了fallback模式
     
     private Class<? extends ResponesWrapper> wrapper;      //响应包裹类
     
     
-    public CatClientInfo(AnnotationAttributes attr, Properties prop){
+    private CatClientInfo(AnnotationAttributes attr, Properties prop){
 
-        CatDefaultConfiguration config = CatClientUtil.getBean(CatDefaultConfiguration.class);
+        DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
         
         this.beanName = attr.getString("value");
         
@@ -49,15 +52,15 @@ public class CatClientInfo {
         
         int connect = attr.getNumber("connect");
         this.connect = connect < 0 ? -1 : connect;
-        this.connect = CatDefaultConfiguration.connect.equals(this.connect) ? config.connect() : this.connect;
+        this.connect = DefaultConfiguration.connect.equals(this.connect) ? config.connect() : this.connect;
 
         int socket = attr.getNumber("socket");
         this.socket = socket < 0 ? -1 : socket;
-        this.socket = CatDefaultConfiguration.socket.equals(this.socket) ? config.socket() : this.socket;
+        this.socket = DefaultConfiguration.socket.equals(this.socket) ? config.socket() : this.socket;
 
         
         RequestLogs logs = attr.getEnum("logs");
-        logs = CatDefaultConfiguration.logs.equals(logs) ? config.logs() : logs;
+        logs = DefaultConfiguration.logs.equals(logs) ? config.logs() : logs;
         this.logs = RequestLogs.Def.equals(logs) ? RequestLogs.All2 : logs;
         
         
@@ -69,33 +72,47 @@ public class CatClientInfo {
             System.err.println("初始化=" + factory.getSimpleName() + "异常！使用默认工厂！");
         }
         this.factory.setDefaultConfiguration(config);
-    
+
+
+        Class<? extends CatMethodInterceptor> interceptor = attr.getClass("interceptor");
+        this.interceptor = DefaultConfiguration.interceptor.equals(interceptor) ? config.interceptor() : interceptor;
         
+
         this.fallback = attr.getClass("fallback");
         this.fallbackMod = fallback != Object.class;
         
         
         //响应包裹类，如果是ResponesWrapper.default，代表没有设置
         Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
-        wrapper = CatDefaultConfiguration.wrapper.equals(wrapper) ? config.wrapper() : wrapper;
-        this.wrapper = wrapper == CatDefaultConfiguration.wrapper ? null : wrapper;
+        wrapper = DefaultConfiguration.wrapper.equals(wrapper) ? config.wrapper() : wrapper;
+        this.wrapper = wrapper == DefaultConfiguration.wrapper ? null : wrapper;
         
     }
-
     
-    public static AnnotationAttributes getAttributes(Class inter) {
+    
+    
+    public final static CatClientInfo buildClientInfo(Class inter, Properties prop) {
+        AnnotationAttributes attributes = getAttributes(inter);
+        CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
+        return clientInfo;
+    }
+    
+    
+    private static AnnotationAttributes getAttributes(Class inter) {
         StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
         AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatClient.class.getName()));
         Map<String, Object> wrapper = responesWrap(inter);
         if( wrapper != null ){
             client.put("wrapper", wrapper.get("value"));
         } else {
-            client.put("wrapper", CatDefaultConfiguration.wrapper);
+            client.put("wrapper", DefaultConfiguration.wrapper);
         }
         return client;
     }
     
-    
+    /**
+     * 递归遍历父类、以及interface，获取@CatResponesWrapper注解
+     * */
     private static Map<String, Object> responesWrap(Class inter){
         StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
         Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
@@ -131,6 +148,9 @@ public class CatClientInfo {
     }
     public CatClientFactory getFactory() {
         return factory;
+    }
+    public Class<? extends CatMethodInterceptor> getInterceptor() {
+        return interceptor;
     }
     public Class getFallback() {
         return fallback;

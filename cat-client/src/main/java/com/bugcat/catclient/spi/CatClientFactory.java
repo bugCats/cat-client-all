@@ -12,7 +12,7 @@ import com.bugcat.catclient.handler.SendProcessor;
 public class CatClientFactory {
     
     
-    private CatDefaultConfiguration config;
+    private DefaultConfiguration config;
     
     
     
@@ -25,6 +25,7 @@ public class CatClientFactory {
     }
     
     
+    
     /**
      * 如果在定义请求方法时，没有传入请求发送类，则在代理类中，自动生成一个请求发送类对象
      * 多例
@@ -32,6 +33,7 @@ public class CatClientFactory {
     public final SendProcessor getSendHandler(){
         return sendHandler();
     }
+    
     
     
     /**
@@ -43,13 +45,13 @@ public class CatClientFactory {
     }
 
     
+    
     /**
      * 设置默认值对象
      * */
-    public final void setDefaultConfiguration(CatDefaultConfiguration config){
+    public final void setDefaultConfiguration(DefaultConfiguration config){
         this.config = config;
     }
-    
     
     
     
@@ -65,6 +67,7 @@ public class CatClientFactory {
         return config.catHttp();
     }
     
+    
     /**
      * 得到http发送类类型
      * 提供给子类重写
@@ -72,6 +75,7 @@ public class CatClientFactory {
     protected SendProcessor sendHandler(){
         return config.sendHandler();
     }
+    
     
     /**
      * 得到结果处理类类型

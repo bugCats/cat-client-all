@@ -28,9 +28,6 @@ package com.bugcat.catclient;
  * 
  * 
  *
- * 断点调试入口
- * com.bugcat.catclient.beanInfos.CatMethodInterceptor#intercept(java.lang.Object, java.lang.reflect.Method, java.lang.Object[], org.springframework.cglib.proxy.MethodProxy)
- *
  * 
  * 更多用法，参见 client-example 项目
  * 

@@ -1,10 +1,16 @@
-package com.bugcat.catclient.beanInfos;
+package com.bugcat.catclient.spi;
 
-import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.beanInfos.CatClientInfo;
+import com.bugcat.catclient.beanInfos.CatMethodInfo;
+import com.bugcat.catclient.beanInfos.CatParameter;
+import com.bugcat.catclient.config.CatHttpRetryConfigurer;
+import com.bugcat.catclient.handler.CatHttpException;
+import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
-import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -14,32 +20,22 @@ import java.lang.reflect.Method;
  * 单例
  * @author bugcat
  * */
-public class CatMethodInterceptor implements MethodInterceptor {
+@Component
+public class DefualtMethodInterceptor implements CatMethodInterceptor {
 
-    private CatMethodInfo methodInfo;
-    private CatClientInfo catClientInfo;
     
-    public CatMethodInterceptor(CatClientInfo catClientInfo, CatMethodInfo methodInfo){
-        this.catClientInfo = catClientInfo;
-        this.methodInfo = methodInfo;
-    }
-    
+    @Autowired
+    private CatHttpRetryConfigurer retryConfigurer;
     
     
     /**
      * 
-     * 名称定义：
      *  
      *  基础数据：基本数据类型、对应的包装类、String、Date、以及Number的其他子类
      * 
      *  有效参数：方法上“排除SendProcessor及其子类、和被@PathVariable标记参数”的其他参数
      *
-     * */
-    
-    
-    
-    
-    /**
+     * 
      * 核心方法
      * 
      * 1、处理入参
@@ -86,7 +82,7 @@ public class CatMethodInterceptor implements MethodInterceptor {
      *      
      * 
      * 
-     * 4、处理http异常
+     * 4、处理http异常，判断是否可以重试
      * 
      *      设置了fallback，调用fallback对应的方法
      *      
@@ -119,7 +115,8 @@ public class CatMethodInterceptor implements MethodInterceptor {
      * 
      * */
     @Override
-    public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+    public Object intercept(CatClientInfo catClientInfo, CatMethodInfo methodInfo, 
+                            Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 
         CatClientFactory factory = catClientInfo.getFactory();   //处理器，如果在@CatClient中指定了处理器，此处应该返回其子类
 
@@ -127,6 +124,7 @@ public class CatMethodInterceptor implements MethodInterceptor {
         Integer handlerIndex = methodInfo.getHandlerIndex();
         if( handlerIndex != null ){ //在方法上，传入了 SendHandler 或其子类
             sendHandler = (SendProcessor) args[handlerIndex];
+            sendHandler.reset();
         } else {
             sendHandler = factory.getSendHandler(); //否则通过工厂创建一个发送类
         }
@@ -144,15 +142,19 @@ public class CatMethodInterceptor implements MethodInterceptor {
         //设置参数，子类可以重写此方法，可以追加签名等信息
         sendHandler.setSendVariable(param);
 
+        
+        
+        
         Object respObj = null;
 
         try {
             
             //执行发送http请求
-            String respStr = sendHandler.httpSend();
+            String respStr = doRequest(sendHandler, resultHandler);
+            
             respObj = resultHandler.resultToBean(respStr, sendHandler, catClientInfo, methodInfo);
         
-        } catch ( Exception e ) {
+        } catch ( Exception ex ) {
             
             if( catClientInfo.isFallbackMod() ){
 
@@ -162,7 +164,7 @@ public class CatMethodInterceptor implements MethodInterceptor {
             } else {
                 
                 //执行默认的http异常处理类
-                Object resp = resultHandler.onHttpError(e, sendHandler, catClientInfo, methodInfo);
+                Object resp = resultHandler.onHttpError(ex, sendHandler, catClientInfo, methodInfo);
                 if( resp != null  ){
                     if( resp instanceof String ){
                         respObj = resultHandler.resultToBean((String) resp, sendHandler, catClientInfo, methodInfo);
@@ -179,5 +181,18 @@ public class CatMethodInterceptor implements MethodInterceptor {
         
     }
 
+  
+    
+    private String doRequest(SendProcessor sendHandler, ResultProcessor resultHandler) throws CatHttpException {
+        try {
+            String respStr = sendHandler.httpSend();
+            return respStr;
+        } catch ( CatHttpException ex ) {
+            if ( resultHandler.canRetry(retryConfigurer, ex, sendHandler) ) {
+                return doRequest(sendHandler, resultHandler);
+            }
+            throw ex;
+        }
+    }
 
 }

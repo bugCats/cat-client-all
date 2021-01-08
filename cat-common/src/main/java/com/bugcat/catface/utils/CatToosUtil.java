@@ -1,5 +1,8 @@
 package com.bugcat.catface.utils;
 
+import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -14,7 +17,22 @@ public class CatToosUtil {
     public static ExpressionParser parser = new SpelExpressionParser();
 
 
+    /**
+     * 获取扫描包路径
+     * */
+    public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs, String annoName){
+        String[] pkgs = annoAttrs.getStringArray(annoName);
+        if( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ){//如果没有设置扫描包路径，取启动类路径
+            StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
+            Class<?> stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
+            String basePackage = stratClass.getPackage().getName();
+            pkgs = new String[] {basePackage};  //获取启动类所在包路径
+        }
+        return pkgs;
+    }
+    
 
+    
     public static boolean isBlank(String str){
         return str == null || "".equals(str.trim());
     }

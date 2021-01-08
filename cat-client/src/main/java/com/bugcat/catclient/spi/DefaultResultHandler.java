@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatMethodReturnInfo;
+import com.bugcat.catclient.config.CatHttpRetryConfigurer;
+import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catface.spi.ResponesWrapper;
@@ -20,12 +22,40 @@ import java.util.Date;
  * */
 public class DefaultResultHandler extends ResultProcessor {
 
+    
+    /**
+     * 发生http异常，是否重连
+     * */
+    @Override
+    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) throws CatHttpException {
+        
+        if( retryConfigurer == null ){
+            return false;
+        }
+        
+        JSONObject notes = sendHandler.getNotes();
+        int retry = (int) notes.getOrDefault(CatHttpRetryConfigurer.RETRY_COUNT, retryConfigurer.getRetries());
+        if ( retryConfigurer.isEnable() && retry > 0) {
+            if( retryConfigurer.containsMethod(sendHandler.getRequestType().name()) ||
+                    retryConfigurer.containsStatus(ex.getStatus()) ||
+                    retryConfigurer.containsException(ex.throwableName()) ||
+                    retryConfigurer.containsNote(notes)
+                    ){
+                notes.put(CatHttpRetryConfigurer.RETRY_COUNT, retry - 1);
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
+    
+    
     /**
      * 如果发生了40x、50x等异常，默认的异常处理方式
      * 如果结果返回String，会继续执行 resultToBean、doFinally 方法；否则直接执行atLast
-     * @return String => 继续执行 resultToBean、doFinally 方法；
-     *         Bean   => 继续执行 doFinally 方法；
+     * @return String => 执行 resultToBean、doFinally 方法；
+     *         Bean   => 直接执行 doFinally 方法；
      *
      * */
     @Override
@@ -84,8 +114,7 @@ public class DefaultResultHandler extends ResultProcessor {
         }
     }
     
-   
- 
+    
 
 
     /**
@@ -112,9 +141,7 @@ public class DefaultResultHandler extends ResultProcessor {
     }
 
     
-
     
-
     
     /**
      * 将 String 强制转换 clazz对应的简单对象
@@ -148,6 +175,8 @@ public class DefaultResultHandler extends ResultProcessor {
         }
     }
 
+    
+    
     /**
      * 得到Number类型的具体子类
      */
@@ -177,4 +206,6 @@ public class DefaultResultHandler extends ResultProcessor {
             return str;
         }
     }
+
+
 }

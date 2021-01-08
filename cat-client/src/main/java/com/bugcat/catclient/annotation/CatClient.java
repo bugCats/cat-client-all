@@ -2,6 +2,8 @@ package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.handler.CatMethodInterceptor;
+import com.bugcat.catclient.spi.DefualtMethodInterceptor;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
@@ -66,5 +68,12 @@ public @interface CatClient {
      * 记录日志方案
      * */
     RequestLogs logs() default RequestLogs.Def;
+ 
+    
+    /**
+     * 动态代理类
+     * 一般情况无需修改
+     * */
+    Class<? extends CatMethodInterceptor> interceptor() default DefualtMethodInterceptor.class;
     
 }

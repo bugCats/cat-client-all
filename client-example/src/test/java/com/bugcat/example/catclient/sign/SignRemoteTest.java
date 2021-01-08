@@ -3,6 +3,7 @@ package com.bugcat.example.catclient.sign;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.example.catclient.remote.ApiRemote3;
 import com.bugcat.example.dto.DemoDTO;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -17,14 +18,15 @@ import java.util.Properties;
  * */
 public class SignRemoteTest {
 
-
-    static Properties prop = new Properties();
+    private static SignRemote remote;
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
+
+        Properties prop = new Properties();
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
         prop.put("demo.apikey", "bugcat");
+        remote = CatClientUtil.proxy(SignRemote.class, prop);
     }
-    static SignRemote remote = CatClientUtil.proxy(SignRemote.class, prop);
     
     
     @Test

@@ -1,7 +1,9 @@
 package com.bugcat.example.catclient.sign;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catface.utils.CatToosUtil;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -17,7 +19,7 @@ public class SignSendProcessor extends SendProcessor {
 
         //使用note，标记是否需要添加签名
         String need = notes.getString("needSign");
-        if("true".equals(need) && keyValueParam != null && keyValueParam.size() > 0 ){
+        if( CatToosUtil.isNotBlank(need) && keyValueParam != null && keyValueParam.size() > 0 ){
 
             TreeMap<String, Object> treeMap = new TreeMap<>(keyValueParam);
             

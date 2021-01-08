@@ -3,6 +3,7 @@ package com.bugcat.example.catclient.token;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.bugcat.catclient.utils.CatClientUtil;
+import com.bugcat.example.catclient.sign.SignRemote;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.tools.ResponseEntity;
 import org.junit.Test;
@@ -12,16 +13,16 @@ import java.util.Properties;
 
 public class TokenRemoteTest {
 
-
-    static Properties prop = new Properties();
+    private static TokenRemote remote;
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
+
+        Properties prop = new Properties();
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
         prop.put("demo.username", "bugcat");
         prop.put("demo.pwd", "[密码]");
+        remote = CatClientUtil.proxy(TokenRemote.class, prop);
     }
-    static TokenRemote remote = CatClientUtil.proxy(TokenRemote.class, prop);
- 
 
     
     

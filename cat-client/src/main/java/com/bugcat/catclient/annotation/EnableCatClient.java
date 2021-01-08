@@ -1,7 +1,7 @@
 package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.scanner.CatClientScannerRegistrar;
-import com.bugcat.catclient.spi.CatDefaultConfiguration;
+import com.bugcat.catclient.spi.DefaultConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -34,6 +34,6 @@ public @interface EnableCatClient {
     /**
      * 各种默认值
      * */
-    Class<? extends CatDefaultConfiguration> defaults() default CatDefaultConfiguration.class;
+    Class<? extends DefaultConfiguration> defaults() default DefaultConfiguration.class;
 
 }

@@ -3,7 +3,7 @@ package com.bugcat.catclient.scanner;
 import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.EnableCatClient;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.spi.CatDefaultConfiguration;
+import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
@@ -22,12 +22,9 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 扫描自定义注解
@@ -40,13 +37,16 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
     private static Logger log = LoggerFactory.getLogger(SendProcessor.class);
     
+    
     //资源加载器
     private ResourceLoader resourceLoader;
     
     //获取properties文件中的参数
     private EnvironmentProperty prop;
-
-    private CatDefaultConfiguration config;
+    
+    //依赖
+    private String[] dependsOn;
+    
     
     @Override
     public void setResourceLoader(ResourceLoader resourceLoader) {
@@ -72,18 +72,28 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         // metadata就是被@EnableCatClient注解的对象，即：启动类
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
 
-        try {
-            /**
-             * 全局默认配置
-             * */
-            Class<? extends CatDefaultConfiguration> configClass = annoAttrs.getClass("defaults");
-            config = configClass.newInstance();
-            CatClientUtil.registerBean(CatDefaultConfiguration.class, config);
-        } catch ( Exception ex ) {
-            log.error("初始化CatDefaultConfiguration异常", ex);
-            return;
-        }
+        
+        List<String> dependsOn = new ArrayList<>();
+        
+        /**
+         * 全局默认配置
+         * */
+        Class<? extends DefaultConfiguration> configClass = annoAttrs.getClass("defaults");
+        BeanDefinitionBuilder config = BeanDefinitionBuilder.genericBeanDefinition(configClass);
+        String configBeanName = CatToosUtil.uncapitalize(configClass.getSimpleName());
+        registry.registerBeanDefinition(configBeanName, config.getBeanDefinition());
+        dependsOn.add(configBeanName);
+        
+        /**
+         * 工具类
+         * */
+        BeanDefinitionBuilder catClientUtil = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
+        String catClientUtilBeanName = CatToosUtil.uncapitalize(CatClientUtil.class.getSimpleName());
+        registry.registerBeanDefinition(catClientUtilBeanName, catClientUtil.getBeanDefinition());
+        dependsOn.add(catClientUtilBeanName);
 
+        
+        this.dependsOn = dependsOn.toArray(new String[dependsOn.size()]);
         
         Class<?>[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
@@ -92,14 +102,8 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             registerCatClient(classes, registry);
             
         } else {
-            
-            String[] pkgs = annoAttrs.getStringArray("value");
-            if( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ){//如果没有设置扫描包路径，取启动类路径
-                StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
-                Class<?> stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
-                String basePackage = stratClass.getPackage().getName();
-                pkgs = new String[] {basePackage};  //获取启动类所在包路径
-            }
+
+            String[] pkgs = CatToosUtil.scanPackages(metadata, annoAttrs, "value");
 
             // 定义扫描对象
             CatClientScanner scanner = new CatClientScanner(registry);
@@ -119,9 +123,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
                 beanDefinition(definition);
             }
         }
-        
-        BeanDefinitionBuilder catClientUtil = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
-        registry.registerBeanDefinition(CatClientUtil.class.getSimpleName(), catClientUtil.getBeanDefinition());
         
     }
     
@@ -169,13 +170,16 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         definition.getPropertyValues().addPropertyValue("prop", prop);    //FactoryBean属性
         definition.getPropertyValues().addPropertyValue("clazz", className);    //FactoryBean属性
         definition.setPrimary(true);
+        definition.setDependsOn(dependsOn);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
         
         return className;
     }
     
 
-    
+    /**
+     * 环境参数
+     * */
     private static class EnvironmentProperty extends Properties {
         
         private Environment environment;
@@ -192,14 +196,21 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         public String getProperty(String key) {
             return environment.resolvePlaceholders(key);
         }
+        
         @Override
         public String getProperty(String key, String defaultValue) {
             String value = environment.resolvePlaceholders(key);
             return defaultValue != null && key.equals(value) ? defaultValue : value; 
         }
+        
     }
 
     
+    
+    
+    /**
+     * 自定义扫描
+     * */
     private static class CatClientScanner extends ClassPathBeanDefinitionScanner {
 
         private Set<BeanDefinitionHolder> holders;

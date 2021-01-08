@@ -1,35 +1,39 @@
 package com.bugcat.catclient.spi;
 
+import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.spi.ResponesWrapper;
+import org.springframework.stereotype.Component;
 
 
 /**
  * 全局默认值
  * @author bugcat
  * */
-public class CatDefaultConfiguration {
+public class DefaultConfiguration {
     
     
     // 初始值
     public static final Class wrapper = ResponesWrapper.Default.class;
+    public static final Class interceptor = DefualtMethodInterceptor.class;
     public static final RequestLogs logs = RequestLogs.Def;
     public static final Integer socket = 0;
     public static final Integer connect = 0;
 
 
     
+    /**
+     * 单例
+     * */
+    protected CatHttp http;
+    protected ResultProcessor resultHandler;
     
     
-    private CatHttp http;
-    private ResultProcessor resultHandler;
     
-    
-    
-    public CatDefaultConfiguration(){}
+    public DefaultConfiguration(){}
     
 
     
@@ -65,7 +69,23 @@ public class CatDefaultConfiguration {
     }
     
     
+    /**
+     * 默认的http流程处理
+     * */
+    public Class<? extends CatMethodInterceptor> interceptor(){
+        return interceptor;
+    }
+   
     
+    /**
+     * 默认请求发送类
+     * 多例
+     * */
+    public SendProcessor sendHandler(){
+        return new DefaultSendHandler();
+    }
+    
+
     /**
      * 默认http类
      * 单例
@@ -75,31 +95,13 @@ public class CatDefaultConfiguration {
             synchronized ( this ){
                 if( http == null ){
                     http = CatClientUtil.getBean(CatHttp.class);
-                    if( http == null ){ // 一般这种情况为使用main方法调用
-                        try {
-                            Class<?> clazz = Class.forName("com.bugcat.catclient.utils.CatHttpUtil");
-                            http = (CatHttp) clazz.newInstance();
-                        } catch ( Exception ex ) {
-                            
-                        }
-                    }
                 }
             }
         }
         return http;
     }
 
-    
-    /**
-     * 默认请求发送类
-     * 多例
-     * */
-    public SendProcessor sendHandler(){
-        return new DefaultSendHandler();
-    }
 
-    
-    
     /**
      * 默认响应处理类
      * 单例

@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.spi.CatDefaultConfiguration;
+import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.dto.DemoEntity;
@@ -20,12 +20,15 @@ import java.util.Properties;
  * 
  * */
 public class ApiRemote4Test {
-    
-    
-    static Properties prop = new Properties();
+
+
+    private static ApiRemote4Ext remote;
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-        CatDefaultConfiguration configuration = new CatDefaultConfiguration(){
+
+        Properties prop = new Properties();
+        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        DefaultConfiguration configuration = new DefaultConfiguration(){
             @Override
             public int socket() {
                 return 30000;
@@ -36,11 +39,11 @@ public class ApiRemote4Test {
                 return 30000;
             }
         };
-//        prop.put(CatDefaultConfiguration.class, configuration);
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        prop.put(DefaultConfiguration.class, configuration);
+        remote = CatClientUtil.proxy(ApiRemote4Ext.class, prop);
     }
-    static ApiRemote4Ext remote = CatClientUtil.proxy(ApiRemote4Ext.class, prop);
     
+
     
     @Test
     public void demo1() throws Exception {
