@@ -1,9 +1,11 @@
 package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.handler.RequestLogs;
+import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
-import com.bugcat.catclient.spi.DefualtMethodInterceptor;
+import com.bugcat.catclient.spi.DefaultConfiguration;
+import com.bugcat.catclient.spi.DefaultMethodInterceptor;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
@@ -11,8 +13,11 @@ import java.lang.annotation.*;
 
 
 /**
- * 定义类
- * 实际默认值，参考CatDefaultConfiguration
+ * 
+ * 定义interface
+ * 
+ * 属性的实际默认值，可以通过{@link DefaultConfiguration}修改 
+ * 
  * @author bugcat
  * */
 @Target({ ElementType.TYPE})
@@ -23,7 +28,7 @@ public @interface CatClient {
     
     
     /**
-     * 别名
+     * bean别名
      * */
     @AliasFor(value = "value", annotation = Component.class)
     String value() default "";
@@ -37,8 +42,8 @@ public @interface CatClient {
     
     
     /**
-     * 创建catClient工厂类，由这个类负责创建请求发送类，和响应处理类
-     * 如果需要扩展，请继承CatClientFactory，再在@CatClient中指向其扩展类
+     * 由这个类负责创建  请求发送类、响应处理类、http工具类
+     * 如果需要扩展，请继承{@link CatClientFactory}，再在@CatClient中指向其扩展类
      * */
     Class<? extends CatClientFactory> factory() default CatClientFactory.class;
     
@@ -46,20 +51,21 @@ public @interface CatClient {
     /**
      * 异常处理类，当接口发生http异常（40x、50x），执行的回调方法。类似FeignClient的fallback
      * 异常处理类，必须实现被@CatClient标记的interface
-     * 默认使用 ResultProcessor.httpError 处理
+     * 默认使用{@link ResultProcessor#onHttpError}处理
+     * @see DefaultMethodInterceptor#intercept
      * */
     Class fallback() default Object.class;
     
     
     
     /**
-     * 读值超时，默认CatDefaultConfiguration#socket；-1 代表不限制
+     * 读值超时；默认值{@link DefaultConfiguration#socket}；-1 代表不限制
      * */
     int socket() default 0;
     
     
     /**
-     * 链接超时，默认CatDefaultConfiguration#connect；-1 代表不限制
+     * 链接超时；默认值{@link DefaultConfiguration#connect}；-1 代表不限制
      * */
     int connect() default 0;
     
@@ -70,10 +76,11 @@ public @interface CatClient {
     RequestLogs logs() default RequestLogs.Def;
  
     
+    
     /**
-     * 动态代理类
+     * 动态生成的http请求代理类
      * 一般情况无需修改
      * */
-    Class<? extends CatMethodInterceptor> interceptor() default DefualtMethodInterceptor.class;
+    Class<? extends CatMethodInterceptor> interceptor() default DefaultMethodInterceptor.class;
     
 }

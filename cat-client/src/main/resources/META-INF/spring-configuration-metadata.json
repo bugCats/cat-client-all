@@ -1,0 +1,46 @@
+{
+  "properties": [
+    {
+      "name": "retry.enable",
+      "type": "java.lang.Boolean",
+      "defaultValue": "false",
+      "description": "是否开启http重连。重连策略：note || (method && ( status || exception ))"
+    },
+    {
+      "name": "retry.retrie",
+      "type": "java.lang.Integer",
+      "defaultValue": "2",
+      "description": "重连次数"
+    },
+    {
+      "name": "retry.status",
+      "type": "java.lang.String",
+      "defaultValue": "500-520",
+      "description": "需要重连的http状态码；多个用逗号隔开；"
+    },
+    {
+      "name": "retry.method",
+      "type": "java.lang.String",
+      "defaultValue": "any",
+      "description": "需要重连的请求方式；多个用逗号隔开；"
+    },
+    {
+      "name": "retry.exception",
+      "type": "java.lang.String",
+      "defaultValue": "java.io.IOException",
+      "description": "需要重连的异常、或其子类；多个用逗号隔开；"
+    },
+    {
+      "name": "retry.note",
+      "type": "java.lang.String",
+      "defaultValue": "",
+      "description": "需要重连的自定义标记；多个用逗号隔开；"
+    },
+    {
+      "name": "retry.note-match",
+      "type": "java.lang.String",
+      "defaultValue": "'{}'",
+      "description": "需要重连的自定义标记键值对，使用单引号包裹的json字符串：'{key:value}'"
+    }
+  ]
+}

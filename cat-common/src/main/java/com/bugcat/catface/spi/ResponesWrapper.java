@@ -1,7 +1,7 @@
 package com.bugcat.catface.spi;
 
 import com.alibaba.fastjson.TypeReference;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Type;
@@ -9,14 +9,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * http响应包裹类处理
- *
- * <pre>
- *     
- *  比喻远程服务端的响应，统一使用了ResponseEntity实体进行封装，具体的业务对象，是ResponseEntity通过泛型确定的一个属性
- *  那么可以使用包裹类处理，去掉ResponseEntity，interface中方法直接返回业务对象
- *  
- * </pre>
+ * http响应包装器类处理
+ * 
+ * 部分框架，服务端的响应，为统一对象，具体的业务数据，是统一对象通过泛型确认的属性。
+ * 比喻{@link ResponseEntity} {@link HttpEntity}，具体响应是通过泛型 T 确认的body属性
+ * 
+ * 可以称这类ResponseEntity、HttpEntity为响应包装器类
+ * 
+ * 1、对于cat-client，此处可以设置去包装器类，从而interface的方法，可以直接返回具体的业务对象 
+ * 
+ * 2、对于cat-server，可以设置自动加包装器类，让所有的响应，都封装成统一的响应包装器类
+ * 
+ * 拆包装、加包装
+ * 
+ * 
  * 
  * @author bugcat
  * */
@@ -24,10 +30,11 @@ public abstract class ResponesWrapper<T> {
 
 
     /**
-     * 响应包裹类map
+     * 响应包装器类map
      * */
     private final static Map<Class, ResponesWrapper> wrapperMap = new HashMap<>();
 
+    
     
     public final static ResponesWrapper getResponesWrapper(Class<? extends ResponesWrapper> clazz){
         if( clazz == null ){
@@ -42,7 +49,7 @@ public abstract class ResponesWrapper<T> {
                         wrapper = clazz.newInstance();
                         wrapperMap.put(clazz, wrapper);
                     } catch ( Exception e ) {
-                        throw new RuntimeException("获取" + clazz.getSimpleName() + "包裹类异常");
+                        throw new RuntimeException("获取" + clazz.getSimpleName() + "包装器类异常");
                     }
                 }
             }
@@ -52,40 +59,46 @@ public abstract class ResponesWrapper<T> {
     
     
     /**
-     * 获取包裹类class
+     * 获取包装器类class
      * */
     public abstract Class<T> getWrapperClass();
 
+    
     /**
-     * 获取json转对象泛型
+     * 获取json转对象泛型，eg：return new TypeReference<ResponseEntity<M>>(type){};
      * @param type 业务类型的Type
      * */
     public abstract <M> TypeReference getWrapperType(Type type);
     
+    
     /**
-     * 校验业务
+     * 校验业务处理结果
      * 直接抛出异常
      * */
     public abstract void checkValid(T obj) throws Exception;
 
+    
     /**
      * 得到业务数据
      * */
     public abstract Object getValue(T obj);
+    
     
     /**
      * 构建
      * */
     public abstract T createEntry(Object value);
 
+    
     /**
      * 构建
      * */
     public abstract T createEntry(Exception ex);
     
     
+    
     /**
-     * 默认
+     * 默认值
      * */
     public final static class Default extends ResponesWrapper<Object>{
         @Override

@@ -3,22 +3,25 @@ package com.bugcat.catclient.utils;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
 import com.bugcat.catclient.scanner.CatClientInfoFactoryBean;
+import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.DefaultConfiguration;
-import com.bugcat.catclient.spi.DefualtMethodInterceptor;
+import com.bugcat.catclient.spi.DefaultMethodInterceptor;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.util.AbstractQueue;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,11 +55,32 @@ public class CatClientUtil implements ApplicationContextAware {
         try {
             return context.getBean(clazz);
         } catch ( Exception e ) {
-            return (T) catClinetMap.get(clazz);
+            try {
+                Map<String, T> beans = context.getBeansOfType(clazz);
+                if( beans.size() == 1 ){
+                    return beans.values().iterator().next();
+                } else {
+                    for(T value : beans.values()){
+                        if( clazz == value.getClass()){
+                            return value;
+                        }
+                        String clazzName = value.getClass().getSimpleName();
+                        int start = clazzName.indexOf("$$");
+                        if( start > -1 ) {
+                            clazzName = clazzName.substring(0, start);
+                        }
+                        if( clazz.getSimpleName().equals(clazzName) ){
+                            return value;
+                        }
+                    }
+                }
+                throw new NoSuchBeanDefinitionException(clazz);
+            } catch ( Exception ex ) {
+                return (T) catClinetMap.get(clazz);
+            }
         }
     }
-    
-    
+
     
     /**
      * 注册bean
@@ -132,7 +156,7 @@ public class CatClientUtil implements ApplicationContextAware {
             if( key.startsWith("${") ){
                 Matcher matcher = keyPat1.matcher(key);
                 if ( matcher.find() ) {
-                    String[] keys = matcher.group(1).split(":");
+                    String[] keys = matcher.group(1).split(":");    //例如：${value:def}，defaultValue优先度高于def
                     if( keys.length > 1 && defaultValue == null ){
                         defaultValue = keys[1];
                     }
@@ -170,30 +194,38 @@ public class CatClientUtil implements ApplicationContextAware {
                 DefaultConfiguration config = new DefaultConfiguration();
                 registerBean(DefaultConfiguration.class, config);
 
-                DefualtMethodInterceptor interceptor = new DefualtMethodInterceptor();
-                registerBean(DefualtMethodInterceptor.class, interceptor);
+                CatClientFactory factory = new CatClientFactory();
+                registerBean(CatClientFactory.class, factory);
                 
-                CatHttpRetryConfigurer retry = new CatHttpRetryConfigurer();
-                retry.init();
-                registerBean(CatHttpRetryConfigurer.class, retry);
+                DefaultMethodInterceptor interceptor = new DefaultMethodInterceptor();
+                registerBean(DefaultMethodInterceptor.class, interceptor);
                 
                 try {
+                    
+                    CatHttpRetryConfigurer retry = new CatHttpRetryConfigurer();
+                    retry.init();
+                    registerBean(CatHttpRetryConfigurer.class, retry);
+                    
                     Class<?> clazz = Class.forName("com.bugcat.catclient.utils.CatHttpUtil");
                     CatHttp http = (CatHttp) clazz.newInstance();
                     registerBean(CatHttp.class, http);
+                    
                 } catch ( Exception ex ) {
-
+                    ex.printStackTrace();
                 }
                 
                 Thread worker = new Thread(() -> {
                     BlockingQueue<InitializingBean> beans = BeanInitHandler.beans;
                     while ( run ) {
                         try {
-                            InitializingBean bean = beans.take();
+                            InitializingBean bean = beans.poll(60, TimeUnit.SECONDS);
+                            if( bean == null ){
+                                run = false;
+                                break;
+                            }
                             bean.afterPropertiesSet();
                         } catch ( Exception ex ) {
                             run = false;
-                            ex.printStackTrace();
                         }
                     }
                 });

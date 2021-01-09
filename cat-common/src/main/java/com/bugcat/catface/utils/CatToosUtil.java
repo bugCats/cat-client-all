@@ -1,11 +1,14 @@
 package com.bugcat.catface.utils;
 
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
@@ -31,6 +34,19 @@ public class CatToosUtil {
         return pkgs;
     }
     
+    
+    public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns){
+        for(Class clazz : anns){
+            Annotation annotation = element.getAnnotation(clazz);
+            if( annotation != null ){
+                Object value = AnnotationUtils.getValue(annotation);
+                if( value != null && CatToosUtil.isNotBlank(value.toString()) ){
+                    return value.toString();
+                }
+            }
+        }
+        return "";
+    }
 
     
     public static boolean isBlank(String str){

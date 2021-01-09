@@ -10,10 +10,10 @@ import java.lang.reflect.Type;
  * */
 public class CatMethodReturnInfo {
     
-    private String name;    //参数的类名称
-    private boolean simple; //是否为简单对象：String、基本数据类型+包装类
-    private Class clazz;    //参数class
-    private Type type;      //参数的Type
+    private final String name;    //参数的类名称
+    private final boolean simple; //是否为简单对象：String、基本数据类型+包装类
+    private final Class clazz;    //参数class
+    private final Type type;      //参数的Type
 
  
     public CatMethodReturnInfo(Class clazz, Type type) {

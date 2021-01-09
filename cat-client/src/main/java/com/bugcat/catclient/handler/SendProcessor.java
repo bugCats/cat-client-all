@@ -31,8 +31,8 @@ public class SendProcessor {
     private CatHttp catHttp;
     
     private String methodName;  //api方法名
-    private RequestMethod requestType;    //请求方式
-    private boolean postJson = false;
+    private RequestMethod requestType;
+    private boolean postString = false;
 
     protected int connect;
     protected int socket;
@@ -54,7 +54,7 @@ public class SendProcessor {
     public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param){
         
         this.methodInfo = methodInfo;
-        this.catHttp = param.getCatHttp();
+        this.catHttp = methodInfo.getFactory().getCatHttp();
         
         this.methodName = methodInfo.getName();
         this.path = methodInfo.getHost() + param.getPath();
@@ -87,7 +87,7 @@ public class SendProcessor {
         this.connect = methodInfo.getConnect();
         this.socket = methodInfo.getSocket();
 
-        this.postJson = methodInfo.isPostJson();
+        this.postString = methodInfo.isPostString();
     }
 
     
@@ -99,8 +99,8 @@ public class SendProcessor {
         
         Object value = param.getValue();
         
-        // 使用post发送json字符串
-        if( isJsonPost() ){
+        // 使用post发送字符串
+        if( isPostString() ){
 
             reqStr = value instanceof String ? CatToosUtil.toStringIfBlank(value, "") : JSONObject.toJSONString(value);
             
@@ -111,13 +111,16 @@ public class SendProcessor {
                 
                 keyValueParam = (Map<String, Object>) value;
 
-            } else {// 传入了一个对象，对象中属性不能有map！！！
+            } else {// 传入了一个对象，转换成键值对
                 
                 keyValueParam = beanToMap(value);
             }
             
             // 请求入参转换成String，方便记录日志
-            reqStr = JSONObject.toJSONString(keyValueParam);
+            if(printInLog(false) || printInLog(true)){
+                reqStr = JSONObject.toJSONString(keyValueParam);
+            }
+            
         }
     }
     
@@ -139,7 +142,7 @@ public class SendProcessor {
                     respStr = catHttp.doGet(path, keyValueParam, headerMap, socket, connect);
                     break;
                 case POST:
-                    if( postJson ){
+                    if( postString ){
                         respStr = catHttp.jsonPost(path, reqStr, headerMap, socket, connect);
                     } else {
                         respStr = catHttp.doPost(path, keyValueParam, headerMap, socket, connect);
@@ -171,7 +174,9 @@ public class SendProcessor {
     }
     
     
-    
+    /**
+     * 多次请求，共用一个SendProcessor情况下，每次执行http之前，需要重置参数
+     * */
     public void reset(){
         this.notes = null;
         this.headerMap.clear();  //  请求头信息
@@ -186,23 +191,29 @@ public class SendProcessor {
     /**
      * 判断是否为 json post
      * */
-    public boolean isJsonPost(){
-        return postJson;
+    public boolean isPostString(){
+        return postString;
     }
 
     
-    
+    /**
+     * 复杂对象，转form表单形式
+     * */
     public Map<String, Object> beanToMap(Object bean){
         if( bean == null ){
             return new HashMap<>();
         }
+        
+        /**
+         * 此处使用fastjson，将对象，转换成JSONObject。
+         * fastjson的注解都可以生效
+         * */
         Object value = JSON.toJSON(bean);
         return transform(value);
     }
-    
-    
+
     /**
-     * 将普通map，转换成form形式
+     * 复杂对象，转form表单形式
      * */
     private Map<String, Object> transform(Object value){
         Map<String, Object> result = new HashMap<>();
@@ -211,8 +222,6 @@ public class SendProcessor {
         }
         return result;
     }
-    
-    
     private void transform(Map<String, Object> result, String parName, Object value){
         if( value == null ) {
             return;
@@ -245,7 +254,6 @@ public class SendProcessor {
         return methodInfo.outLog(hasErr);
     }
 
-    
     
     public RequestMethod getRequestType() {
         return requestType;

@@ -4,6 +4,8 @@ import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
+import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.InitializingBean;
@@ -95,8 +97,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                 Map<String, Object> attr = metadata.getAnnotationAttributes(CatMethod.class.getName());
                 if ( attr != null ) {  //如果方法上有 CatMethod
                     
-                    CatMethodInfo methodInfo = new CatMethodInfo();
-                    methodInfo.parse(method, catClientInfo, prop);
+                    CatMethodInfo methodInfo = new CatMethodInfo(method, catClientInfo, prop);
                     
                     CatClientMethodInterceptor interceptor = new CatClientMethodInterceptor(catClientInfo, methodInfo);//代理方法=aop
                     CatClientUtil.addInitBean(interceptor);
@@ -125,7 +126,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     
     /**
-     * 动态代理 方法链接器
+     * 动态代理 方法拦截器
      * */
     private static final class CatClientMethodInterceptor implements MethodInterceptor, InitializingBean {
 
@@ -141,6 +142,11 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         @Override
         public void afterPropertiesSet() throws Exception {
             interceptor = CatClientUtil.getBean(catClientInfo.getInterceptor());
+            
+            DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
+            CatClientFactory factory = CatClientUtil.getBean(catClientInfo.getFactoryClass());
+            factory.configuration(config);
+            methodInfo.setFactory(factory);
         }
 
         @Override

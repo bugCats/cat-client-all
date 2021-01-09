@@ -26,13 +26,16 @@ public @interface EnableCatClient {
     
     
     /**
-     * 指定interface，优先级高于包路径扫描
+     * 指定interface，优先级高于value
+     * 此项不为默认值情况下，会忽略value
      * */
     Class[] classes() default {};
 
 
     /**
-     * 各种默认值
+     * 默认值、以及配置项
+     * 可以用来统一修改{@link CatClient}{@link CatMethod}的默认值
+     * 作用于全局
      * */
     Class<? extends DefaultConfiguration> defaults() default DefaultConfiguration.class;
 

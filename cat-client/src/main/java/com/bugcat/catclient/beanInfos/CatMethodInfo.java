@@ -5,6 +5,7 @@ import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.annotation.CatNote;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -12,76 +13,126 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 /**
- * @CatMethod 描述信息
- * 单例
+ * 方法描述信息，单例
+ * {@link CatMethod}
+ * 
  * @author bugcat
  * */
 public class CatMethodInfo {
 
-    
-    private String name;    //方法名称
-    private String host;    //域名
-    private String value;   //调用的url，从@CatMethod注解中获取的原始数据，可以包含${}
-    
-    private Map<String, Object> notes;   //其他自定义参数、标记
-    
-    private RequestMethod requestType;  //get|post|delete
-    private boolean postJson = false;   //post发送json字符串
-
-    private ShowLog nomalLog = new ShowLog();    // 日志记录方案
-    private ShowLog onErrLog = new ShowLog();
-    
-    private int connect;
-    private int socket;
-
-    private Map<String, CatMethodParamInfo> params;             //除了SendProcessor、PathVariable以外，其他的参数map => 参数名:参数对象信息
-    private Map<String, CatMethodParamInfo> pathParamIndexMap;  //出现在url上的参数(@PathVariable)map => 参数名:参数对象信息
-    
-    private CatMethodReturnInfo returnInfo;  //方法返回参数对象
-    
-    private Integer handlerIndex = null;    //SendProcessor 在参数列表中出现的索引
-    
+    /**
+     * 方法名称
+     * */
+    private final String name;
     
     /**
-     * 解析方法
-     * @param method    
-     * @param catClientInfo        @CatClient信息
-     * @param prop       加载properties文件
-     * @return
-     */
-    public boolean parse(Method method, CatClientInfo catClientInfo, Properties prop){
+     * 域名  eq：http://xxxx，此时${host}已经被变量填充
+     * */
+    private final String host;
+    
+    /**
+     * 调用的url，从@CatMethod注解中获取的原始数据，可以包含${}
+     * */
+    private final String value;
+    
+    /**
+     * 方法上自定义参数、标记
+     * */
+    private final Map<String, Object> notes;
+    
+    /**
+     * 发送方式 get|post|delete
+     * */
+    private final RequestMethod requestType;
+    /**
+     * 是否为post发送字符串模式
+     * */
+    private final boolean postString;
+
+    /**
+     * 日志记录法案
+     * */
+    private final ShowLog nomalLog = new ShowLog();
+    private final ShowLog onErrLog = new ShowLog();
+    
+    /**
+     * http请求读写超时
+     * */
+    private final int connect;
+    private final int socket;
+
+    /**
+     * 除了SendProcessor、PathVariable以外，其他的参数map => 参数名:参数对象信息
+     * */
+    private final Map<String, CatMethodParamInfo> params;
+    
+    /**
+     * 出现在url上的参数{@link PathVariable}map => 参数名:参数对象信息
+     * */
+    private final Map<String, CatMethodParamInfo> pathParamIndexMap;
+    
+    /**
+     * 方法返回参数对象
+     * */
+    private final CatMethodReturnInfo returnInfo;
+    
+    /**
+     * SendProcessor 在参数列表中出现的索引
+     * 为null，表示需要通过{@link CatClientFactory#getSendHandler()}自动生成
+     * */
+    private final Integer handlerIndex;
+    
+    /**
+     * 工厂类
+     * */
+    private CatClientFactory factory;  
+    
+    
+    
+    
+    
+    
+    public CatMethodInfo(Method method, CatClientInfo catClientInfo, Properties prop){
+        
         
         StandardMethodMetadata metadata = new StandardMethodMetadata(method);
         AnnotationAttributes attr = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(CatMethod.class.getName()));
 
+        // userSave
         this.name = method.getName();
+
+        // http://www.bugcat.com
+        this.host = catClientInfo.getHost();   
         
-        this.host = catClientInfo.getHost();   // http://www.bugcat.com
-        
+        // /user/save
         this.value = "/" + prop.getProperty(attr.getString("value")).replaceAll("^/", "");
 
-        this.requestType = attr.getEnum("method");  // post | get | jsonp
-        
-        
+        // post | get
+        this.requestType = attr.getEnum("method");
+
+        // 其他自定义参数、标记
+        Map<String, Object> noteMap = new HashMap<>();
         CatNote[] notes = attr.getAnnotationArray("notes", CatNote.class);
-        this.notes = new HashMap<>();           //其他自定义参数、标记
         if( notes != null && notes.length > 0 ){
             for ( CatNote note : notes ) {
                 String value = CatToosUtil.defaultIfBlank(note.value(), "");
-                String key = CatToosUtil.isBlank(note.key()) ? value : note.key();
+                String key = CatToosUtil.isBlank(note.key()) ? value : note.key();  //如果 key属性为空，默认赋值value
                 if( value.startsWith("${") ){
-                    this.notes.put(key, prop.getProperty(value));
+                    noteMap.put(key, prop.getProperty(value));   //初步解析 value上的${}变量
                 } else {
-                    this.notes.put(key, value);
+                    noteMap.put(key, value);
                 }
             }   
         }
+        this.notes = Collections.unmodifiableMap(noteMap);
 
+        
         // 控制日志打印
         RequestLogs logs = RequestLogs.Def == attr.getEnum("logs") ? catClientInfo.getLogs() : attr.getEnum("logs");
         nomalLog.in = logs == RequestLogs.All || logs == RequestLogs.In;
@@ -89,16 +140,23 @@ public class CatMethodInfo {
         onErrLog.in = logs == RequestLogs.All2  || logs == RequestLogs.In2;
         onErrLog.out = logs == RequestLogs.All2  || logs == RequestLogs.Out2;
 
-        
+        //链接超时
         int connect = attr.getNumber("connect");
-        this.connect = connect < 0 ? -1 : ( connect == 0 ? catClientInfo.getConnect() : connect );  //链接超时
+        this.connect = connect < 0 ? -1 : ( connect == 0 ? catClientInfo.getConnect() : connect );
 
-        
+        //链接超时
         int socket = attr.getNumber("socket");
-        this.socket = socket < 0 ? -1 : ( socket == 0 ? catClientInfo.getSocket() : socket );  //链接超时
-        
+        this.socket = socket < 0 ? -1 : ( socket == 0 ? catClientInfo.getSocket() : socket );  
 
-        params = new HashMap<>();   //方法上参数列表，除了SendHandler、PathVariable以外，其他的有效参数
+        
+        boolean postString = false;
+        Integer handlerIndex = null;
+        
+        //方法上参数列表，除了SendHandler、PathVariable以外，其他的有效参数
+        Map<String, CatMethodParamInfo> params = new HashMap<>();
+        
+        //出现在url上的参数
+        Map<String, CatMethodParamInfo> pathParamIndexMap = new HashMap<>();
         
         Parameter[] parameters = method.getParameters();
         for ( int i = 0; i < parameters.length; i++ ) {
@@ -106,42 +164,35 @@ public class CatMethodInfo {
             Parameter parameter = parameters[i];
 
             //如果post方式
-            if( requestType == RequestMethod.POST ){
+            if( this.requestType == RequestMethod.POST ){
+                
                 //并且参数上有@RequestBody
                 if ( parameter.isAnnotationPresent(RequestBody.class) ) {
-                    if( postJson ){
+                    if( postString ){
                         throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody注解的入参！" + method.toString());
                     } else {
-                        postJson = true;
+                        postString = true;
                     }
                 }
             }
             
-            String pname = null;
-            RequestParam requestParam = parameter.getAnnotation(RequestParam.class);
-            if( requestParam != null ){
-                pname = CatToosUtil.defaultIfBlank(requestParam.value(), requestParam.name());
-            } else {
-                ModelAttribute model = parameter.getAnnotation(ModelAttribute.class);
-                if( model != null ){
-                    pname = CatToosUtil.defaultIfBlank(model.value(), model.name());
-                } else {
-                    pname = parameter.getName();
-                }
+            //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
+            String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
+            if( CatToosUtil.isBlank(pname) ){
+                pname = parameter.getName();
             }
 
             Class<?> pclazz = parameter.getType();
 
-            PathVariable pathVariable = parameter.getAnnotation(PathVariable.class);    //在url上追加的参数，不绑定到参数列表中
+            //在url上追加的参数，不绑定到参数列表中
+            PathVariable pathVariable = parameter.getAnnotation(PathVariable.class);
             if( pathVariable != null){
-                String pathParam = CatToosUtil.defaultIfBlank(pathVariable.value(), pathVariable.name());
-                if(pathParamIndexMap == null){
-                    pathParamIndexMap = new HashMap<>();
-                }
+                String pathParam = pathVariable.value();
                 pathParamIndexMap.put(pathParam, new CatMethodParamInfo(pname, i, pclazz));
             }
-                
-            if(SendProcessor.class.isAssignableFrom(parameter.getType())){//这个参数是SendProcessor，不绑定到参数列表中
+
+            //这个参数是SendProcessor、或者其子类，不绑定到参数列表中
+            if(SendProcessor.class.isAssignableFrom(parameter.getType())){
                 handlerIndex = Integer.valueOf(i);
             } else {
                 params.put(pname, new CatMethodParamInfo(pname, i, pclazz));
@@ -149,9 +200,13 @@ public class CatMethodInfo {
         }
 
         //方法返回对象
-        returnInfo = new CatMethodReturnInfo(method.getReturnType(), method.getGenericReturnType());
+        this.returnInfo = new CatMethodReturnInfo(method.getReturnType(), method.getGenericReturnType());
 
-        return true;
+        this.postString = postString;
+        this.handlerIndex = handlerIndex;
+        this.params = Collections.unmodifiableMap(params);
+        this.pathParamIndexMap = Collections.unmodifiableMap(pathParamIndexMap);
+        
     }
 
     
@@ -161,7 +216,7 @@ public class CatMethodInfo {
      * 
      * 1、将所有的有效入参转成成map => 方法上参数名称：参数值
      * 
-     * 2、判断，如果map大小：
+     * 2、判断map大小：
      * 
      *          为1：再判断该参数是否为基础数据：
      *                  是，直接返回map
@@ -226,7 +281,6 @@ public class CatMethodInfo {
     public boolean outLog(boolean err){
         return err ? onErrLog.out : nomalLog.out;
     }
-    
     public Integer getHandlerIndex () {
         return handlerIndex;
     }
@@ -251,8 +305,14 @@ public class CatMethodInfo {
     public CatMethodReturnInfo getReturnInfo () {
         return returnInfo;
     }
-    public boolean isPostJson() {
-        return postJson;
+    public boolean isPostString() {
+        return postString;
     }
 
+    public CatClientFactory getFactory() {
+        return factory;
+    }
+    public void setFactory(CatClientFactory factory) {
+        this.factory = factory;
+    }
 }

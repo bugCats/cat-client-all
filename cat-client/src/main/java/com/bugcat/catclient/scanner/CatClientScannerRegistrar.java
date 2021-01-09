@@ -44,7 +44,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     //获取properties文件中的参数
     private EnvironmentProperty prop;
     
-    //依赖
+    //CatClientInfoFactoryBean的依赖项
     private String[] dependsOn;
     
     
@@ -68,8 +68,10 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         log.info("catclient 客户端启用...");
         
         
-        // 这个类AnnotationScannerRegistrar，通过@EnableCatClient注解上使用@Import加载
-        // metadata就是被@EnableCatClient注解的对象，即：启动类
+        /**
+         * 这个类AnnotationScannerRegistrar，通过{@link EnableCatClient}注解上使用@Import加载
+         * metadata就是被@EnableCatClient注解的对象，即：启动类
+         * */
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
 
         
@@ -162,15 +164,18 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * 只能说[org.springframework.beans.PropertyValue]很强大吧
          * */
         
-        // 注册FactoryBean工厂，
-        // 自动注入，会根据interface，从Spring容器中获取到对应的组件，这需要FactoryBean支持
-        // interface -> interface工厂 -> interface实现类 -> 自动注入
-        // FactoryBean 的生命周期，早于Spring容器，无法使用自动注入，因此需要使用ioc反射，将对象赋值给FactoryBean
-        definition.setBeanClass(CatClientInfoFactoryBean.class);    //FactoryBean类型
-        definition.getPropertyValues().addPropertyValue("prop", prop);    //FactoryBean属性
-        definition.getPropertyValues().addPropertyValue("clazz", className);    //FactoryBean属性
+        
+        /**
+         * 注册FactoryBean工厂，
+         * 自动注入，会根据interface，从Spring容器中获取到对应的组件，这需要FactoryBean支持
+         * interface -> interface工厂 -> interface实现类 -> 自动注入
+         * FactoryBean 的生命周期，早于Spring容器，无法使用自动注入，因此需要使用ioc反射，将对象赋值给FactoryBean
+         * */
+        definition.setBeanClass(CatClientInfoFactoryBean.class);
+        definition.getPropertyValues().addPropertyValue("prop", prop);
+        definition.getPropertyValues().addPropertyValue("clazz", className);
         definition.setPrimary(true);
-        definition.setDependsOn(dependsOn);
+        definition.setDependsOn(dependsOn); //设置依赖项
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
         
         return className;
@@ -219,14 +224,16 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             super(registry);
         }
         
+        
         @Override
         protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
             holders = super.doScan(basePackages);   //得到所有标记了@CatClient的interface
             return holders;
         }
 
+        
         /**
-         * @CatClient 标记在interface上，spring扫描时，默认会排除interface，因此需要重写此方法
+         * CatClient标记在interface上，spring扫描时，默认会排除interface，因此需要重写此方法
          * */
         @Override
         protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {

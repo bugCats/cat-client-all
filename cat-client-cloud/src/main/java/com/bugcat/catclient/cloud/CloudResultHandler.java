@@ -9,7 +9,7 @@ public class CloudResultHandler extends DefaultResultHandler {
 
 
     @Override
-    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) throws CatHttpException {
+    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) {
         boolean retry = super.canRetry(retryConfigurer, ex, sendHandler);
         ((CloudSendHandler) sendHandler).chooseOtherHost();
         return retry;

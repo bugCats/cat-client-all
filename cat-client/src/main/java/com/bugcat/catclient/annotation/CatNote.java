@@ -5,19 +5,17 @@ import java.lang.annotation.*;
 
 
 /**
- * 为方法添加特殊标记
+ * 
+ * 1、为方法添加特殊标记
+ * 
+ * 2、为方法的入参起别名
+ * 
  * @author bugcat
  * */
-@Target({ ElementType.METHOD})
+@Target({ ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface CatNote {
-
-    /**
-     * 
-     * 对方法的额外标记
-     * 
-     * */
     
     
     

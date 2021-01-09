@@ -15,82 +15,76 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * @CatClient 注解信息
- * 单例
+ * 注解信息，单例 
+ * {@link CatClient}
+ * 
  * @author bugcat
  * */
 public class CatClientInfo {
     
-    private String beanName;            //主键别名
+    private final String host;
     
-    private String host;                //远程接口域名，支持${xx.xx}
+    private final int connect;
+    private final int socket;
     
-    private int connect;                //http链接超时
+    private final RequestLogs logs;
     
-    private int socket;                 //http链接超时
+    private final Class<? extends CatClientFactory> factoryClass;   //处理类
     
-    private RequestLogs logs;           //日志打印方案
+    private final Class<? extends CatMethodInterceptor> interceptor;
     
-    private CatClientFactory factory;   //处理类
+    private final Class fallback;
+    private final boolean fallbackMod;    //是否启用了fallback模式
+
+
+    /**
+     * 响应包装器类处理
+     * {@link ResponesWrapper}
+     * */
+    private final Class<? extends ResponesWrapper> wrapper;
     
-    private Class<? extends CatMethodInterceptor> interceptor;      //动态代理拦截器类
     
-    private Class fallback;                 //http异常处理类
-    private boolean fallbackMod = false;    //是否启用了fallback模式
     
-    private Class<? extends ResponesWrapper> wrapper;      //响应包裹类
     
     
     private CatClientInfo(AnnotationAttributes attr, Properties prop){
-
-        DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
         
-        this.beanName = attr.getString("value");
+        //全局默认配置
+        DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
         
         String host = attr.getString("host");
         this.host = prop.getProperty(host);
         
         int connect = attr.getNumber("connect");
-        this.connect = connect < 0 ? -1 : connect;
-        this.connect = DefaultConfiguration.connect.equals(this.connect) ? config.connect() : this.connect;
+        connect = connect < 0 ? -1 : connect;
+        this.connect = DefaultConfiguration.connect == connect ? config.connect() : connect;
 
         int socket = attr.getNumber("socket");
-        this.socket = socket < 0 ? -1 : socket;
-        this.socket = DefaultConfiguration.socket.equals(this.socket) ? config.socket() : this.socket;
-
+        socket = socket < 0 ? -1 : socket;
+        this.socket = DefaultConfiguration.socket == socket ? config.socket() : socket;
         
         RequestLogs logs = attr.getEnum("logs");
         logs = DefaultConfiguration.logs.equals(logs) ? config.logs() : logs;
         this.logs = RequestLogs.Def.equals(logs) ? RequestLogs.All2 : logs;
         
-        
-        Class<? extends CatClientFactory> factory = attr.getClass("factory");
-        try {
-            this.factory = factory.newInstance(); 
-        } catch ( Exception e ) {
-            this.factory = new CatClientFactory();
-            System.err.println("初始化=" + factory.getSimpleName() + "异常！使用默认工厂！");
-        }
-        this.factory.setDefaultConfiguration(config);
-
+        Class<? extends CatClientFactory> factoryClass = attr.getClass("factory");
+        this.factoryClass = DefaultConfiguration.factory.equals(factoryClass) ? config.clientFactory() : factoryClass;
 
         Class<? extends CatMethodInterceptor> interceptor = attr.getClass("interceptor");
         this.interceptor = DefaultConfiguration.interceptor.equals(interceptor) ? config.interceptor() : interceptor;
-        
 
         this.fallback = attr.getClass("fallback");
         this.fallbackMod = fallback != Object.class;
         
-        
-        //响应包裹类，如果是ResponesWrapper.default，代表没有设置
+        //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
         wrapper = DefaultConfiguration.wrapper.equals(wrapper) ? config.wrapper() : wrapper;
         this.wrapper = wrapper == DefaultConfiguration.wrapper ? null : wrapper;
         
     }
+
     
-    
-    
+
     public final static CatClientInfo buildClientInfo(Class inter, Properties prop) {
         AnnotationAttributes attributes = getAttributes(inter);
         CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
@@ -129,11 +123,6 @@ public class CatClientInfo {
  
 
 
-    
-    
-    public String getBeanName() {
-        return beanName;
-    }
     public String getHost () {
         return host;
     }
@@ -146,8 +135,8 @@ public class CatClientInfo {
     public RequestLogs getLogs() {
         return logs;
     }
-    public CatClientFactory getFactory() {
-        return factory;
+    public Class<? extends CatClientFactory> getFactoryClass() {
+        return factoryClass;
     }
     public Class<? extends CatMethodInterceptor> getInterceptor() {
         return interceptor;

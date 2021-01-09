@@ -1,28 +1,26 @@
 package com.bugcat.catclient.handler;
 
-
+/**
+ * http异常
+ * */
 public class CatHttpException extends Exception {
 
     private Integer status;
-    private Throwable throwable;
+    private Class<? extends Throwable> clazz;
     
     
     public CatHttpException(Integer status, Throwable throwable) {
         super(throwable);
         this.status = status;
-        this.throwable = throwable;
+        this.clazz = throwable.getClass();
     }
 
     public Integer getStatus() {
         return status;
     }
 
-    public Throwable getThrowable() {
-        return throwable;
+    public Class<? extends Throwable> getIntrospectedClass() {
+        return clazz;
     }
     
-    
-    public String throwableName(){
-        return getThrowable().getClass().getName();
-    }
 }

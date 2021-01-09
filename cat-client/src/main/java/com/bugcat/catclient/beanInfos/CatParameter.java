@@ -1,8 +1,6 @@
 package com.bugcat.catclient.beanInfos;
 
 
-import com.bugcat.catclient.spi.CatHttp;
-
 import java.util.Map;
 
 
@@ -17,7 +15,6 @@ public class CatParameter {
     private String path;    //真实url，PathVariable已经处理
     private Object value;   //经过处理之后的有效参数
     private Map<String, Object> argMap; //原始的参数列表
-    private CatHttp catHttp;    //http请求类
     
     
     
@@ -42,10 +39,4 @@ public class CatParameter {
         this.argMap = argMap;
     }
 
-    public CatHttp getCatHttp() {
-        return catHttp;
-    }
-    public void setCatHttp(CatHttp catHttp) {
-        this.catHttp = catHttp;
-    }
 }

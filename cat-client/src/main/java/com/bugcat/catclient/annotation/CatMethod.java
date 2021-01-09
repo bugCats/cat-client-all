@@ -41,15 +41,30 @@ public @interface CatMethod {
     
     
     /**
-     * 追加的其他自定义参数、标记。
+     * 追加的其他自定义参数、或标记。
+     * 
+     * notes = {
+     *      @CatNote(key="name", value="bugcat"),           直接字符串
+     *      @CatNote(key="host", value="${host})",          从环境变量中获取
+     *      @CatNote(key="clazz", value="#{req.clazz})",    从方法入参上获取对象.属性（此种方法，必须要为入参取别名）
+     *      @CatNote("bugcat")                              省略key，最终key=value
+     * }
+     * 
+     * 方法的入参上，使用：
+     * <pre>
+     *      @ModelAttribute("paramName")    声明post、get键值对对象，参数别名为paramName
+     *      @PathVariable("paramName")      声明pathVariable类型参数，参数名为paramName
+     *      @RequestParam("paramName")      声明键值对参数，参数名为paramName
+     *      @CatNote("paramName")           其他类型参数，使用post发送字符串，结合@RequestBody使用
+     * </pre>
      * */
-    CatNote[] notes() default {};   // notes = {@CatNote(key="name", value="bugcat"), @CatNote(key="host", value="${host}", @CatNote(key="clazz", value="#{req.clazz}", @CatNote("bugcat"))}
+    CatNote[] notes() default {};
     
     
     
     /**
      * 读值超时：
-     * -1 不限；0 同当前类配置；其他值 超时的毫秒数
+     * -1 不限；0 同当前interface配置；其他值，超时的毫秒数
      * */
     int socket() default 0;
     
@@ -57,7 +72,7 @@ public @interface CatMethod {
     
     /**
      * 链接超时：
-     * -1 不限；0 同当前类配置；其他值 超时的毫秒数
+     * -1 不限；0 同当前interface配置；其他值，超时的毫秒数
      * */
     int connect() default 0;
     
@@ -65,7 +80,7 @@ public @interface CatMethod {
     
     /**
      * 日志记录方案
-     * Def：同当前类配置
+     * Def：同当前interface配置
      * */
     RequestLogs logs() default RequestLogs.Def;
     

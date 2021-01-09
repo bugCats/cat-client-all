@@ -10,9 +10,9 @@ import com.bugcat.catface.utils.CatToosUtil;
 public class CatMethodParamInfo {
 
     
-    private String name;    //参数名
-    private int index;      //参数索引值
-    private boolean simple; //是否为String、基本数据类型、包装类
+    private final String name;    //参数名
+    private final int index;      //参数索引值
+    private final boolean simple; //是否为String、基本数据类型、包装类
     
     /**
      * 入参参数

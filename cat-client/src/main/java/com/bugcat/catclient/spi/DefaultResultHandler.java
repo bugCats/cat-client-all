@@ -22,12 +22,9 @@ import java.util.Date;
  * */
 public class DefaultResultHandler extends ResultProcessor {
 
-    
-    /**
-     * 发生http异常，是否重连
-     * */
+
     @Override
-    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) throws CatHttpException {
+    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) {
         
         if( retryConfigurer == null ){
             return false;
@@ -36,12 +33,12 @@ public class DefaultResultHandler extends ResultProcessor {
         JSONObject notes = sendHandler.getNotes();
         int retry = (int) notes.getOrDefault(CatHttpRetryConfigurer.RETRY_COUNT, retryConfigurer.getRetries());
         if ( retryConfigurer.isEnable() && retry > 0) {
-            if( retryConfigurer.containsMethod(sendHandler.getRequestType().name()) ||
-                    retryConfigurer.containsStatus(ex.getStatus()) ||
-                    retryConfigurer.containsException(ex.throwableName()) ||
-                    retryConfigurer.containsNote(notes)
-                    ){
-                notes.put(CatHttpRetryConfigurer.RETRY_COUNT, retry - 1);
+            boolean method = retryConfigurer.containsMethod(sendHandler.getRequestType().name());
+            boolean status = retryConfigurer.containsStatus(ex.getStatus());
+            boolean exception = retryConfigurer.containsException(ex.getIntrospectedClass());
+            boolean note = retryConfigurer.containsNote(notes);
+            if( note || (method && ( status || exception )) ){
+                notes.put(CatHttpRetryConfigurer.RETRY_COUNT, retry - 1); //重连次数减一
                 return true;
             }
         }
@@ -49,15 +46,7 @@ public class DefaultResultHandler extends ResultProcessor {
         return false;
     }
 
-    
-    
-    /**
-     * 如果发生了40x、50x等异常，默认的异常处理方式
-     * 如果结果返回String，会继续执行 resultToBean、doFinally 方法；否则直接执行atLast
-     * @return String => 执行 resultToBean、doFinally 方法；
-     *         Bean   => 直接执行 doFinally 方法；
-     *
-     * */
+
     @Override
     public Object onHttpError(Exception exception, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) throws Exception {
         throw exception;
@@ -65,12 +54,6 @@ public class DefaultResultHandler extends ResultProcessor {
 
     
     
-    /**
-     * 将返回字符串，转换成对象
-     * 
-     * @param methodInfo    方法返回值数据类型信息，用来将http响应，转换成对象 -> new TypeReference<T>(){}
-     * @return
-     */
     @Override
     public Object resultToBean(String resp, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) {
 
@@ -81,8 +64,9 @@ public class DefaultResultHandler extends ResultProcessor {
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 
         ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
-        
-        if ( wrapper == null ) {// 没有设置包裹类
+
+        // 没有设置包装器类
+        if ( wrapper == null ) {
             
             //日期、基本数据类型、及包装类
             if(returnInfo.isSimple()){
@@ -91,7 +75,7 @@ public class DefaultResultHandler extends ResultProcessor {
                 
             } else if ( java.sql.Date.class.isAssignableFrom(returnInfo.getClazz()) ){
                 
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd HH:mi:ss.SSS");
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd HH:mi:ss.SSS");   //非线程安全
                 ParsePosition pos = new ParsePosition(0);
                 Date strtodate = formatter.parse(resp, pos);
                 return strtodate;
@@ -102,10 +86,12 @@ public class DefaultResultHandler extends ResultProcessor {
             }
         } else {
 
-            //设置了包裹类
+            //设置了包装器类
             Class returnClass = methodInfo.getReturnInfo().getClazz();
             Class<ResponseEntity> wrapperClass = wrapper.getWrapperClass();
-            if( returnClass.equals(wrapperClass) ) { //方法的响应，与包裹类型相同
+            
+            //方法的响应，与包装器类型相同
+            if( returnClass.equals(wrapperClass) ) {
                 return JSONObject.parseObject(resp, returnInfo.getType());
             } else {
                 return JSONObject.parseObject(resp, wrapper.getWrapperType(returnInfo.getType()));
@@ -113,17 +99,8 @@ public class DefaultResultHandler extends ResultProcessor {
             
         }
     }
-    
-    
 
 
-    /**
-     * 在toBean之后执行
-     * 获取到对象之后，再做处理
-     * @see ResponesWrapper
-     * 
-     * @param resp 经过toBean方法转换后的参数
-     */
     @Override
     public Object doFinally(Object resp, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) throws Exception {
         ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
@@ -132,10 +109,13 @@ public class DefaultResultHandler extends ResultProcessor {
         }
         Class wrapperClass = wrapper.getWrapperClass();
         Class returnClass = methodInfo.getReturnInfo().getClazz();
-        if( wrapperClass.equals(returnClass) ){    //方法的响应，与包裹类型相同，直接返回对象
+        
+        //方法的响应，与包装器类型相同，直接返回对象
+        if( wrapperClass.equals(returnClass) ){
             return resp;
-        } else {// 方法的响应，与包裹类型不相同，拆包裹
-            wrapper.checkValid(resp);    //校验
+        } else {
+            // 方法的响应，与包装器类型不相同，拆包裹、校验
+            wrapper.checkValid(resp);
             return wrapper.getValue(resp);
         }
     }
