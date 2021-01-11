@@ -4,7 +4,7 @@
       "name": "retry.enable",
       "type": "java.lang.Boolean",
       "defaultValue": "false",
-      "description": "是否开启http重连。重连策略：note || (method && ( status || exception ))"
+      "description": "是否开启http重连。重连策略：note || (tags && method && ( status || exception )))"
     },
     {
       "name": "retry.retrie",
@@ -29,6 +29,12 @@
       "type": "java.lang.String",
       "defaultValue": "java.io.IOException",
       "description": "需要重连的异常、或其子类；多个用逗号隔开；"
+    },
+    {
+      "name": "retry.tags",
+      "type": "java.lang.String",
+      "defaultValue": "any",
+      "description": "需要重连的分组；多个用逗号隔开；"
     },
     {
       "name": "retry.note",

@@ -13,7 +13,7 @@ import java.util.*;
  * 
  * 重连策略
  * 
- * 最终每个配置项的匹配逻辑： note || (method && ( status || exception ))
+ * 最终每个配置项的匹配逻辑： note || (tags && method && ( status || exception ))
  * 
  * */
 @Component
@@ -65,6 +65,12 @@ public class CatHttpRetryConfigurer {
 
 
     /**
+     * 需要重连的分组；多个用逗号隔开；
+     * */
+    @Value("${retry.tags:any}")
+    private String tags;
+    
+    /**
      * 其他特殊标记；多个用逗号隔开；
      * 会匹配方法上@CatNote注解，当retry.note设置的值，在@CatNote value中存在时，触发重连
      * 
@@ -86,6 +92,7 @@ public class CatHttpRetryConfigurer {
     
     private Set<String> statusCode = new HashSet<>();
     private Set<Class> exceptionCode = new HashSet<>();
+    private Set<String> tagsCode = new HashSet<>();
     private Set<String> noteCode = new HashSet<>();
     private Map<String, Object> noteMatchCode = new HashMap<>();
 
@@ -131,6 +138,16 @@ public class CatHttpRetryConfigurer {
                     }
                 }
             }
+
+            if ( CatToosUtil.isNotBlank(tags) ){
+                if( "any".equalsIgnoreCase(tags) ){
+                    tags = "*";
+                } else {
+                    for(String tag : tags.split(",")){
+                        tagsCode.add(tag.trim());
+                    }
+                }
+            }
             
             if ( CatToosUtil.isNotBlank(note) ){
                 for(String nt : note.split(",")){
@@ -158,6 +175,17 @@ public class CatHttpRetryConfigurer {
         }
         for( Class clazz : exceptionCode ){
             if( clazz.isAssignableFrom(ex) ){
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean containsTags(String[] tags){
+        if( "*".equals(this.tags) ) {
+            return true;
+        }
+        for ( String tag : tags ) {
+            if( tagsCode.contains(tag) ){
                 return true;
             }
         }

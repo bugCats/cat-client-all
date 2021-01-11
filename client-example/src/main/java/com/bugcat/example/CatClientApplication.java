@@ -2,6 +2,7 @@ package com.bugcat.example;
 
 import com.bugcat.catclient.annotation.EnableCatClient;
 import com.bugcat.example.catclient.remote.ApiRemote1;
+import com.bugcat.example.catclient.serverApi.Config;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -10,8 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @ComponentScan("com.bugcat")
-//@EnableCatClient(classes = ApiRemote1.class)    //开启被CatClient，并且扫描指定包路径
-@EnableCatClient("com.bugcat")    //开启被CatClient，并且扫描指定包路径
+@EnableCatClient(value = "com.bugcat",  classes = Config.class)    //开启被CatClient，并且扫描指定包路径
 @SpringBootApplication
 public class CatClientApplication {
 

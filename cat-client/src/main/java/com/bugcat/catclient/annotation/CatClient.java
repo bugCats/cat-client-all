@@ -1,9 +1,9 @@
 package com.bugcat.catclient.annotation;
 
+import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.spi.CatClientFactory;
-import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.spi.DefaultMethodInterceptor;
 import org.springframework.core.annotation.AliasFor;
@@ -20,7 +20,7 @@ import java.lang.annotation.*;
  * 
  * @author bugcat
  * */
-@Target({ ElementType.TYPE})
+@Target({ ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component
@@ -57,7 +57,6 @@ public @interface CatClient {
     Class fallback() default Object.class;
     
     
-    
     /**
      * 读值超时；默认值{@link DefaultConfiguration#socket}；-1 代表不限制
      * */
@@ -75,6 +74,11 @@ public @interface CatClient {
      * */
     RequestLogs logs() default RequestLogs.Def;
  
+    
+    /**
+     * 分组标记，配置重连分组
+     * */
+    String[] tags() default "";
     
     
     /**

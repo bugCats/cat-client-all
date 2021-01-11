@@ -15,7 +15,7 @@ import java.util.Properties;
 
 
 /**
- * 去响应包裹类版
+ * 去响应包装器类版
  * */
 public class ApiRemote3Test {
 

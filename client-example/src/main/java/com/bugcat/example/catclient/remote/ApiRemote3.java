@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 
- * 呆毛3，去包裹类版
+ * 呆毛3，去包装器类版
  * 单元测试类 @link com.bugcat.example.catclient.remote.ApiRemote3Test
  * 
  * ApiRemote1、ApiRemote2可以发现，API响应对象统一为 ResponseEntity，使用ResponseEntity将业务响应进行封装，
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * ResponseEntity.getDate() 得到具体的业务数据
  *
  * 如果不想这么做，只想获取业务参数，如果发生业务异常，直接抛出就行
- * 可以采用去包裹类版。
+ * 可以采用去包装器类版。
  *
  * 
  * 此时可以通过配置，实现统一去掉ResponseEntity外层
@@ -44,7 +44,7 @@ public interface ApiRemote3 {
     
     
     /**
-     * 将req序列化成json，再使用post发送json字符串。@RequestBody 不能少
+     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
      *
      * @param req 入参
      * */

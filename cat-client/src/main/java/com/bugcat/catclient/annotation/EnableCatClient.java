@@ -1,5 +1,6 @@
 package com.bugcat.catclient.annotation;
 
+import com.bugcat.catclient.handler.CatClients;
 import com.bugcat.catclient.scanner.CatClientScannerRegistrar;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import org.springframework.context.annotation.Import;
@@ -26,8 +27,10 @@ public @interface EnableCatClient {
     
     
     /**
-     * 指定interface，优先级高于value
-     * 此项不为默认值情况下，会忽略value
+     * 1、classes是普通的interface，指定interface创建
+     * 
+     * 2、classes是{@link CatClients}子类，并且类的方法上含有{@link CatClient}，视为声明客户端
+     * @see CatClients
      * */
     Class[] classes() default {};
 

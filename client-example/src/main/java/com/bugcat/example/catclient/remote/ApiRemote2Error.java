@@ -13,7 +13,7 @@ import com.bugcat.example.tools.ResponseEntity;
 public class ApiRemote2Error implements ApiRemote2 {
 
     /**
-     * 将req序列化成json，再使用post发送json字符串。@RequestBody 不能少
+     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
      *
      * @param req 入参
      */

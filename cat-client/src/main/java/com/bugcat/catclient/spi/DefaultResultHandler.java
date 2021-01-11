@@ -24,7 +24,7 @@ public class DefaultResultHandler extends ResultProcessor {
 
 
     @Override
-    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, SendProcessor sendHandler) {
+    public boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException ex, CatClientInfo clientInfo, SendProcessor sendHandler) {
         
         if( retryConfigurer == null ){
             return false;
@@ -33,11 +33,12 @@ public class DefaultResultHandler extends ResultProcessor {
         JSONObject notes = sendHandler.getNotes();
         int retry = (int) notes.getOrDefault(CatHttpRetryConfigurer.RETRY_COUNT, retryConfigurer.getRetries());
         if ( retryConfigurer.isEnable() && retry > 0) {
+            boolean note = retryConfigurer.containsNote(notes);
+            boolean tags = retryConfigurer.containsTags(clientInfo.getTags());
             boolean method = retryConfigurer.containsMethod(sendHandler.getRequestType().name());
             boolean status = retryConfigurer.containsStatus(ex.getStatus());
             boolean exception = retryConfigurer.containsException(ex.getIntrospectedClass());
-            boolean note = retryConfigurer.containsNote(notes);
-            if( note || (method && ( status || exception )) ){
+            if( note || (tags && method && ( status || exception )) ){
                 notes.put(CatHttpRetryConfigurer.RETRY_COUNT, retry - 1); //重连次数减一
                 return true;
             }

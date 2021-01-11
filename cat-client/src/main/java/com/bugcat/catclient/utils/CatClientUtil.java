@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -102,51 +103,47 @@ public class CatClientUtil implements ApplicationContextAware {
      * 通过静态方法创建
      * */
     public static <T> T proxy(Class<T> inter){
-        return proxy(inter, new Properties());
+        return proxy(inter, envProperty());
     }
     
     /**
      * 通过静态方法创建，包含读取环境变量情况
      * */
     public static <T> T proxy(Class<T> inter, Properties properties){
-        
         if( catClinetMap.containsKey(inter) ){
             return (T) catClinetMap.get(inter);
         }
-        
         Inner.noop();
-        
         DefaultConfiguration config = (DefaultConfiguration) properties.get(DefaultConfiguration.class);
         if( config != null ){
              refreshBean(DefaultConfiguration.class, config);
         }
-        
         ToosProperty prop = new ToosProperty(properties);
-        CatClientInfo clientInfo = CatClientInfo.buildClientInfo(inter, prop);
-        T bean = CatClientInfoFactoryBean.createCatClients(inter, clientInfo, prop);
+        CatClientInfo clientInfo = CatClientInfo.build(inter, prop);
+        T bean = CatClientInfoFactoryBean.createCatClient(inter, clientInfo, prop);
         registerBean(inter, bean);
-        
         return bean;
     }
+
     
     
-    
-    private static class ToosProperty extends Properties {
+    public static Properties envProperty(){
+        return context != null ? new EnvironmentProperty(context.getEnvironment()) : new Properties();
+    }
+
+    /**
+     * 自定义环境参数
+     * */
+    public static class ToosProperty extends Properties {
 
         private Properties prop;
 
         public ToosProperty(Properties prop) {
             this.prop = prop;
         }
-
-        @Override
-        public Object get(Object key) {
-            return prop.get(key);
-        }
-        @Override
-        public Object getOrDefault(Object key, Object defaultValue) {
-            return prop.getOrDefault(key, defaultValue);
-        }
+        /**
+         * key 类似于 ${demo.remoteApi}
+         * */
         @Override
         public String getProperty(String key) {
             return getProperty(key, null);
@@ -167,8 +164,30 @@ public class CatClientUtil implements ApplicationContextAware {
             return value == null ? key : value;
         }
     }
-    
 
+    /**
+     * 环境参数
+     * */
+    public static class EnvironmentProperty extends Properties {
+
+        private Environment environment;
+
+        public EnvironmentProperty(Environment environment) {
+            this.environment = environment;
+        }
+        /**
+         * key 类似于 ${demo.remoteApi}
+         * */
+        @Override
+        public String getProperty(String key) {
+            return environment.resolvePlaceholders(key);
+        }
+        @Override
+        public String getProperty(String key, String defaultValue) {
+            String value = environment.resolvePlaceholders(key);
+            return defaultValue != null && key.equals(value) ? defaultValue : value;
+        }
+    }
     
     
     /**
@@ -265,7 +284,7 @@ public class CatClientUtil implements ApplicationContextAware {
         }
     }
 
-
+    
     
     @Override
     protected void finalize() throws Throwable {

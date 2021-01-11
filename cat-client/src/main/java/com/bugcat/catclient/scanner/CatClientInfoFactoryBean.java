@@ -1,5 +1,6 @@
 package com.bugcat.catclient.scanner;
 
+import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
@@ -32,6 +33,11 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     // interface的class
     private Class<T> clazz;
     
+    
+    // 
+    private CatClient client;
+    
+    
     private Properties prop;
 
     @Override
@@ -42,18 +48,14 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     protected T createInstance() throws Exception {
-        CatClientInfo clientInfo = CatClientInfo.buildClientInfo(clazz, prop);
-        return createCatClients(clazz, clientInfo, prop);
+        CatClientInfo clientInfo = CatClientInfo.build(clazz, client, prop);
+        return createCatClient(clazz, clientInfo, prop);
     }
 
-
-
-    
-    
     /**
      * 解析interface方法，生成动态代理类
      */
-    public final static <T> T createCatClients(Class<T> clazz, CatClientInfo catClientInfo, Properties prop) {
+    public final static <T> T createCatClient(Class<T> clazz, CatClientInfo clientInfo, Properties prop) {
         
         Map<String, Map<String, Method>> methodMap = new HashMap<>();
         
@@ -61,7 +63,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
          * 是否使用了 fallback
          * 如果使用了，必须将interface中的方法，与fallback类中方法关联起来
          * */
-        if( catClientInfo.isFallbackMod() ){
+        if( clientInfo.isFallbackMod() ){
             Method[] methods = clazz.getDeclaredMethods();
             for( Method method : methods ){
                 CatMethod catMethod = method.getAnnotation(CatMethod.class);
@@ -78,12 +80,12 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         
         Class[] interfaces = new Class[]{clazz};
 
-        CallbackHelper helper = new CallbackHelper(catClientInfo.getFallback(), interfaces) {
+        CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
             @Override
             protected Object getCallback (Method method) {
 
-                if( catClientInfo.isFallbackMod() ){
+                if( clientInfo.isFallbackMod() ){
                     Map<String, Method> map = methodMap.get(method.getName());
                     if( map != null ){
                         Method tmp = map.get(CatToosUtil.signature(method));
@@ -97,9 +99,9 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                 Map<String, Object> attr = metadata.getAnnotationAttributes(CatMethod.class.getName());
                 if ( attr != null ) {  //如果方法上有 CatMethod
                     
-                    CatMethodInfo methodInfo = new CatMethodInfo(method, catClientInfo, prop);
+                    CatMethodInfo methodInfo = new CatMethodInfo(method, clientInfo, prop);
                     
-                    CatClientMethodInterceptor interceptor = new CatClientMethodInterceptor(catClientInfo, methodInfo);//代理方法=aop
+                    CatClientMethodInterceptor interceptor = new CatClientMethodInterceptor(clientInfo, methodInfo);//代理方法=aop
                     CatClientUtil.addInitBean(interceptor);
                     
                     return interceptor;//代理方法=aop
@@ -117,7 +119,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(interfaces);
-        enhancer.setSuperclass(catClientInfo.getFallback());
+        enhancer.setSuperclass(clientInfo.getFallback());
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
         Object obj = enhancer.create();
@@ -165,7 +167,13 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     public void setClazz(Class<T> clazz) {
         this.clazz = clazz;
     }
-    
+
+    public CatClient getClient() {
+        return client;
+    }
+    public void setClient(CatClient client) {
+        this.client = client;
+    }
 
     public Properties getProp() {
         return prop;

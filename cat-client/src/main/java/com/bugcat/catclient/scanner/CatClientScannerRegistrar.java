@@ -2,6 +2,7 @@ package com.bugcat.catclient.scanner;
 
 import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.EnableCatClient;
+import com.bugcat.catclient.handler.CatClients;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
@@ -24,6 +25,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -41,8 +43,10 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     //资源加载器
     private ResourceLoader resourceLoader;
     
+    
     //获取properties文件中的参数
-    private EnvironmentProperty prop;
+    private Properties prop;
+    
     
     //CatClientInfoFactoryBean的依赖项
     private String[] dependsOn;
@@ -55,7 +59,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
     @Override
     public void setEnvironment(Environment environment) {
-        this.prop = new EnvironmentProperty(environment);
+        this.prop = new CatClientUtil.EnvironmentProperty(environment);
     }
 
 
@@ -66,7 +70,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 
         log.info("catclient 客户端启用...");
-        
         
         /**
          * 这个类AnnotationScannerRegistrar，通过{@link EnableCatClient}注解上使用@Import加载
@@ -93,39 +96,36 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         String catClientUtilBeanName = CatToosUtil.uncapitalize(CatClientUtil.class.getSimpleName());
         registry.registerBeanDefinition(catClientUtilBeanName, catClientUtil.getBeanDefinition());
         dependsOn.add(catClientUtilBeanName);
-
         
         this.dependsOn = dependsOn.toArray(new String[dependsOn.size()]);
         
+        int count = 0;
+        
         Class<?>[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
-            
-            log.info("catclient 客户端数量：" + classes.length );
-            registerCatClient(classes, registry);
-            
-        } else {
+            count = count + registerCatClient(classes, registry);
+        }
 
-            String[] pkgs = CatToosUtil.scanPackages(metadata, annoAttrs, "value");
+        String[] pkgs = CatToosUtil.scanPackages(metadata, annoAttrs, "value");
 
-            // 定义扫描对象
-            CatClientScanner scanner = new CatClientScanner(registry);
-            scanner.setResourceLoader(resourceLoader);
-            scanner.addIncludeFilter(new AnnotationTypeFilter(CatClient.class));   //筛选带有@CatClient注解的类
+        // 定义扫描对象
+        CatClientScanner scanner = new CatClientScanner(registry);
+        scanner.setResourceLoader(resourceLoader);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(CatClient.class));   //筛选带有@CatClient注解的类
 
-            //执行扫描
-            scanner.scan(pkgs);
-            
-            if( scanner.holders == null ){
-                scanner.holders = new HashSet<>();
-            }
-            
-            log.info("catclient 客户端数量：" + scanner.holders.size() );
-            for ( BeanDefinitionHolder holder : scanner.holders ){
-                GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
-                beanDefinition(definition);
-            }
+        //执行扫描
+        scanner.scan(pkgs);
+        if( scanner.holders == null ){
+            scanner.holders = new HashSet<>();
         }
         
+        count = count + scanner.holders.size();
+        for ( BeanDefinitionHolder holder : scanner.holders ){
+            GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
+            beanDefinition(null, definition);
+        }
+
+        log.info("catclient 客户端数量：" + count );
     }
     
     
@@ -134,23 +134,49 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     /**
      * 通过class直接注册
      * */
-    private void registerCatClient(Class<?>[] classes, BeanDefinitionRegistry registry) {
-        for ( Class<?> clazz : classes ){
-            CatClient client = clazz.getAnnotation(CatClient.class);
-            String beanName = CatToosUtil.defaultIfBlank(client.value(), CatToosUtil.uncapitalize(clazz.getSimpleName()));
-            AbstractBeanDefinition definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
-            if( definition == null ){
-                BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-                definition = builder.getRawBeanDefinition();
-                registry.registerBeanDefinition(beanName, definition);
+    private int registerCatClient(Class<?>[] inters, BeanDefinitionRegistry registry) {
+        int count = 0;
+        for ( Class<?> inter : inters ){
+            if( CatClients.class.isAssignableFrom(inter) ){
+                Method[] methods = inter.getMethods();
+                for ( Method method : methods ) {
+                    CatClient client = method.getAnnotation(CatClient.class);
+                    if( client == null ){
+                        continue;
+                    }
+                    count ++ ;
+                    Class clazz = method.getReturnType();
+                    registerClass(client, clazz, registry);
+                }
+            } else {
+                CatClient client = inter.getAnnotation(CatClient.class);
+                if( client == null ){
+                    log.warn(inter.getName() + "上没有找到@CatClient注解");
+                    continue;
+                }
+                count ++ ;
+                registerClass(client, inter, registry);
             }
-            beanDefinition(definition);
         }
+        return count;
+    }
+    
+    private void registerClass(CatClient client, Class clazz, BeanDefinitionRegistry registry){
+        String beanName = CatToosUtil.defaultIfBlank(client.value(), CatToosUtil.uncapitalize(clazz.getSimpleName()));
+        AbstractBeanDefinition definition = null;
+        try { definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName); } catch ( Exception e ) { }
+        if( definition == null ){
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+            definition = builder.getRawBeanDefinition();
+            registry.registerBeanDefinition(beanName, definition);
+        }
+        beanDefinition(client, definition);
     }
     
     
     
-    private String beanDefinition(AbstractBeanDefinition definition){
+    
+    private String beanDefinition(CatClient client, AbstractBeanDefinition definition){
 
         String className = definition.getBeanClassName();   //扫描到的interface类名
         
@@ -174,43 +200,13 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         definition.setBeanClass(CatClientInfoFactoryBean.class);
         definition.getPropertyValues().addPropertyValue("prop", prop);
         definition.getPropertyValues().addPropertyValue("clazz", className);
+        definition.getPropertyValues().addPropertyValue("client", client);
         definition.setPrimary(true);
         definition.setDependsOn(dependsOn); //设置依赖项
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
         
         return className;
     }
-    
-
-    /**
-     * 环境参数
-     * */
-    private static class EnvironmentProperty extends Properties {
-        
-        private Environment environment;
-
-        public EnvironmentProperty(Environment environment) {
-            super();
-            this.environment = environment;
-        }
-        
-        /**
-         * key 类似于 ${demo.remoteApi}
-         * */
-        @Override
-        public String getProperty(String key) {
-            return environment.resolvePlaceholders(key);
-        }
-        
-        @Override
-        public String getProperty(String key, String defaultValue) {
-            String value = environment.resolvePlaceholders(key);
-            return defaultValue != null && key.equals(value) ? defaultValue : value; 
-        }
-        
-    }
-
-    
     
     
     /**

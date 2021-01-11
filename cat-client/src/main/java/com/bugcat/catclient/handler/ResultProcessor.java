@@ -17,7 +17,7 @@ public abstract class ResultProcessor {
     /**
      * 发生http异常，是否重连
      * */
-    public abstract boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException exception, SendProcessor sendHandler);
+    public abstract boolean canRetry(CatHttpRetryConfigurer retryConfigurer, CatHttpException exception, CatClientInfo clientInfo, SendProcessor sendHandler);
 
     
     

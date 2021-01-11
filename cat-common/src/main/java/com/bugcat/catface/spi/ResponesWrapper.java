@@ -87,13 +87,13 @@ public abstract class ResponesWrapper<T> {
     /**
      * 构建
      * */
-    public abstract T createEntry(Object value);
+    public abstract T createEntryOnSuccess(Object value, Type returnType);
 
     
     /**
      * 构建
      * */
-    public abstract T createEntry(Exception ex);
+    public abstract T createEntryOnException(Throwable ex, Type returnType);
     
     
     
@@ -116,11 +116,11 @@ public abstract class ResponesWrapper<T> {
             return null;
         }
         @Override
-        public Object createEntry(Object value) {
+        public Object createEntryOnSuccess(Object value, Type returnType) {
             return null;
         }
         @Override
-        public Object createEntry(Exception ex) {
+        public Object createEntryOnException(Throwable ex, Type returnType) {
             return null;
         }
     }

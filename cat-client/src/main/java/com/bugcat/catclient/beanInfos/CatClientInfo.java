@@ -9,8 +9,10 @@ import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardAnnotationMetadata;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -20,7 +22,7 @@ import java.util.Properties;
  * 
  * @author bugcat
  * */
-public class CatClientInfo {
+public final class CatClientInfo {
     
     private final String host;
     
@@ -28,6 +30,8 @@ public class CatClientInfo {
     private final int socket;
     
     private final RequestLogs logs;
+    
+    private final String[] tags;
     
     private final Class<? extends CatClientFactory> factoryClass;   //处理类
     
@@ -42,11 +46,9 @@ public class CatClientInfo {
      * {@link ResponesWrapper}
      * */
     private final Class<? extends ResponesWrapper> wrapper;
-    
-    
-    
-    
-    
+
+
+
     private CatClientInfo(AnnotationAttributes attr, Properties prop){
         
         //全局默认配置
@@ -67,6 +69,8 @@ public class CatClientInfo {
         logs = DefaultConfiguration.logs.equals(logs) ? config.logs() : logs;
         this.logs = RequestLogs.Def.equals(logs) ? RequestLogs.All2 : logs;
         
+        this.tags = attr.getStringArray("tags");
+        
         Class<? extends CatClientFactory> factoryClass = attr.getClass("factory");
         this.factoryClass = DefaultConfiguration.factory.equals(factoryClass) ? config.clientFactory() : factoryClass;
 
@@ -84,17 +88,33 @@ public class CatClientInfo {
     }
 
     
-
-    public final static CatClientInfo buildClientInfo(Class inter, Properties prop) {
-        AnnotationAttributes attributes = getAttributes(inter);
+    
+    /**
+     * 构建CatClientInfo对象
+     * */
+    public final static CatClientInfo build(Class inter, Properties prop) {
+        return build(inter, null, prop);
+    }
+    
+    public final static CatClientInfo build(Class inter, CatClient client, Properties prop) {
+        if( client == null ){
+            client = (CatClient) inter.getAnnotation(CatClient.class);
+        }
+        Map<String, Object> attrMap = AnnotationUtils.getAnnotationAttributes(client);
+        AnnotationAttributes attributes = getAttributes(inter, attrMap);
         CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
         return clientInfo;
     }
     
-    
-    private static AnnotationAttributes getAttributes(Class inter) {
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
-        AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatClient.class.getName()));
+
+    private static AnnotationAttributes getAttributes(Class inter, Map<String, Object> attrMap) {
+        /**
+         * 如果通过{@link CatClients}生成，则attrMap为null
+         * */
+        if( attrMap == null ){ 
+            attrMap = new HashMap<>();
+        }
+        AnnotationAttributes client = new AnnotationAttributes(attrMap);
         Map<String, Object> wrapper = responesWrap(inter);
         if( wrapper != null ){
             client.put("wrapper", wrapper.get("value"));
@@ -103,7 +123,7 @@ public class CatClientInfo {
         }
         return client;
     }
-    
+
     /**
      * 递归遍历父类、以及interface，获取@CatResponesWrapper注解
      * */
@@ -120,7 +140,10 @@ public class CatClientInfo {
         }
         return wrapper;
     }
- 
+
+
+
+
 
 
     public String getHost () {
@@ -134,6 +157,9 @@ public class CatClientInfo {
     }
     public RequestLogs getLogs() {
         return logs;
+    }
+    public String[] getTags() {
+        return tags;
     }
     public Class<? extends CatClientFactory> getFactoryClass() {
         return factoryClass;
