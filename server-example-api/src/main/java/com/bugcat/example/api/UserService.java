@@ -3,6 +3,7 @@ package com.bugcat.example.api;
 
 import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
+import com.bugcat.catclient.annotation.CatNote;
 import com.bugcat.catface.annotation.CatResponesWrapper;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
@@ -30,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
  * 
  * 
  * 
- * CatResponesWrapper 统一为响应添加包裹类。如果响应本身就是包裹类，则忽略
+ * CatResponesWrapper 统一为响应添加包装器类。如果响应本身就是包装器类，则忽略
  * 可以仔细查看swagger文档、和接口响应日志
  * 会发现响应外层自动加了一层ResponseEntity
  * 
@@ -41,7 +42,6 @@ import org.springframework.web.bind.annotation.*;
 //@FeignClient
     
 @Api(tags = "用户操作api")
-@CatClient(host = "${core-server.remoteApi}", connect = 3000, socket = 3000)
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface UserService {
     
@@ -49,21 +49,27 @@ public interface UserService {
     
     @ApiOperation("分页查询用户")
     @CatMethod(value = "/user/userPage")
-    ResponseEntity<PageInfo<UserInfo>> userPage(@ModelAttribute UserPageVi vi);
+    ResponseEntity<PageInfo<UserInfo>> userPage(@ModelAttribute("vi") UserPageVi vi);
     
 
     @ApiOperation("根据用户id查询用户信息")
-    @CatMethod(value = "/user/get/{uid}", method = RequestMethod.GET)
+    @CatMethod(value = "/user/get/{uid}", method = RequestMethod.GET, notes = @CatNote("user"))
     UserInfo userInfo(@PathVariable("uid") String uid);
     
 
     @ApiOperation("编辑用户")
-    @CatMethod(value = "/user/save", method = RequestMethod.POST)
-    ResponseEntity<Void> userSave(@RequestBody UserSaveVi vi) throws Exception;
+    @CatMethod(value = "/user/save", method = RequestMethod.POST, notes = @CatNote(key = "name", value = "#{vi.name}"))
+    ResponseEntity<Void> userSave(@RequestBody @CatNote("vi") UserSaveVi vi) throws Exception;
     
 
     @ApiOperation("设置用户状态")
     @CatMethod(value = "/user/status", method = RequestMethod.GET)
     Void status(@RequestParam("uid") String userId, @RequestParam("status") String status);
+
+
+    @ApiOperation("删除用户状态")
+    @CatMethod(value = "/user/delete/{uid}", method = RequestMethod.GET)
+    UserInfo delete(@RequestParam("uid") String userId);
+
 
 }

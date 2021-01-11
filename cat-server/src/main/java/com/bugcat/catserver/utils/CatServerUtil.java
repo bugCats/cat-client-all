@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -21,13 +22,23 @@ import java.util.concurrent.LinkedBlockingQueue;
  * */
 @ComponentScan("com.bugcat.catserver")
 public class CatServerUtil implements ApplicationContextAware {
+
+    public static final String bridgeName = "$bugcat$";
+    public static final String annName = RequestMapping.class.getName();
+    
     
     private static ApplicationContext context;
 
-    
+
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
+    }
+
+
+    public static final String trimName(String name){
+        return name.startsWith(bridgeName) ? name.substring(bridgeName.length()) : name;
     }
     
     
@@ -35,43 +46,28 @@ public class CatServerUtil implements ApplicationContextAware {
         try {
             return context.getBean(clazz);
         } catch ( Exception e ) {
-            return null;
-        }
-    }
-    
-    
-    public static <T> Map<String, T> getBeansOfType (Class<T> clazz){
-        try {
-            return context.getBeansOfType(clazz);
-        } catch ( Exception e ) {
-            return null;
-        }
-    }
-    
-    
-    public static <T> T getBeanOfType (Class<T> clazz){
-        Map<String, T> beans = getBeansOfType(clazz);
-        if( beans.size() == 1 ){
-            return beans.values().iterator().next();
-        } else {
-            for(T value : beans.values()){
-                if( clazz == value.getClass()){
-                    return value;
-                }
-                String clazzName = value.getClass().getSimpleName();
-                int start = clazzName.indexOf("$$");
-                if( start > -1 ) {
-                    clazzName = clazzName.substring(0, start);
-                }
-                if( clazz.getSimpleName().equals(clazzName) ){
-                    return value;
+            Map<String, T> beans = context.getBeansOfType(clazz);
+            if( beans.size() == 1 ){
+                return beans.values().iterator().next();
+            } else {
+                for(T value : beans.values()){
+                    if( clazz == value.getClass()){
+                        return value;
+                    }
+                    String clazzName = value.getClass().getSimpleName();
+                    int start = clazzName.indexOf("$$");
+                    if( start > -1 ) {
+                        clazzName = clazzName.substring(0, start);
+                    }
+                    if( clazz.getSimpleName().equals(clazzName) ){
+                        return value;
+                    }
                 }
             }
+            throw new NoSuchBeanDefinitionException(clazz);
         }
-        throw new NoSuchBeanDefinitionException(clazz);
     }
     
-
     
     /**
      * 给new出的对象，自动注入属性

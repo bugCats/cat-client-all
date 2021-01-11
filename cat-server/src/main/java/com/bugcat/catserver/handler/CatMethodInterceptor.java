@@ -1,12 +1,8 @@
 package com.bugcat.catserver.handler;
 
 import com.bugcat.catface.spi.ResponesWrapper;
-import com.bugcat.catserver.beanInfos.CatServerInfo;
+import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.spi.CatInterceptor;
-import com.bugcat.catserver.utils.CatServerUtil;
-import org.springframework.asm.Type;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cglib.core.Signature;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -16,7 +12,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -24,45 +21,28 @@ import java.util.function.Function;
  * 单例
  * @author bugcat
  * */
-public class CatMethodInterceptor implements MethodInterceptor, InitializingBean {
+public final class CatMethodInterceptor implements MethodInterceptor {
     
     
-    private CatServerInfo catServerInfo;
     private StandardMethodMetadata interMethod;         //interface上对于的方法
-    private Class serverClass;
     private Method realMethod;
 
     private MethodProxy realMethodProxy;
     private List<CatInterceptor> handers;
     
     private Function<Object, Object> successToEntry;
-    private Function<Object, Object> errorToEntry;
-    
-    
-    public CatMethodInterceptor(CatServerInfo catServerInfo){
-        this.catServerInfo = catServerInfo;
-    }
+    private Function<Throwable, Object> errorToEntry;
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    
+    protected void initializing(MethodBuilder builder) {
         
-        Signature signature = new Signature(realMethod.getName(), Type.getReturnType(realMethod), Type.getArgumentTypes(realMethod));
-        realMethodProxy = MethodProxy.find(serverClass, signature);
+        interMethod = builder.getInterMethod();
+        realMethod = builder.getRealMethod();
         
-        if( handers == null ){
-            Class<? extends CatInterceptor>[] handerList = catServerInfo.getHanders();
-            handers = new ArrayList<>(handerList.length);
-            for(Class<? extends CatInterceptor> clazz : handerList) {
-                if( CatInterceptor.class.equals(clazz) ){
-                    handers.add(CatInterceptor.instance);
-                } else {
-                    handers.add(CatServerUtil.getBeanOfType(clazz));
-                }
-            }
-            handers.sort(Comparator.comparingInt(CatInterceptor::getOrder));
-        }
+        realMethodProxy = builder.getMethodProxy();
+        handers = builder.getHanders();
         
-        ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
+        ResponesWrapper wrapper = builder.getWrapper();
         if( wrapper != null ){
             Class wrap = wrapper.getWrapperClass();
             Class<?> returnType = realMethod.getReturnType();
@@ -70,8 +50,8 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
                 successToEntry = value -> value;
                 errorToEntry = value -> value;
             } else {
-                successToEntry = value -> wrapper.createEntry(value);
-                errorToEntry = value -> wrapper.createEntry(value);
+                successToEntry = value -> wrapper.createEntryOnSuccess(value, realMethod.getGenericReturnType());
+                errorToEntry = value -> wrapper.createEntryOnException(value, realMethod.getGenericReturnType());
             }
         } else {
             successToEntry = value -> value;
@@ -79,6 +59,7 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
         }
     }
 
+    
     
     @Override
     public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -115,7 +96,7 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
         } catch ( Throwable ex ) {
             
             exception = ex;
-            point.result = errorToEntry.apply(point.result);
+            point.result = errorToEntry.apply(ex);
             
         } finally {
             
@@ -134,16 +115,4 @@ public class CatMethodInterceptor implements MethodInterceptor, InitializingBean
         return point.result;
     }
 
-
-    public void setServerClass(Class serverClass) {
-        this.serverClass = serverClass;
-    }
-
-    public void setRealMethod(Method realMethod) {
-        this.realMethod = realMethod;
-    }
-
-    public void setInterMethods(StandardMethodMetadata interMethod) {
-        this.interMethod = interMethod;
-    }
 }

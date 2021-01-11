@@ -5,7 +5,6 @@ import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.type.StandardMethodMetadata;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -18,14 +17,12 @@ import java.util.Map;
 import java.util.function.IntFunction;
 
 /**
+ * 将动态生成的interface实现类，注册成Controller
  * @author: bugcat
  * */
 public class CatServerInitBean implements InitializingBean {
 
-    public static final String bridgeName = "$bugcat$";
-    public static final String annName = RequestMapping.class.getName();
 
-    
     private List<Class> catServerList;
     private BeanDefinitionRegistry registry;
     
@@ -42,20 +39,28 @@ public class CatServerInitBean implements InitializingBean {
             BeanInfo info = new BeanInfo(clazz);
             beanInfos.add(info);
         }
+        
+        /**
+         * level越大，说明继承次数越多，
+         * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
+         * */
         beanInfos.sort(BeanInfo::compareTo);
+        
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
 
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( BeanInfo info : beanInfos ){
             
+            // 原始方法
             info.thisMethods.forEach((sign, metadata) -> {
 
                 Method method = metadata.getIntrospectedMethod();
-                Method bridgeMethod = info.bridgeMethods.get(bridgeName + method.getName());
+                
+                // RequestMapping必须指向桥接方法
+                Method bridgeMethod = info.bridgeMethods.get(CatToosUtil.signature(CatServerUtil.bridgeName + method.getName(), method));
                 if( bridgeMethod != null ){
-
-                    Map<String, Object> attr = metadata.getAnnotationAttributes(annName);
+                    Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
                     RequestMappingInfo mappingInfo = RequestMappingInfo
                             .paths(getValue(attr, "value", stringToArray))
                             .methods(getValue(attr, "method", requestMethodToArray))
@@ -68,7 +73,6 @@ public class CatServerInitBean implements InitializingBean {
                     mapper.unregisterMapping(mappingInfo);
                     mapper.registerMapping(mappingInfo, info.bean, bridgeMethod); // 注册映射处理
                 }  
-                
             });
         }
     }
@@ -85,9 +89,9 @@ public class CatServerInitBean implements InitializingBean {
         
         public BeanInfo(Class clazz){
 
-            this.bean = CatServerUtil.getBeanOfType(clazz);
+            this.bean = CatServerUtil.getBean(clazz);
             
-            Class thisClazz = bean.getClass(); //cglib动态生成的class
+            Class thisClazz = bean.getClass(); //cglib动态生成的class => interface的实现类
                         
             List<Class> inters = new ArrayList<>();
 
@@ -101,16 +105,18 @@ public class CatServerInitBean implements InitializingBean {
             }
 
             for( Class inter : inters ){
-                boolean isBridge = inter.getSimpleName().contains(bridgeName);
+                boolean isBridge = inter.getSimpleName().contains(CatServerUtil.bridgeName);
                 Method[] methods = inter.getMethods();
                 for( Method method : methods ){
-                    if( isBridge && method.getName().contains(bridgeName) ) {
-                        bridgeMethods.put(method.getName(), method);
+                    // 判断是否为桥连方法，RequestMapping应该指向桥连方法
+                    if( isBridge && method.getName().contains(CatServerUtil.bridgeName) ) {
+                        bridgeMethods.put(CatToosUtil.signature(method.getName(), method), method);
                     } else {
+                        //原始方法
                         StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                        Map<String, Object> attr = metadata.getAnnotationAttributes(annName);
+                        Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
                         if( attr != null){
-                            thisMethods.putIfAbsent(CatToosUtil.signature(method), metadata);
+                            thisMethods.put(CatToosUtil.signature(method), metadata);
                         }       
                     }
                 }

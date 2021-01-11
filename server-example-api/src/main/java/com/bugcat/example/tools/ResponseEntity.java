@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 
 /**
- * 响应对象包裹类
+ * 响应对象包装器类
  * @author bugcat
  * */
 @ApiModel

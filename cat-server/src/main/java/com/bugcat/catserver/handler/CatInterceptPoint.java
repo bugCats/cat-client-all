@@ -9,15 +9,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * 拦截器 方法之间的入参
+ * 对于每次请求，为单例
+ * */
 public final class CatInterceptPoint {
     
     private final HttpServletRequest request;
     private final HttpServletResponse response;
+    
     private final Object target;    //访问的对象
     private final Method method;    //访问的方法
+    private final Object[] args;    //方法入参
+    
     private final StandardMethodMetadata interMethod;    //对应的interface的方法
-    private final Object[] args;
-
     
     // 注解属性
     private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>();

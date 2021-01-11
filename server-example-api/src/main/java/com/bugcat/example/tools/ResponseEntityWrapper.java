@@ -1,12 +1,13 @@
 package com.bugcat.example.tools;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.bugcat.catface.spi.ResponesWrapper;
 
 import java.lang.reflect.Type;
 
 /**
- * http响应包裹类处理
+ * http响应包装器类处理
  * 
  * @see ResponesWrapper
  * @author bugcat
@@ -49,12 +50,14 @@ public class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity> {
 
 
     @Override
-    public ResponseEntity createEntry(Object value) {
+    public ResponseEntity createEntryOnSuccess(Object value, Type returnType) {
         return ResponseEntity.ok(value);
     }
 
     @Override
-    public ResponseEntity createEntry(Exception ex) {
+    public ResponseEntity createEntryOnException(Throwable ex, Type returnType) {
+        String err = "{\"err\":\"-1\"}";
+        Object data = JSONObject.parseObject(err, returnType);
         return ResponseEntity.fail("-1", ex.getMessage());
     }
 }

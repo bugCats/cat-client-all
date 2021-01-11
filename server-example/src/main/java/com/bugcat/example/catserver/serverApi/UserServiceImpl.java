@@ -75,4 +75,13 @@ public class UserServiceImpl implements UserService {
         System.out.println("userSave >>> userId=" + userId + ", status=" + status);
         return null;
     }
+
+
+    @Override
+    public UserInfo delete(String userId) {
+        if( 1 == 1 ){
+            throw new RuntimeException("异常");
+        }
+        return null;
+    }
 }

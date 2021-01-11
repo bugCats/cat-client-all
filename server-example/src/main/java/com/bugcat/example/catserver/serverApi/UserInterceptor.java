@@ -26,5 +26,6 @@ public class UserInterceptor extends CatInterceptor{
         System.out.println("UserInterceptor.after" + JSONObject.toJSONString(point.getResult()));
     }
 
+    
 
 }

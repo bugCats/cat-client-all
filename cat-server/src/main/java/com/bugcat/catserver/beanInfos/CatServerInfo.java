@@ -11,17 +11,13 @@ import java.util.Map;
 
 public class CatServerInfo {
 
-    private String beanName;
-
-    private Class<? extends ResponesWrapper> wrapper;      //响应包裹类
+    private Class<? extends ResponesWrapper> wrapper;      //响应包装器类
     
     private Class<? extends CatInterceptor>[] handers;
 
     private CatServerInfo(AnnotationAttributes attr) {
         
-        this.beanName = attr.getString("value");
-
-        //响应包裹类，如果是ResponesWrapper.default，代表没有设置
+        //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
         this.wrapper = wrapper == null || ResponesWrapper.Default.class.equals(wrapper) ? null : wrapper;
         
@@ -63,11 +59,7 @@ public class CatServerInfo {
         return wrapper;
     }
     
-    
 
-    public String getBeanName() {
-        return beanName;
-    }
     public Class<? extends ResponesWrapper> getWrapper() {
         return wrapper;
     }

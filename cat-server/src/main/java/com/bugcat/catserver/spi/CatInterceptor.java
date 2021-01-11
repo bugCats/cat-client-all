@@ -30,7 +30,7 @@ public class CatInterceptor {
 
     
     /**
-     * 在方法之后执行
+     * 在切面方法之后执行
      * */
     public void after(CatInterceptPoint point){
         
