@@ -1,5 +1,6 @@
 package com.bugcat.catclient.spi;
 
+import com.bugcat.catclient.handler.CatFastJsonResolver;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.utils.CatClientUtil;
@@ -77,6 +78,14 @@ public class DefaultConfiguration {
     public CatHttp catHttp(){
         return CatClientUtil.getBean(CatHttp.class);
     }
-    
+
+
+    /**
+     * 默认序列化对象
+     * */
+    public CatJsonResolver jsonResolver(){
+        return new CatFastJsonResolver();
+    }
+
 
 }

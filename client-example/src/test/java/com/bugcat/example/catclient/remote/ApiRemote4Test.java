@@ -3,7 +3,9 @@ package com.bugcat.example.catclient.remote;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
+import com.bugcat.catclient.config.CatJacksonResolver;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catclient.spi.CatJsonResolver;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
@@ -37,6 +39,11 @@ public class ApiRemote4Test {
             @Override
             public int connect() {
                 return 30000;
+            }
+
+            @Override
+            public CatJsonResolver jsonResolver() {
+                return new CatJacksonResolver();
             }
         };
         prop.put(DefaultConfiguration.class, configuration);

@@ -1,15 +1,15 @@
 package com.bugcat.catclient.config;
 
+import com.bugcat.catclient.spi.CatJsonResolver;
 import com.bugcat.catface.spi.ResponesWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Type;
 
-@Component
-public class CatJacksonResolver implements CatJsonObjectResolverConfigurer.JsonObjectResolver {
+
+public class CatJacksonResolver implements CatJsonResolver{
 
     
     private final ObjectMapper mapper = new ObjectMapper();

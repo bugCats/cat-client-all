@@ -22,6 +22,7 @@ public class CatClientFactory {
     
     private ResultProcessor resultHandler;
     private CatHttp http;
+    private CatJsonResolver jsonResolver;
     
 
     
@@ -62,9 +63,21 @@ public class CatClientFactory {
     }
 
 
-    
-    
-    
+
+    /**
+     * 获取对象序列化处理类
+     * 单例
+     * */
+    public final CatJsonResolver getJsonResolver(){
+        synchronizSetValueIfNull(this.jsonResolver, () -> jsonResolver(), CatClientFactory::setJsonResolver);
+        return jsonResolver;
+    }
+
+
+
+
+
+
     /**
      * 提供给子类重写
      * 通过子类重写方式，返回指定的http类
@@ -95,6 +108,14 @@ public class CatClientFactory {
     }
 
     
+    /**
+     * 默认的对象序列化工具，为fastjson
+     * 提供给子类重写
+     * */
+    protected CatJsonResolver jsonResolver(){
+        return getConfiguration().jsonResolver();
+    }
+    
     
     
     private final <T> void synchronizSetValueIfNull(T value, Supplier<T> supplier, BiConsumer<CatClientFactory, T> consumer){
@@ -117,9 +138,10 @@ public class CatClientFactory {
     private void setHttp(CatHttp http) {
         this.http = http;
     }
+    private void setJsonResolver(CatJsonResolver jsonResolver) {
+        this.jsonResolver = jsonResolver;
+    }
 
-
-    
     public DefaultConfiguration getConfiguration(){
         return configuration;
     }

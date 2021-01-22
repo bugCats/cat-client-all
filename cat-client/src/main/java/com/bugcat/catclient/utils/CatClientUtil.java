@@ -2,7 +2,6 @@ package com.bugcat.catclient.utils;
 
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
-import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
 import com.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
@@ -224,10 +223,6 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
                 
                 DefaultConfiguration config = new DefaultConfiguration();
                 registerBean(DefaultConfiguration.class, config);
-
-                CatJsonObjectResolverConfigurer resolver = new CatJsonObjectResolverConfigurer();
-                resolver.afterPropertiesSet();
-                registerBean(CatJsonObjectResolverConfigurer.class, resolver);
                 
                 CatClientFactory factory = new CatClientFactory();
                 registerBean(CatClientFactory.class, factory);

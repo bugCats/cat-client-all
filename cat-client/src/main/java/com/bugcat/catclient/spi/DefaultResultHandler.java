@@ -5,11 +5,9 @@ import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
-import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
 import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.http.ResponseEntity;
 
@@ -17,8 +15,6 @@ import java.lang.reflect.Constructor;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer.JsonObjectResolver;
 
 /**
  * 默认的结果处理类
@@ -66,8 +62,7 @@ public class DefaultResultHandler extends ResultProcessor {
             return null;
         }
 
-        CatJsonObjectResolverConfigurer resolverConfigurer = CatClientUtil.getBean(CatJsonObjectResolverConfigurer.class);
-        JsonObjectResolver resolver = resolverConfigurer.getResolver();
+        CatJsonResolver resolver = methodInfo.getFactory().getJsonResolver();
         
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 

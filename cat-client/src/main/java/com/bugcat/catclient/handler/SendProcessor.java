@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatParameter;
-import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
-import com.bugcat.catclient.spi.CatHttp;
+import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.spi.CatJsonResolver;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
@@ -14,9 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
-import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer.JsonObjectResolver;
 
 /**
  * http 请求发送类
@@ -29,7 +32,7 @@ public class SendProcessor {
     protected static Logger logger = LoggerFactory.getLogger(SendProcessor.class);
     
     private CatMethodInfo methodInfo;
-    private CatHttp catHttp;
+    private CatClientFactory factory;
     
     private String methodName;  //api方法名
     private RequestMethod requestType;
@@ -55,7 +58,7 @@ public class SendProcessor {
     public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param){
         
         this.methodInfo = methodInfo;
-        this.catHttp = methodInfo.getFactory().getCatHttp();
+        this.factory = methodInfo.getFactory();
         
         this.methodName = methodInfo.getName();
         this.path = methodInfo.getHost() + param.getPath();
@@ -100,8 +103,7 @@ public class SendProcessor {
         
         Object value = param.getValue();
 
-        CatJsonObjectResolverConfigurer resolverConfigurer = CatClientUtil.getBean(CatJsonObjectResolverConfigurer.class);
-        JsonObjectResolver resolver = resolverConfigurer.getResolver();
+        CatJsonResolver resolver = factory.getJsonResolver();
 
         // 使用post发送字符串
         if( isPostString() ){
@@ -143,13 +145,13 @@ public class SendProcessor {
         try {
             switch ( requestType ) {
                 case GET:
-                    respStr = catHttp.doGet(path, keyValueParam, headerMap, socket, connect);
+                    respStr = factory.getCatHttp().doGet(path, keyValueParam, headerMap, socket, connect);
                     break;
                 case POST:
                     if( postString ){
-                        respStr = catHttp.jsonPost(path, reqStr, headerMap, socket, connect);
+                        respStr = factory.getCatHttp().jsonPost(path, reqStr, headerMap, socket, connect);
                     } else {
-                        respStr = catHttp.doPost(path, keyValueParam, headerMap, socket, connect);
+                        respStr = factory.getCatHttp().doPost(path, keyValueParam, headerMap, socket, connect);
                     }
                     break;
             }
