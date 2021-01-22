@@ -1,6 +1,7 @@
 package com.bugcat.catclient.config;
 
 import com.bugcat.catclient.spi.CatJsonResolver;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.spi.ResponesWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
@@ -12,8 +13,24 @@ import java.lang.reflect.Type;
 public class CatJacksonResolver implements CatJsonResolver{
 
     
-    private final ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
 
+
+    public CatJacksonResolver(){
+        this(null);
+    }
+
+    public CatJacksonResolver(ObjectMapper objectMapper){
+        this.mapper = objectMapper;
+        if( mapper == null ){
+            mapper = CatClientUtil.getBean(ObjectMapper.class);
+        }
+        if( mapper == null ){
+            mapper = new ObjectMapper();
+        }        
+    }
+    
+    
     
     @Override
     public <T> T toJavaBean(String jsonString, Type type) {
