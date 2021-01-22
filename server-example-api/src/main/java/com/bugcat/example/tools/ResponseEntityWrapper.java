@@ -24,8 +24,8 @@ public class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity> {
      * 获取json转对象泛型
      */
     @Override
-    public <M> TypeReference getWrapperType(Type type){
-        return new TypeReference<ResponseEntity<M>>(type){};
+    public <T> Object getWrapperType(Type type){
+        return new TypeReference<ResponseEntity<T>>(type){};
     }
 
     /**

@@ -68,8 +68,7 @@
 				<artifactId>cat-server-swagger</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-
-
+			
 
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
@@ -79,6 +78,7 @@
 				<scope>import</scope>
 			</dependency>
 
+			
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
@@ -90,6 +90,13 @@
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
 				<version>1.2.31</version>
+			</dependency>
+
+			<!-- jackson -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>2.9.9</version>
 			</dependency>
 
 			<!-- http 相关 -->
@@ -120,9 +127,11 @@
 		</dependencies>
 	</dependencyManagement>
 
+	
 	<modules>
 		<module>cat-common</module>
 		<module>cat-client</module>
+		<module>cat-client-jackson</module>
 		<module>cat-client-http</module>
 		<module>cat-client-cloud</module>
 		<module>cat-server</module>

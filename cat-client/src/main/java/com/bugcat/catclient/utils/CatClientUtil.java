@@ -2,12 +2,14 @@ package com.bugcat.catclient.utils;
 
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
+import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
 import com.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.spi.DefaultMethodInterceptor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
@@ -31,7 +33,7 @@ import java.util.regex.Pattern;
  * @author bugcat
  * */
 @ComponentScan("com.bugcat.catclient")
-public class CatClientUtil implements ApplicationContextAware {
+public class CatClientUtil implements ApplicationContextAware, DisposableBean {
 
     
     public static final Pattern keyPat1 = Pattern.compile("^\\$\\{(.+)\\}$");
@@ -46,7 +48,12 @@ public class CatClientUtil implements ApplicationContextAware {
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
     }
-
+    
+    @Override
+    public void destroy() throws Exception {
+        Inner.run = false;
+    }
+    
     
     /**
      * 优先从Spring容器中获取
@@ -131,6 +138,7 @@ public class CatClientUtil implements ApplicationContextAware {
         return context != null ? new EnvironmentProperty(context.getEnvironment()) : new Properties();
     }
 
+    
     /**
      * 自定义环境参数
      * */
@@ -141,6 +149,7 @@ public class CatClientUtil implements ApplicationContextAware {
         public ToosProperty(Properties prop) {
             this.prop = prop;
         }
+        
         /**
          * key 类似于 ${demo.remoteApi}
          * */
@@ -148,6 +157,7 @@ public class CatClientUtil implements ApplicationContextAware {
         public String getProperty(String key) {
             return getProperty(key, null);
         }
+        
         @Override
         public String getProperty(String key, String defaultValue) {
             if( key.startsWith("${") ){
@@ -175,6 +185,7 @@ public class CatClientUtil implements ApplicationContextAware {
         public EnvironmentProperty(Environment environment) {
             this.environment = environment;
         }
+        
         /**
          * key 类似于 ${demo.remoteApi}
          * */
@@ -182,6 +193,7 @@ public class CatClientUtil implements ApplicationContextAware {
         public String getProperty(String key) {
             return environment.resolvePlaceholders(key);
         }
+        
         @Override
         public String getProperty(String key, String defaultValue) {
             String value = environment.resolvePlaceholders(key);
@@ -191,7 +203,7 @@ public class CatClientUtil implements ApplicationContextAware {
     
     
     /**
-     * 手动注册类初始化方法
+     * 手动注册一些非Spring组件的初始化
      * */
     public static final void addInitBean(InitializingBean bean){
         BeanInitHandler.beans.add(bean);
@@ -213,6 +225,10 @@ public class CatClientUtil implements ApplicationContextAware {
                 DefaultConfiguration config = new DefaultConfiguration();
                 registerBean(DefaultConfiguration.class, config);
 
+                CatJsonObjectResolverConfigurer resolver = new CatJsonObjectResolverConfigurer();
+                resolver.afterPropertiesSet();
+                registerBean(CatJsonObjectResolverConfigurer.class, resolver);
+                
                 CatClientFactory factory = new CatClientFactory();
                 registerBean(CatClientFactory.class, factory);
                 
@@ -257,7 +273,9 @@ public class CatClientUtil implements ApplicationContextAware {
 
     
     
-    
+    /**
+     * 在所有的组件初始后执行
+     * */
     @Order
     @Component
     public static class BeanInitHandler implements InitializingBean {
@@ -284,11 +302,7 @@ public class CatClientUtil implements ApplicationContextAware {
         }
     }
 
-    
-    
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        Inner.run = false;
-    }
+
+
+
 }

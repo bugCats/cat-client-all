@@ -5,9 +5,11 @@ import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
+import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
 import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.spi.ResponesWrapper;
 import org.springframework.http.ResponseEntity;
 
@@ -15,6 +17,8 @@ import java.lang.reflect.Constructor;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer.JsonObjectResolver;
 
 /**
  * 默认的结果处理类
@@ -61,6 +65,9 @@ public class DefaultResultHandler extends ResultProcessor {
         if( resp == null ){
             return null;
         }
+
+        CatJsonObjectResolverConfigurer resolverConfigurer = CatClientUtil.getBean(CatJsonObjectResolverConfigurer.class);
+        JsonObjectResolver resolver = resolverConfigurer.getResolver();
         
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 
@@ -82,8 +89,7 @@ public class DefaultResultHandler extends ResultProcessor {
                 return strtodate;
                 
             } else {//复杂对象
-                
-                return JSONObject.parseObject(resp, returnInfo.getType());
+                return resolver.toJavaBean(resp, returnInfo.getType());
             }
         } else {
 
@@ -93,11 +99,10 @@ public class DefaultResultHandler extends ResultProcessor {
             
             //方法的响应，与包装器类型相同
             if( returnClass.equals(wrapperClass) ) {
-                return JSONObject.parseObject(resp, returnInfo.getType());
+                return resolver.toJavaBean(resp, returnInfo.getType());
             } else {
-                return JSONObject.parseObject(resp, wrapper.getWrapperType(returnInfo.getType()));
+                return resolver.toJavaBean(resp, wrapper, returnInfo.getType());
             }
-            
         }
     }
 

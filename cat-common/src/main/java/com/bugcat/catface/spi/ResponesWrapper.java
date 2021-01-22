@@ -68,7 +68,7 @@ public abstract class ResponesWrapper<T> {
      * 获取json转对象泛型，eg：return new TypeReference<ResponseEntity<M>>(type){};
      * @param type 业务类型的Type
      * */
-    public abstract <M> TypeReference getWrapperType(Type type);
+    public abstract <T> Object getWrapperType(Type type);
     
     
     /**
@@ -106,7 +106,7 @@ public abstract class ResponesWrapper<T> {
             return null;
         }
         @Override
-        public <M> TypeReference getWrapperType(Type type) {
+        public Object getWrapperType(Type type) {
             return null;
         }
         @Override

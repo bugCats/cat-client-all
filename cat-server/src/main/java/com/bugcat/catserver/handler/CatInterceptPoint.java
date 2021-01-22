@@ -53,7 +53,7 @@ public final class CatInterceptPoint {
         Map<String, Object> attr = annAttrMap.get(annotationClass);
         if( attr == null ){
             Map<String, Object> map = interMethod.getAnnotationAttributes(annotationClass.getName());
-            if( map != null ){
+            if( map == null ){
                 map = new HashMap<>();
             }
             attr = Collections.unmodifiableMap(map);

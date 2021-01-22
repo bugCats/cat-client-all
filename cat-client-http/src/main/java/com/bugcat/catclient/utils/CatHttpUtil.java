@@ -5,6 +5,8 @@ import com.bugcat.catclient.spi.CatHttp;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -53,6 +55,7 @@ public class CatHttpUtil implements CatHttp {
         formHeader.put("Content-Type", "application/x-www-form-urlencoded");
     }
 
+    @Override
 	public String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
         CloseableHttpClient httpclient = null;
         CloseableHttpResponse response = null;
@@ -69,11 +72,12 @@ public class CatHttpUtil implements CatHttp {
             httpget.setConfig(getRequestConfig(ints));
             httpclient = HttpClients.createDefault();
             response = httpclient.execute(httpget);
-            HttpEntity entity = response.getEntity();
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			StatusLine statusLine = response.getStatusLine();
+			HttpEntity entity = response.getEntity();
+            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
                 return EntityUtils.toString(entity, charset);
             } else {
-                throw new Exception("http请求异常！" + response.getStatusLine().toString());
+                throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
             }
         } catch (Exception ex) {
 			throwException(response, ex);
@@ -82,8 +86,9 @@ public class CatHttpUtil implements CatHttp {
         }
         return null;
     }
-    
-    
+
+
+	@Override
 	public String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException{
 		CloseableHttpClient httpclient = null;
 		CloseableHttpResponse response = null;
@@ -115,15 +120,14 @@ public class CatHttpUtil implements CatHttp {
 				create.setDefaultRequestConfig(requestConfig);
 			}
 			httpclient = create.build();
-
 			response = httpclient.execute(httpPost);
+			StatusLine statusLine = response.getStatusLine();
 			HttpEntity entity = response.getEntity();
-			int status = response.getStatusLine().getStatusCode() / 100;
-            if (status == 2) {
-                return EntityUtils.toString(entity, charset);
-            } else {
-                throw new Exception("http请求异常！" + response.getStatusLine().toString());
-            }
+			if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+				return EntityUtils.toString(entity, charset);
+			} else {
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+			}
 		} catch (Exception ex) {
 			throwException(response, ex);
 		} finally {
@@ -132,6 +136,7 @@ public class CatHttpUtil implements CatHttp {
 		return null;
 	}
 
+	@Override
 	public String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws CatHttpException {
 		CloseableHttpClient httpclient = null;
 		CloseableHttpResponse response = null;
@@ -148,12 +153,13 @@ public class CatHttpUtil implements CatHttp {
 			create.setDefaultRequestConfig(getRequestConfig(ints));
 			httpclient = create.build();
 			response = httpclient.execute(httpPost);
+			StatusLine statusLine = response.getStatusLine();
 			HttpEntity entity = response.getEntity();
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                return EntityUtils.toString(entity, charset);
-            } else {
-                throw new Exception("http请求异常！" + response.getStatusLine().toString());
-            }
+			if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+				return EntityUtils.toString(entity, charset);
+			} else {
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+			}
 		} catch (Exception ex) {
 			throwException(response, ex);
 		} finally {

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatParameter;
+import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.*;
 import java.util.regex.Matcher;
-
+import com.bugcat.catclient.config.CatJsonObjectResolverConfigurer.JsonObjectResolver;
 
 /**
  * http 请求发送类
@@ -98,11 +99,14 @@ public class SendProcessor {
     public void setSendVariable(CatParameter param){
         
         Object value = param.getValue();
-        
+
+        CatJsonObjectResolverConfigurer resolverConfigurer = CatClientUtil.getBean(CatJsonObjectResolverConfigurer.class);
+        JsonObjectResolver resolver = resolverConfigurer.getResolver();
+
         // 使用post发送字符串
         if( isPostString() ){
 
-            reqStr = value instanceof String ? CatToosUtil.toStringIfBlank(value, "") : JSONObject.toJSONString(value);
+            reqStr = value instanceof String ? CatToosUtil.toStringIfBlank(value, "") : resolver.toJsonString(value);
             
         //使用post、get发送键值对
         } else {
@@ -118,7 +122,7 @@ public class SendProcessor {
             
             // 请求入参转换成String，方便记录日志
             if(printInLog(false) || printInLog(true)){
-                reqStr = JSONObject.toJSONString(keyValueParam);
+                reqStr = resolver.toJsonString(keyValueParam);
             }
             
         }

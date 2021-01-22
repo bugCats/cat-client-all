@@ -45,6 +45,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.bugcat</groupId>
+			<artifactId>cat-client-jackson</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.bugcat</groupId>
 			<artifactId>server-example-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
