@@ -10,19 +10,19 @@ import java.util.*;
 
 
 /**
- * 
+ *
  * 重连策略
- * 
+ *
  * 最终每个配置项的匹配逻辑： note || (tags && method && ( status || exception ))
- * 
+ *
  * */
 @Component
 public class CatHttpRetryConfigurer {
 
-    
+
     public static final String RETRY_COUNT = "bugcat$HttpRetryCount";
 
-    
+
     /**
      * 是否开启重连
      */
@@ -32,7 +32,7 @@ public class CatHttpRetryConfigurer {
 
     /**
      * 重连次数
-     * 
+     *
      * 注意，重连次数不包含第一次调用！
      * retries=2，实际上最多会调用3次
      */
@@ -69,11 +69,11 @@ public class CatHttpRetryConfigurer {
      * */
     @Value("${retry.tags:any}")
     private String tags;
-    
+
     /**
      * 其他特殊标记；多个用逗号隔开；
      * 会匹配方法上@CatNote注解，当retry.note设置的值，在@CatNote value中存在时，触发重连
-     * 
+     *
      * "payOrder,userSave"
      */
     @Value("${retry.note:}")
@@ -87,16 +87,16 @@ public class CatHttpRetryConfigurer {
      */
     @Value("${retry.note-match:{}}")
     private String noteMatch;
-    
-    
-    
-    private Set<String> statusCode = new HashSet<>();
+
+
+
+    private List<StatusCode> statusCode = new ArrayList<>();
     private Set<Class> exceptionCode = new HashSet<>();
     private Set<String> tagsCode = new HashSet<>();
     private Set<String> noteCode = new HashSet<>();
     private Map<String, Object> noteMatchCode = new HashMap<>();
 
-    
+
     @PostConstruct
     public void init() throws ClassNotFoundException {
 
@@ -109,14 +109,14 @@ public class CatHttpRetryConfigurer {
             if ( CatToosUtil.isNotBlank(status) ) {
                 String[] codes = status.split(",");
                 for ( String code : codes ) {
+                    StatusCode sc = null;
                     if ( code.contains("-") ) {
-                        String[] tmp = code.split("-");
-                        for ( int i = Integer.valueOf(tmp[0]), e = Integer.valueOf(tmp[1]); i <= e; i++ ) {
-                            statusCode.add(String.valueOf(i));
-                        }
+                        String[] cs = code.split("-");
+                        sc = new StatusCode(Integer.parseInt(cs[0]), Integer.parseInt(cs[1]));
                     } else {
-                        statusCode.add(code);
+                        sc = new StatusCode(Integer.parseInt(code));
                     }
+                    statusCode.add(sc);
                 }
             }
 
@@ -148,7 +148,7 @@ public class CatHttpRetryConfigurer {
                     }
                 }
             }
-            
+
             if ( CatToosUtil.isNotBlank(note) ){
                 for(String nt : note.split(",")){
                     noteCode.add(nt.trim());
@@ -162,9 +162,17 @@ public class CatHttpRetryConfigurer {
         }
     }
 
-    
+
     public boolean containsStatus(Integer status){
-        return status != null && this.statusCode.contains(String.valueOf(status));
+        if( status == null ){
+            return false;
+        }
+        for(StatusCode sc : statusCode ){
+            if( sc.start <= status && status <= sc.end ){
+                return true;
+            }
+        }
+        return false;
     }
     public boolean containsMethod(String method){
         return "*".equals(this.method) || this.method.contains("," + method.toUpperCase() + ",");
@@ -208,15 +216,27 @@ public class CatHttpRetryConfigurer {
         }
         return false;
     }
-    
-    
+
+
     public boolean isEnable() {
         return enable;
     }
-    
+
     public int getRetries() {
         return retries;
     }
-    
 
+
+
+    private static class StatusCode {
+        private int start;
+        private int end;
+        public StatusCode(int code) {
+            this(code, code);
+        }
+        public StatusCode(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
+    }
 }
