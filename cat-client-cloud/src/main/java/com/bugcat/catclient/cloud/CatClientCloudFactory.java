@@ -6,8 +6,10 @@ import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.ServerChoose;
 import com.bugcat.catclient.utils.CatClientUtil;
+import org.springframework.stereotype.Component;
 
-public class CatClientCloudFactory extends CatClientFactory {
+@Component
+public class CatClientCloudFactory extends CatClientFactory{
 
     
     protected static class Inner {

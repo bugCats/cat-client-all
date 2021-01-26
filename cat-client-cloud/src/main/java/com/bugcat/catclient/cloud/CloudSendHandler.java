@@ -9,12 +9,11 @@ import com.bugcat.catclient.spi.ServerChoose;
 /**
  * 多例
  * */
-public class CloudSendHandler extends SendProcessor {
+public class CloudSendHandler extends SendProcessor{
     
     private ServerChoose chooser;
-    
-    private String serviceName;
-    private String hostAddr;
+
+    private CatInstanceEntry instanceEntry;
     private String path;
 
     
@@ -26,17 +25,19 @@ public class CloudSendHandler extends SendProcessor {
     public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param) {
         super.setConfigInfo(methodInfo, param);
 
-        serviceName = methodInfo.getHost();
+        instanceEntry = new CatInstanceEntry(methodInfo.getHost());
         path = param.getPath();
-        hostAddr = chooser.hostAddr(serviceName);
         
-        super.path = hostAddr + path;
+        String ipAddr = chooser.hostAddr(instanceEntry);
+        instanceEntry.setIpAddr(ipAddr);
+        super.path = instanceEntry.getHostAddr() + path;
     }
 
     
     public void chooseOtherHost(){
-        hostAddr = chooser.hostAddr(serviceName, hostAddr);
-        super.path = hostAddr + path;
+        String ipAddr = chooser.retryHostAddr(instanceEntry);
+        instanceEntry.setIpAddr(ipAddr);
+        super.path = instanceEntry.getHostAddr() + path;
     }
     
 }

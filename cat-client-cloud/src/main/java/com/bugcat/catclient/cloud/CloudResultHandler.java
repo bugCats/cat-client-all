@@ -6,7 +6,7 @@ import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.DefaultResultHandler;
 
-public class CloudResultHandler extends DefaultResultHandler {
+public class CloudResultHandler extends DefaultResultHandler{
 
 
     @Override
