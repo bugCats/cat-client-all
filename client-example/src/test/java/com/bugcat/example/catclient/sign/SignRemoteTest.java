@@ -22,6 +22,9 @@ public class SignRemoteTest {
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
+        SignFactory factory = new SignFactory();
+        CatClientUtil.registerBean(SignFactory.class, factory);
+        
         Properties prop = new Properties();
         prop.put("demo.remoteApi", "http://127.0.0.1:8010");
         prop.put("demo.apikey", "bugcat");

@@ -68,7 +68,7 @@ public class CatMethodInfo {
     private final int socket;
 
     /**
-     * 除了SendProcessor、PathVariable以外，其他的参数map => 参数名:参数对象信息
+     * 除了SendProcessor、PathVariable、RequestHeader以外，其他的参数map => 参数名:参数对象信息
      * */
     private final Map<String, CatMethodParamInfo> params;
     
@@ -76,6 +76,11 @@ public class CatMethodInfo {
      * 出现在url上的参数{@link PathVariable}map => 参数名:参数对象信息
      * */
     private final Map<String, CatMethodParamInfo> pathParamIndexMap;
+
+    /**
+     * 出现在url上的参数{@link RequestHeader}map => 参数名:参数对象信息
+     * */
+    private final Map<String, CatMethodParamInfo> headerParamIndexMap;
     
     /**
      * 方法返回参数对象
@@ -157,6 +162,10 @@ public class CatMethodInfo {
         
         //出现在url上的参数
         Map<String, CatMethodParamInfo> pathParamIndexMap = new HashMap<>();
+
+        //出现在header上的参数
+        Map<String, CatMethodParamInfo> headerParamIndexMap = new HashMap<>();
+        
         
         Parameter[] parameters = method.getParameters();
         for ( int i = 0; i < parameters.length; i++ ) {
@@ -177,7 +186,7 @@ public class CatMethodInfo {
             }
             
             //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
-            String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
+            String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
             if( CatToosUtil.isBlank(pname) ){
                 pname = parameter.getName();
             }
@@ -189,12 +198,24 @@ public class CatMethodInfo {
             if( pathVariable != null){
                 String pathParam = pathVariable.value();
                 pathParamIndexMap.put(pathParam, new CatMethodParamInfo(pname, i, pclazz));
+                continue;
             }
-
+            RequestHeader header = parameter.getAnnotation(RequestHeader.class);
+            if ( header != null ){
+                String pathParam = header.value();
+                headerParamIndexMap.put(pathParam, new CatMethodParamInfo(pname, i, pclazz));
+                continue;
+            }
+            
             //这个参数是SendProcessor、或者其子类，不绑定到参数列表中
             if(SendProcessor.class.isAssignableFrom(parameter.getType())){
+                if( handlerIndex != null ){
+                    throw new IllegalArgumentException("方法上只容许出现一个SendProcessor入参！" + method.toString());
+                }
                 handlerIndex = Integer.valueOf(i);
             } else {
+                
+                // 有效参数
                 params.put(pname, new CatMethodParamInfo(pname, i, pclazz));
             }
         }
@@ -206,7 +227,7 @@ public class CatMethodInfo {
         this.handlerIndex = handlerIndex;
         this.params = Collections.unmodifiableMap(params);
         this.pathParamIndexMap = Collections.unmodifiableMap(pathParamIndexMap);
-        
+        this.headerParamIndexMap = Collections.unmodifiableMap(headerParamIndexMap);
     }
 
     
@@ -234,12 +255,22 @@ public class CatMethodInfo {
         
         //处理url上的参数 =>  /api/{uid}
         String path = value;
-        if( pathParamIndexMap != null ) {//填充 url 上的参数 
+        if( pathParamIndexMap.size() > 0 ) {//填充 url 上的参数 
             for ( Map.Entry<String, CatMethodParamInfo> entry : pathParamIndexMap.entrySet() ){
                 path = path.replace("{" + entry.getKey() + "}", CatToosUtil.toStringIfBlank(args[entry.getValue().getIndex()], "").toString());
             }
         }
         param.setPath(path);
+
+
+        // 处理header参数
+        Map<String, String> headerMap = new HashMap<>();
+        if( headerParamIndexMap.size() > 0 ) {//填充 url 上的参数 
+            for ( Map.Entry<String, CatMethodParamInfo> entry : headerParamIndexMap.entrySet() ){
+                headerMap.put(entry.getKey(), String.valueOf(args[entry.getValue().getIndex()]));  // entry.getValue().getIndex()=该参数，在方法上出现的索引值
+            }
+        }        
+        param.setHeaderMap(headerMap);
         
         
         // 将入参数组args，转换成： 参数名->入参    此时argMap中一定不包含SendProcessor
@@ -248,8 +279,7 @@ public class CatMethodInfo {
             argMap.put(key, args[value.getIndex()]);  // entry.getValue().getIndex()=该参数，在方法上出现的索引值
         });
         param.setArgMap(argMap);
-        
-        
+
         Object arg = null;
         if( params.size() == 1 ){//如果入参仅一个
             Map.Entry<String, Object> entry = argMap.entrySet().iterator().next();

@@ -187,7 +187,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor {
      * 执行http请求，如果开启了重连、并且满足重连设置，此处会循环调用，直至成功、或者重试次数耗尽
      * 重连次数，不包含第一次调用！
      * */
-    private String doRequest(CatClientInfo clientInfo, SendProcessor sendHandler, ResultProcessor resultHandler) throws CatHttpException {
+    private String doRequest(CatClientInfo clientInfo, SendProcessor sendHandler, ResultProcessor resultHandler) throws Exception {
         try {
             String respStr = sendHandler.httpSend();
             return respStr;
@@ -195,7 +195,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor {
             if ( resultHandler.canRetry(retryConfigurer, ex, clientInfo, sendHandler) ) {
                 return doRequest(clientInfo, sendHandler, resultHandler);
             }
-            throw ex;
+            throw ex.getIntrospectedException();
         }
     }
 

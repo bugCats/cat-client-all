@@ -32,7 +32,7 @@ public class TokenServerController {
      * */
     @PostMapping(value = "/server/token")
     public ResponseEntity<String> token(@RequestHeader("token") String token, @RequestBody Demo data){
-        System.out.println(token);
+        System.out.println("token=" + token);
         return ResponseEntity.ok(token);
     }
     

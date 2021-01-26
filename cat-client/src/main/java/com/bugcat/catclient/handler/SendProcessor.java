@@ -41,11 +41,11 @@ public class SendProcessor {
     protected int connect;
     protected int socket;
 
-    protected Map<String, String> headerMap = new HashMap<>();  //  请求头信息
     protected JSONObject notes;    //其他自定义参数、标记
 
     protected String path;        //url地址     eg： https://blog.csdn.net/qq_41399429
 
+    protected Map<String, String> headerMap = new HashMap<>();  //  请求头信息
     protected Map<String, Object> keyValueParam;  //键值对
 
     protected String reqStr;      //请求参数
@@ -85,6 +85,7 @@ public class SendProcessor {
             notes.put(key, value);            
         });
         
+        this.headerMap.putAll(param.getHeaderMap());
         
         this.requestType = methodInfo.getRequestType();
         

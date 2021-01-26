@@ -7,6 +7,7 @@ import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -31,8 +32,14 @@ public interface TokenRemote {
 
 
 
+    @CatMethod(value = "/server/token", method = RequestMethod.POST, notes = @CatNote("needToken"))
+    ResponseEntity<String> token1(@RequestBody Demo demo);
+
+
+
     @CatMethod(value = "/server/token", method = RequestMethod.POST)
-    ResponseEntity<String> token(@RequestBody Demo demo);
-    
-    
+    ResponseEntity<String> token2(@RequestBody Demo demo, @RequestHeader("token") String token);
+
+
+
 }

@@ -13,9 +13,12 @@ public class CatParameter {
     
     
     private String path;    //真实url，PathVariable已经处理
+    
     private Object value;   //经过处理之后的有效参数
+    
     private Map<String, Object> argMap; //原始的参数列表
     
+    private Map<String, String> headerMap;
     
     
     public String getPath() {
@@ -39,4 +42,10 @@ public class CatParameter {
         this.argMap = argMap;
     }
 
+    public Map<String, String> getHeaderMap() {
+        return headerMap;
+    }
+    public void setHeaderMap(Map<String, String> headerMap) {
+        this.headerMap = headerMap;
+    }
 }

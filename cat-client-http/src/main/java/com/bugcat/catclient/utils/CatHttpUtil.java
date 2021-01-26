@@ -243,7 +243,7 @@ public class CatHttpUtil implements CatHttp {
 	/**
 	 * 抛出异常
 	 * */
-	private static void throwException(HttpResponse response, Throwable throwable) throws CatHttpException {
+	private static void throwException(HttpResponse response, Exception throwable) throws CatHttpException {
 		Integer status = response != null && response.getStatusLine() != null ? response.getStatusLine().getStatusCode() : null;
 		throw new CatHttpException(status, throwable);
 	}
