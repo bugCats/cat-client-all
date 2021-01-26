@@ -1,5 +1,6 @@
 package com.bugcat.example.catclient.remote;
 
+import com.bugcat.catclient.handler.CatSendContextHolder;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.tools.PageInfo;
@@ -30,6 +31,9 @@ public class ApiRemote2Error implements ApiRemote2 {
      */
     @Override
     public String demo2(SendProcessor send, Demo req) {
+        System.err.println("打印异常：");
+        CatSendContextHolder context = CatSendContextHolder.getContext();
+        context.getException().printStackTrace();
         return "demo2 异常";
     }
     

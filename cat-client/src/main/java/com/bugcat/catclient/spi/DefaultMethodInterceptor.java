@@ -6,6 +6,7 @@ import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
 import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
+import com.bugcat.catclient.handler.CatSendContextHolder;
 import com.bugcat.catclient.handler.ResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,40 +139,47 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
         //设置参数，子类可以重写此方法，可以追加签名等信息
         sendHandler.setSendVariable(param);
 
-
+        //原始响应字符串
+        String respStr = null;
+        //响应对象
         Object respObj = null;
-
         try {
 
             //执行发送http请求
-            String respStr = doRequest(catClientInfo, sendHandler, resultHandler);
+            respStr = doRequest(catClientInfo, sendHandler, resultHandler);
 
             //执行字符串转对象，此时对象，为方法的返回值类型
             respObj = resultHandler.resultToBean(respStr, sendHandler, catClientInfo, methodInfo);
 
         } catch ( Exception ex ) {
-
-            //开启了异常回调模式
-            if ( catClientInfo.isFallbackMod() ) {
-
-                // 说明自定义了http异常处理类
-                respObj = methodProxy.invokeSuper(target, args);
-            }
             
-            //没有定义回调模式、或者回调模式返回null
-            if ( respObj == null ) {
-
-                //执行默认的http异常处理类
-                Object resp = resultHandler.onHttpError(ex, sendHandler, catClientInfo, methodInfo);
-                if ( resp != null ) {
-                    if ( resp instanceof String ) {
-                        respObj = resultHandler.resultToBean((String) resp, sendHandler, catClientInfo, methodInfo);
-                    } else {
-                        respObj = resp;
-                    }
-                } else {
-                    respObj = null;
+            // 将部分参数，存入ThreadLocal中，在fallback中，可以通过 CatSendContextHolder.getContext 得到这些数据
+            CatSendContextHolder context = new CatSendContextHolder(respStr, ex);
+            
+            try {
+                //开启了异常回调模式
+                if ( catClientInfo.isFallbackMod() ) {
+    
+                    // 说明自定义了http异常处理类
+                    respObj = methodProxy.invokeSuper(target, args);
                 }
+                //没有定义回调模式、或者回调模式返回null
+                if ( respObj == null ) {
+    
+                    //执行默认的http异常处理类
+                    Object resp = resultHandler.onHttpError(ex, sendHandler, catClientInfo, methodInfo);
+                    if ( resp != null ) {
+                        if ( resp instanceof String ) {
+                            respObj = resultHandler.resultToBean((String) resp, sendHandler, catClientInfo, methodInfo);
+                        } else {
+                            respObj = resp;
+                        }
+                    } else {
+                        respObj = null;
+                    }
+                }
+            } finally {
+                context.remove();
             }
         }
 
