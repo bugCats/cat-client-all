@@ -1,9 +1,7 @@
 package com.bugcat.catclient.handler;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
-
 /**
+ * 仅当发生异常时，才会有值
  * @author bugcat
  * */
 public class CatSendContextHolder{
@@ -36,12 +34,9 @@ public class CatSendContextHolder{
     }
 
 
-    @Nullable
     public String getResponse() {
         return response;
     }
-
-    @NotNull
     public Exception getException() {
         return exception;
     }
