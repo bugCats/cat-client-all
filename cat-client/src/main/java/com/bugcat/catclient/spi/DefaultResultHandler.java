@@ -110,14 +110,16 @@ public class DefaultResultHandler extends ResultProcessor {
         }
         Class wrapperClass = wrapper.getWrapperClass();
         Class returnClass = methodInfo.getReturnInfo().getClazz();
-        
+
         //方法的响应，与包装器类型相同，直接返回对象
         if( wrapperClass.equals(returnClass) ){
             return resp;
-        } else {
-            // 方法的响应，与包装器类型不相同，拆包裹、校验
+        } else if( wrapperClass.isAssignableFrom(resp.getClass()) ){
+            // 方法的响应与包装器类型不同相同，并且响应类型是包装器类：拆包裹、校验
             wrapper.checkValid(resp);
             return wrapper.getValue(resp);
+        }else {
+            return resp;
         }
     }
 
