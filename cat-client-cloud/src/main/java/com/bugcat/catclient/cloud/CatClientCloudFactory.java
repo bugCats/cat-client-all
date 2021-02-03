@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class CatClientCloudFactory extends CatClientFactory{
 
     
-    protected static class Inner {
+    private static class Inner {
         
         private static ServerChoose chooser = CatClientUtil.getBean(ServerChoose.class);
         private static CloudResultHandler resultHandler = new CloudResultHandler();
@@ -42,5 +42,9 @@ public class CatClientCloudFactory extends CatClientFactory{
         return Inner.resultHandler;
     }
 
+    
+    public final static ServerChoose getServerChoose(){
+        return Inner.chooser;
+    }
     
 }

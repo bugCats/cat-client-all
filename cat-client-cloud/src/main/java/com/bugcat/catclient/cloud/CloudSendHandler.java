@@ -16,10 +16,15 @@ public class CloudSendHandler extends SendProcessor{
     private CatInstanceEntry instanceEntry;
     private String path;
 
+
+    public CloudSendHandler() {
+        this.chooser = getServerChoose();
+    }
     
     public CloudSendHandler(ServerChoose chooser) {
         this.chooser = chooser;
     }
+    
     
     @Override
     public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param) {
@@ -38,6 +43,11 @@ public class CloudSendHandler extends SendProcessor{
         String ipAddr = chooser.retryHostAddr(instanceEntry);
         instanceEntry.setIpAddr(ipAddr);
         super.path = instanceEntry.getHostAddr() + path;
+    }
+
+
+    protected ServerChoose getServerChoose(){
+        return CatClientCloudFactory.getServerChoose();
     }
     
 }
