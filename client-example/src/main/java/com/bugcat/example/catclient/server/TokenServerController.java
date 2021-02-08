@@ -1,6 +1,7 @@
 package com.bugcat.example.catclient.server;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
@@ -32,6 +33,7 @@ public class TokenServerController {
      * */
     @PostMapping(value = "/server/token")
     public ResponseEntity<String> token(@RequestHeader("token") String token, @RequestBody Demo data){
+        System.out.println("data=" + JSONObject.toJSONString(data));
         System.out.println("token=" + token);
         return ResponseEntity.ok(token);
     }

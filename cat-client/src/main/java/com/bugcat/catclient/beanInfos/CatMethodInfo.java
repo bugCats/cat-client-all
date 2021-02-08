@@ -153,8 +153,11 @@ public class CatMethodInfo {
         int socket = attr.getNumber("socket");
         this.socket = socket < 0 ? -1 : ( socket == 0 ? catClientInfo.getSocket() : socket );  
 
-        
+        //是否为post发送字符串
         boolean postString = false;
+        //是否已经出现过主要入参对象
+        boolean hasPrimary = false;
+        //sendHandler出现的索引值
         Integer handlerIndex = null;
         
         //方法上参数列表，除了SendHandler、PathVariable以外，其他的有效参数
@@ -171,19 +174,6 @@ public class CatMethodInfo {
         for ( int i = 0; i < parameters.length; i++ ) {
             
             Parameter parameter = parameters[i];
-
-            //如果post方式
-            if( this.requestType == RequestMethod.POST ){
-                
-                //并且参数上有@RequestBody
-                if ( parameter.isAnnotationPresent(RequestBody.class) ) {
-                    if( postString ){
-                        throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody注解的入参！" + method.toString());
-                    } else {
-                        postString = true;
-                    }
-                }
-            }
             
             //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
             String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
@@ -213,10 +203,29 @@ public class CatMethodInfo {
                     throw new IllegalArgumentException("方法上只容许出现一个SendProcessor入参！" + method.toString());
                 }
                 handlerIndex = Integer.valueOf(i);
+                
             } else {
+
+                CatMethodParamInfo paramInfo = new CatMethodParamInfo(pname, i, pclazz);
+
+                if( parameter.isAnnotationPresent(ModelAttribute.class) ||
+                        parameter.isAnnotationPresent(RequestBody.class)){
+                    
+                    if( hasPrimary ){
+                        throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody、@ModelAttribute注解的入参！" + method.toString());
+                    } else {
+                        hasPrimary = true;
+                        paramInfo.setPrimary(true);
+                    }
+                    
+                    //如果post方式，并且有@RequestBody注解
+                    if( this.requestType == RequestMethod.POST && parameter.isAnnotationPresent(RequestBody.class)){
+                        postString = true;
+                    }
+                }
                 
                 // 有效参数
-                params.put(pname, new CatMethodParamInfo(pname, i, pclazz));
+                params.put(pname, paramInfo);
             }
         }
 
@@ -280,11 +289,12 @@ public class CatMethodInfo {
         });
         param.setArgMap(argMap);
 
+        
         Object arg = null;
         if( params.size() == 1 ){//如果入参仅一个
             Map.Entry<String, Object> entry = argMap.entrySet().iterator().next();
             CatMethodParamInfo paramInfo = params.get(entry.getKey());
-            if( paramInfo.isSimple() ){//为String、基本数据类型、包装类
+            if( paramInfo.isSimple() && !paramInfo.isPrimary() ){//为String、基本数据类型、包装类、非主要入参类
                 arg = argMap;
             } else {//是对象，将value值返回，在下一步再将对象转换成键值对
                 arg = argMap.values().iterator().next();

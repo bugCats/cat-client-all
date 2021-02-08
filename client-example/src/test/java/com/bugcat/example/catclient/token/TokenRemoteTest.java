@@ -2,6 +2,7 @@ package com.bugcat.example.catclient.token;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.dto.Demo;
 import com.bugcat.example.tools.ResponseEntity;
@@ -35,11 +36,16 @@ public class TokenRemoteTest {
         demo.setName("bugcat");
         demo.setMark("猫脸");
         ResponseEntity<String> token1 = remote.token1(demo);
-        System.out.println("remote.token=" + token1.getData());
+        System.out.println("remote.token1=" + token1.getData());
         
         String token = "TokenRemoteTest-token2";
         ResponseEntity<String> token2 = remote.token2(demo, token);
-        System.out.println("remote.token=" + token2.getData());
+        System.out.println("remote.token2=" + token2.getData());
+        
+        String url = "/server/token";
+        ResponseEntity<String> token3 = remote.token3(url, "TokenRemoteTest-token3", JSONObject.toJSONString(demo));
+        System.out.println("remote.token3=" + token3.getData());
+
     }
 
 }
