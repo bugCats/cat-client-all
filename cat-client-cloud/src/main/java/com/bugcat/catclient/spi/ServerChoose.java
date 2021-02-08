@@ -9,7 +9,7 @@ public interface ServerChoose{
     
     /**
      * 根据serviceName获取实例地址
-     * @return http://ip:port/ctx
+     * @return ip:port or www.bugcat.com
      * */
     String hostAddr(CatInstanceEntry instanceEntry);
 
@@ -22,7 +22,7 @@ public interface ServerChoose{
      * 
      * 此时，如果有多个实例情况下，应该优先选取其他健康实例
      * 
-     * @return http://ip:port/ctx
+     * @return ip:port or www.bugcat.com
      * */
     String retryHostAddr(CatInstanceEntry instanceEntry);
     
