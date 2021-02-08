@@ -4,7 +4,7 @@ import com.bugcat.catface.spi.ResponesWrapper;
 import com.bugcat.catserver.asm.CatAsm;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.handler.CatInterceptorBuilders;
-import com.bugcat.catserver.handler.CatInterceptorBuilders.*;
+import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
@@ -73,21 +73,18 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
             Class enhancer = asm.enhancer(inter, warp); //使用asm增强interface
             thisInters[i] = enhancer;
         }
-        
         // 此时thisInters中，全部为增强后的扩展interface
 
         CatInterceptorBuilders builders = CatInterceptorBuilders.builders();
-        
         for(Class inter : thisInters ){
-            Method[] methods = inter.getMethods();
-            for(Method method : methods){
+            for(Method method : inter.getMethods()){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
                 Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
                 
                 // 遍历每个interface的方法，筛选只有包含CatServerInitBean.annName注解的
                 if( attr != null ){
                     String name = method.getName();
-                    if ( name.startsWith(CatServerUtil.bridgeName) ) {
+                    if ( CatServerUtil.isBridgeMethod(method) ) {
                         //桥接方法 noop
                     } else {
                         // 原始方法
@@ -98,7 +95,6 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
                 }
             }
         }
-        
         
         CallbackHelper helper = new CallbackHelper(clazz, thisInters) {
             
@@ -119,7 +115,6 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
             }
         };
         
-        
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(clazz);
         enhancer.setInterfaces(thisInters);
@@ -127,11 +122,9 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
         enhancer.setCallbacks(helper.getCallbacks());
         enhancer.setClassLoader(classLoader);
         
-        
         Object obj = enhancer.create();
         Class<?> server = obj.getClass();
 
-        
         /**
          * 通过动态代理生成的obj，不会自动注入属性，需要借助Srping容器实现自动注入
          * */

@@ -14,13 +14,6 @@ import org.springframework.stereotype.Service;
  * */
 @Service
 public class DemoService {
-
-    /**
-     * 也可以作为普通组件自动注入
-     * */
-    @Autowired
-    private UserService userService;
-    
     
     public Demo creart(){
         Demo demo = new Demo();

@@ -1,16 +1,20 @@
 package com.bugcat.catserver.utils;
 
+import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,10 +40,25 @@ public class CatServerUtil implements ApplicationContextAware {
         context = applicationContext;
     }
 
-
-    public static final String trimName(String name){
+    /**
+     * 得到原始方法名
+     * */
+    public static final String trimMethodName(String name){
         return name.startsWith(bridgeName) ? name.substring(bridgeName.length()) : name;
     }
+    /**
+     * 得到桥连方法名
+     * */
+    public static final String bridgeMethodName(String name){
+        return bridgeName + name;
+    }
+    /**
+     * 判断是否为桥连方法
+     * */
+    public static final boolean isBridgeMethod(Method method){
+        return method != null && method.getName().startsWith(bridgeName);
+    }
+    
     
     
     public static <T> T getBean (Class<T> clazz){
@@ -91,6 +110,7 @@ public class CatServerUtil implements ApplicationContextAware {
     }
 
 
+    
     @Order
     @Component
     public static class BeanInitHandler implements InitializingBean {

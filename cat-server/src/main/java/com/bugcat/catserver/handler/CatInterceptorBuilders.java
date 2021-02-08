@@ -7,6 +7,7 @@ import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.Type;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cglib.core.Signature;
+import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
 
@@ -16,29 +17,37 @@ import java.util.*;
 
 /**
  * 通过cglib生成代理类
- * 单例
  *
  * @author bugcat
  */
 public final class CatInterceptorBuilders implements InitializingBean {
-
     
     private Map<String, MethodBuilder> builderMap = new HashMap<>();
 
 
     private Class serverClass;
     private CatServerInfo catServerInfo;
-    
-
-    private CatInterceptorBuilders() { }
 
     
     public static CatInterceptorBuilders builders(){
         return new CatInterceptorBuilders();
     }
 
-
+    private CatInterceptorBuilders() { }
     
+    
+    /**
+     * 执行此方法之后，加入到组件初始化队列中
+     * */
+    public void registryInitializingBean(Class<?> serverClass, CatServerInfo catServerInfo) {
+        this.serverClass = serverClass;
+        this.catServerInfo = catServerInfo;
+        CatServerUtil.addInitBean(this);
+    }
+    
+    /**
+     * 在组件初始化时执行，为builder赋值，并且初始化
+     * */
     @Override
     public void afterPropertiesSet() throws Exception {
         builderMap.values().stream().forEach(builder -> {
@@ -59,7 +68,6 @@ public final class CatInterceptorBuilders implements InitializingBean {
 
             ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
 
-
             builder.methodProxy = realMethodProxy;
             builder.handers = handers;
             builder.wrapper = wrapper;
@@ -67,11 +75,14 @@ public final class CatInterceptorBuilders implements InitializingBean {
             builder.catMethodInterceptor.initializing(builder);
         });
     }
-    
-    
-    
+
+
+
+    /**
+     * MethodBuilder.builder 只会生成一个CatMethodInterceptor，具体初始化功能，在{@link CatInterceptorBuilders#afterPropertiesSet()}此处执行
+     * */
     public MethodBuilder builder(String name){
-        String key = CatServerUtil.trimName(name);
+        String key = CatServerUtil.trimMethodName(name);
         MethodBuilder builder = builderMap.get(key);
         if( builder == null ){
             builder = new MethodBuilder();
@@ -80,15 +91,11 @@ public final class CatInterceptorBuilders implements InitializingBean {
         return builder;
     }
     
+    
     public MethodBuilder getBuilder(String name){
-        return builderMap.get(CatServerUtil.trimName(name));
+        return builderMap.get(CatServerUtil.trimMethodName(name));
     }
 
-    public void registryInitializingBean(Class<?> serverClass, CatServerInfo catServerInfo) {
-        this.serverClass = serverClass;
-        this.catServerInfo = catServerInfo;
-        CatServerUtil.addInitBean(this);
-    }
 
 
     public final static class MethodBuilder {

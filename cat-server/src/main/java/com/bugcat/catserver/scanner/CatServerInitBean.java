@@ -79,7 +79,7 @@ public class CatServerInitBean implements InitializingBean {
 
     
     
-    private class BeanInfo implements Comparable<BeanInfo> {
+    private static class BeanInfo implements Comparable<BeanInfo> {
         
         private int level = 0;  //继承关系：如果是子类，那么level比父类大，排在后面
         private Object bean;

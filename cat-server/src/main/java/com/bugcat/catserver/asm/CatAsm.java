@@ -3,6 +3,7 @@ package com.bugcat.catserver.asm;
 import com.bugcat.catface.spi.ResponesWrapper;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.*;
+import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
 
 import java.io.File;
@@ -37,14 +38,9 @@ public final class CatAsm implements Opcodes {
     
     
     // 设置动态生成扩展interface的目录
-    private final String debug = "CatServerAsmDebug";
-    
-    
+    private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
     
     private final ClassLoader classLoader;
-    private final String debugDir;
-    
-    
     
     /**
      * 类加载器
@@ -52,7 +48,6 @@ public final class CatAsm implements Opcodes {
      * */
     public CatAsm(ClassLoader classLoader) {
         this.classLoader = classLoader;
-        this.debugDir = System.getProperty(debug);
     }
 
 
@@ -113,7 +108,7 @@ public final class CatAsm implements Opcodes {
             MethodVisitor mv = null;
             Class returnType = returnTypeMap.get(descriptor);
             if( returnType != null ){
-                Signature sign = new Signature(CatServerUtil.bridgeName + name, returnType);
+                Signature sign = new Signature(CatServerUtil.bridgeMethodName(name), returnType);
                 sign.transform(warp, descriptor, signature);
                 mv = super.visitMethod(access, sign.getName(), sign.getDesc(), sign.getSign(), exceptions);
             } else {
@@ -175,6 +170,12 @@ public final class CatAsm implements Opcodes {
     
     private static String className(Class inter){
         return inter.getName() + CatServerUtil.bridgeName;
+    }
+    public static boolean isBridgeClass(Class clazz){
+        return clazz != null && clazz.getSimpleName().contains(CatServerUtil.bridgeName);
+    }
+    public static String trimClassName(String className){
+        return className.contains(CatServerUtil.bridgeName) ? className.substring(0, className.length() - CatServerUtil.bridgeName.length()) : className;
     }
 
     

@@ -1,9 +1,10 @@
 package com.bugcat.catserver.utils;
 
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.annotation.CatServer;
+import com.bugcat.catserver.asm.CatAsm;
 import com.google.common.collect.ArrayListMultimap;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ClassUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import springfox.documentation.RequestHandler;
@@ -14,10 +15,13 @@ import springfox.documentation.spi.service.contexts.RequestMappingContext;
 import springfox.documentation.spring.web.scanners.ApiListingReferenceScanResult;
 import springfox.documentation.spring.web.scanners.ApiListingReferenceScanner;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Multimaps.asMap;
 import static springfox.documentation.spring.web.ControllerNamingUtils.controllerNameAsGroup;
-import static springfox.documentation.spring.web.paths.Paths.splitCamelCase;
 
 /**
  * swagger扫描
@@ -69,51 +73,89 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
         ApiSelector selector = context.getApiSelector();
         
         Iterable<RequestHandler> matchingHandlers = from(context.getRequestHandlers()).filter(selector.getRequestHandlerSelector());
-        
+
         for (RequestHandler handler : matchingHandlers) {
             
             RequestMappingInfo requestMappingInfo = handler.getRequestMapping();
 
             HandlerMethod handlerMethod = handler.getHandlerMethod();
-            ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(handlerMethod), handlerMethod.getBeanType(), 0);
+//            
 
-            // 通过原始RequestHandler，生成增强后的CatHandlerMethod
-            handlerMethod = new CatHandlerMethod(handlerMethod);
-            
-            RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, handlerMethod);
-            resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+            Class<?> beanType = handlerMethod.getBeanType();
+            if( AnnotationUtils.findAnnotation(beanType, CatServer.class) != null ){ //如果包含CatServer注解，直接返回当前对象的class
+
+                HandlerClassMethod handlerClassMethod = HandlerClassMethod.handlerClassMethod(handlerMethod.getBean().getClass());
+                Class methodFrom = handlerClassMethod.methodFrom(handlerMethod.getMethod());
+
+                // 通过原始RequestHandler，生成增强后的CatHandlerMethod
+                CatHandlerMethod method = new CatHandlerMethod(methodFrom.getInterfaces()[0], handlerMethod);
+                ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(method), method.getBeanType(), 0);
+
+                method.setBeanType(methodFrom);
+                RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, method);
+                resourceGroupRequestMappings.put(resourceGroup, requestMappingContext); 
+                        
+            } else {
+                ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(handlerMethod), handlerMethod.getBeanType(), 0);
+                RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, handlerMethod);
+                resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+            }
         }
         
         return new ApiListingReferenceScanResult(asMap(resourceGroupRequestMappings));
     }
     
     
+    private static class HandlerClassMethod {
+    
+        private static Map<Class, HandlerClassMethod> handlerClassMethodMap = new HashMap<>();
+        
+        /**
+         * @param clazz cglib动态代理之后的对象class
+         * */
+        private static HandlerClassMethod handlerClassMethod(Class clazz){
+            HandlerClassMethod handlerClassMethod = handlerClassMethodMap.get(clazz);
+            if( handlerClassMethod == null ){
+                handlerClassMethod = new HandlerClassMethod();
+                handlerClassMethodMap.put(clazz, handlerClassMethod);
+                Class[] inters = clazz.getInterfaces();
+                for ( Class inter : inters ) {
+                    if( CatAsm.isBridgeClass(inter) ){
+                        for ( Method method : inter.getMethods() ) {
+                            handlerClassMethod.methodClassMap.put(CatToosUtil.signature(method), inter);
+                        }
+                    }
+                }
+            }
+            return handlerClassMethod;
+        }
+        
+        
+        private Map<String, Class> methodClassMap = new HashMap<>();
+        public Class methodFrom(Method method){
+            return methodClassMap.get(CatToosUtil.signature(method));
+        }
+        
+    }
+    
     private static class CatHandlerMethod extends HandlerMethod {
 
         private Class beanType;
         
-        protected CatHandlerMethod(HandlerMethod handlerMethod) {
+        protected CatHandlerMethod(Class beanType, HandlerMethod handlerMethod) {
             super(handlerMethod);
+            this.beanType = beanType;
         }
 
         @Override
         public Class<?> getBeanType() {
-            if( beanType == null ){
-                beanType = super.getBeanType();
-                if( AnnotationUtils.findAnnotation(beanType, CatServer.class) != null ){ //如果包含CatServer注解，直接返回当前对象的class
-                    beanType = super.getBean().getClass();
-                }
-            } 
             return beanType;
         }
-        
+
+        public void setBeanType(Class beanType) {
+            this.beanType = beanType;
+        }
     }
 
 
-//    public static String controllerNameAsGroup(HandlerMethod handlerMethod) {
-//        Class<?> controllerClass = ClassUtils.getUserClass(handlerMethod.getBeanType());
-//        return splitCamelCase(controllerClass.getSimpleName(), "-")
-//                .replace("/", "")
-//                .toLowerCase();
-//    }
 }
