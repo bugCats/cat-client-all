@@ -105,7 +105,7 @@ public class DefaultResultHandler extends ResultProcessor {
     @Override
     public Object doFinally(Object resp, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) throws Exception {
         ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
-        if ( wrapper == null ) {
+        if ( wrapper == null || resp == null ) {
             return resp;
         }
         Class wrapperClass = wrapper.getWrapperClass();

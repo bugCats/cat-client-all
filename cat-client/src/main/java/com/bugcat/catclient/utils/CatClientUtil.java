@@ -241,7 +241,7 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
                     registerBean(CatHttp.class, http);
                     
                 } catch ( Exception ex ) {
-                    ex.printStackTrace();
+                    System.err.println(ex.getMessage());
                 }
                 
                 Thread worker = new Thread(() -> {
