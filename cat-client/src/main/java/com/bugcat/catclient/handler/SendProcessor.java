@@ -7,6 +7,7 @@ import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatJsonResolver;
+import com.bugcat.catclient.spi.Stringable;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
@@ -109,17 +110,20 @@ public class SendProcessor {
         // 使用post发送字符串
         if( isPostString() ){
 
-            reqStr = value instanceof String ? CatToosUtil.toStringIfBlank(value, "") : resolver.toJsonString(value);
+            if ( value instanceof String ){
+                reqStr = CatToosUtil.toStringIfBlank(value, "");
+            } else if ( value instanceof Stringable ){
+                reqStr = ((Stringable) value).serialize();
+            } else {
+                reqStr = resolver.toJsonString(value);
+            }
             
         //使用post、get发送键值对
         } else {
             
             if( value instanceof Map ){
-                
                 keyValueParam = (Map<String, Object>) value;
-
             } else {// 传入了一个对象，转换成键值对
-                
                 keyValueParam = beanToMap(value);
             }
             
