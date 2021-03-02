@@ -3,6 +3,7 @@ package com.bugcat.catserver.scanner;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.annotation.EnableCatServer;
+import com.bugcat.catserver.spi.CatInterceptor;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +116,15 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         }
 
         log.info("catServer 服务端数量：" + count );
+        
+        
+        //扫描所有的 CatInterceptor 子类
+        ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
+        interceptorScanner.setResourceLoader(resourceLoader);
+        interceptorScanner.addIncludeFilter(CatToosUtil.typeChildrenFilter(CatInterceptor.class));
+        interceptorScanner.scan(pkgs);
+        
+        
     }
     
     /**

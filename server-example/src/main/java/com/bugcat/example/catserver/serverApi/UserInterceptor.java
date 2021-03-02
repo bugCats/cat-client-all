@@ -5,11 +5,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catserver.handler.CatInterceptPoint;
 import com.bugcat.catserver.spi.CatInterceptor;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-@Component
+
 public class UserInterceptor extends CatInterceptor{
 
 

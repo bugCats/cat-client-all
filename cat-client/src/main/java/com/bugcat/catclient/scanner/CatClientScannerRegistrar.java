@@ -4,6 +4,8 @@ import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.EnableCatClient;
 import com.bugcat.catclient.handler.CatClients;
 import com.bugcat.catclient.handler.SendProcessor;
+import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
@@ -24,6 +26,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
+import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -126,6 +131,19 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         }
 
         log.info("catclient 客户端数量：" + count );
+        
+        
+        //扫描所有 CatClientFactory 子类
+        ClassPathBeanDefinitionScanner factoryScanner = new ClassPathBeanDefinitionScanner(registry);
+        factoryScanner.setResourceLoader(resourceLoader);
+        factoryScanner.addIncludeFilter(CatToosUtil.typeChildrenFilter(CatClientFactory.class));
+        factoryScanner.scan(pkgs);
+        
+        //扫描所有的 CatHttp 子类
+        ClassPathBeanDefinitionScanner catHttpScanner = new ClassPathBeanDefinitionScanner(registry);
+        catHttpScanner.setResourceLoader(resourceLoader);
+        catHttpScanner.addIncludeFilter(CatToosUtil.typeChildrenFilter(CatHttp.class));
+        catHttpScanner.scan(pkgs);
     }
     
     
@@ -244,4 +262,5 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         }
     }
 
+    
 }

@@ -4,8 +4,6 @@ import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.CatClientFactory;
 import org.springframework.stereotype.Component;
 
-
-@Component
 public class SignFactory extends CatClientFactory {
 
     @Override

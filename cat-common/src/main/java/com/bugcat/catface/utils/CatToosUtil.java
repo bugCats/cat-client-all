@@ -4,8 +4,10 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.ClassUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -21,7 +23,7 @@ public class CatToosUtil {
 
 
     /**
-     * 获取扫描包路径
+     * 获取扫描包路径，默认为启动类所在包路径
      * */
     public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs, String annoName){
         String[] pkgs = annoAttrs.getStringArray(annoName);
@@ -34,7 +36,9 @@ public class CatToosUtil {
         return pkgs;
     }
     
-    
+    /**
+     * 按顺序，获取第一个有效的注解value值
+     * */
     public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns){
         for(Class clazz : anns){
             Annotation annotation = element.getAnnotation(clazz);
@@ -52,7 +56,6 @@ public class CatToosUtil {
     public static boolean isBlank(String str){
         return str == null || "".equals(str.trim());
     }
-
     public static boolean isNotBlank(String str){
         return !isBlank(str);
     }
@@ -60,11 +63,14 @@ public class CatToosUtil {
     public static String defaultIfBlank(String str, String def){
         return isNotBlank(str) ? str : def;
     }
-
+    
     public static String toStringIfBlank(Object str, String def){
         return str != null ? str.toString() : def;
     }
 
+    /**
+     * 首字母小写
+     * */
     public static String uncapitalize(final String str) {
         int strLen;
         if (str == null || (strLen = str.length()) == 0) {
@@ -101,9 +107,18 @@ public class CatToosUtil {
         }
     }
 
+    
+    /**
+     * 方法签名：
+     * @return method.name([parameterType,parameterType])
+     * */
     public static String signature(Method method){
         return signature(method.getName(), method);
     }
+    /**
+     * 方法签名：
+     * @return method.name([parameterType,parameterType])
+     * */
     public static String signature(String name, Method method){
         StringBuilder sbr = new StringBuilder(300);
         Type[] types = method.getGenericParameterTypes();
@@ -115,4 +130,41 @@ public class CatToosUtil {
         }
         return name + "([" + sbr.toString() + "])";
     }
+
+    
+    /**
+     * 扫描子类过滤器
+     * */
+    public static AssignableTypeFilter typeChildrenFilter(Class<?> targetType){
+        return new TypeFilter(targetType);
+    }
+
+
+    /**
+     * 扫描子类过滤器
+     * */
+    private static class TypeFilter extends AssignableTypeFilter{
+
+        private Class<?> targetType;
+
+        public TypeFilter(Class<?> targetType) {
+            super(targetType);
+            this.targetType = targetType;
+        }
+
+        @Override
+        protected Boolean matchTargetType(String typeName) {
+            Boolean bool = super.matchTargetType(typeName);
+            if( bool == null ){
+                try {
+                    Class<?> clazz = ClassUtils.forName(typeName, getClass().getClassLoader());
+                    return targetType.isAssignableFrom(clazz);
+                } catch ( Throwable e ) {
+
+                }
+            }
+            return bool;
+        }
+    }
+
 }
