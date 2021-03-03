@@ -38,7 +38,7 @@ public final class CatInstanceEntry{
     
     void setIpAddr(String ipAddr){
         this.ipAddr = ipAddr;
-        this.hostAddr = matcher.replaceAll("$1" + ipAddr + "$3");
+        this.hostAddr = ipAddr.startsWith("http") ? matcher.replaceAll(ipAddr + "$3") : matcher.replaceAll("$1" + ipAddr + "$3");
     }
     
 }

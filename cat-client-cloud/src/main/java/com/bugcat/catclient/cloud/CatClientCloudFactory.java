@@ -6,24 +6,27 @@ import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.ServerChoose;
 import com.bugcat.catclient.utils.CatClientUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CatClientCloudFactory extends CatClientFactory{
+public class CatClientCloudFactory extends CatClientFactory implements InitializingBean{
+
+
+    private static ServerChoose chooser;
+    
+    private CloudResultHandler resultHandler;
 
     
-    private static class Inner {
-        
-        private static ServerChoose chooser = CatClientUtil.getBean(ServerChoose.class);
-        private static CloudResultHandler resultHandler = new CloudResultHandler();
-        static {
-            if( chooser == null ){
-                throw new RuntimeException("未找到负载均衡对象 ServiceInstanceChooser");
-            }
+    @Override
+    public void afterPropertiesSet() {
+        chooser = CatClientUtil.getBean(ServerChoose.class);
+        if( chooser == null ){
+            throw new RuntimeException("未找到负载均衡对象 ServerChoose，或者有存在多个！");
         }
+        this.resultHandler(new CloudResultHandler());
     }
-    
-    
+
     
     @Override
     protected CatHttp catHttp() {
@@ -33,18 +36,23 @@ public class CatClientCloudFactory extends CatClientFactory{
     
     @Override
     protected SendProcessor sendHandler() {
-        return new CloudSendHandler(Inner.chooser);
+        return new CloudSendHandler(chooser);
     }
 
     
     @Override
     protected ResultProcessor resultHandler() {
-        return Inner.resultHandler;
+        return resultHandler;
+    }
+
+    
+    public void resultHandler(CloudResultHandler resultHandler) {
+        this.resultHandler = resultHandler;
     }
 
     
     public final static ServerChoose getServerChoose(){
-        return Inner.chooser;
+        return chooser;
     }
-    
+
 }
