@@ -6,27 +6,24 @@ import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
 import com.bugcat.catclient.spi.ServerChoose;
 import com.bugcat.catclient.utils.CatClientUtil;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CatClientCloudFactory extends CatClientFactory implements InitializingBean{
-
-
-    private static ServerChoose chooser;
+public class CatClientCloudFactory extends CatClientFactory {
     
-    private CloudResultHandler resultHandler;
-
-    
-    @Override
-    public void afterPropertiesSet() {
-        chooser = CatClientUtil.getBean(ServerChoose.class);
-        if( chooser == null ){
-            throw new RuntimeException("未找到负载均衡对象 ServerChoose，或者有存在多个！");
+    protected static class Inner {
+        private static final ServerChoose chooser;
+        private static final CloudResultHandler resultHandler;
+        static {
+            chooser = CatClientUtil.getBean(ServerChoose.class);
+            if( chooser == null ){
+                throw new RuntimeException("未找到负载均衡对象 ServerChoose，或者有存在多个！");
+            }
+            resultHandler = new CloudResultHandler();
         }
-        this.resultHandler(new CloudResultHandler());
     }
-
+    
+    
     
     @Override
     protected CatHttp catHttp() {
@@ -36,23 +33,18 @@ public class CatClientCloudFactory extends CatClientFactory implements Initializ
     
     @Override
     protected SendProcessor sendHandler() {
-        return new CloudSendHandler(chooser);
+        return new CloudSendHandler(Inner.chooser);
     }
 
     
     @Override
     protected ResultProcessor resultHandler() {
-        return resultHandler;
-    }
-
-    
-    public void resultHandler(CloudResultHandler resultHandler) {
-        this.resultHandler = resultHandler;
+        return Inner.resultHandler;
     }
 
     
     public final static ServerChoose getServerChoose(){
-        return chooser;
+        return Inner.chooser;
     }
 
 }
