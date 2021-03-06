@@ -29,7 +29,7 @@ public interface UserService {
 public class UserServiceImpl implements UserService {
 
     @Override
-    public ResponseEntity<PageInfo<UserInfo>> userPage(UserPageVi vi) {
+    public ResponseEntity<PageInfo<UserInfo>> userPage(String token, UserPageVi vi) {
         return null;
     }
 
