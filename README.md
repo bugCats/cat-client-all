@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
 
 <br>
 
-反观 **`dubbo`** 类的框架，服务端会有一个*xml*配置文件，暴露提供的*Service*层信息（高版本中直接可以使用注解申明）。然后在**`服务端`**，直接用一个类**实现**这个*interface*接口，实现*interface*中方法，即可被远程客户端调用。看上去就好像是**`客户端`**，**注入**一个*Service*类的*interface*，就完成了调用远程服务端的*Service*具体实现类。
+反观 **`dubbo`** 类的框架，服务端会有一个*xml*配置文件，暴露提供的*Service*层信息（高版本中直接可以使用注解申明）。然后在 **`服务端`** ，直接用一个类 **实现** 这个*interface*接口，实现*interface*中方法，即可被远程客户端调用。看上去就好像是 **`客户端`** ，**注入**一个*Service*类的*interface*，就完成了调用远程服务端的*Service*具体实现类。
 
 
 <br>
@@ -136,7 +136,7 @@ public interface UserService {
 
 <br>
 
-#### 2. 普通类实现这个*feign-interface*，并且在类上添加 **`@CatServer`**
+#### 2. 普通类实现这个*feign-interface*，并且在类上添加`@CatServer`
 
 ```
 @CatServer
@@ -165,7 +165,7 @@ public class UserServiceImpl implements UserService {
 
 <br>
 
-#### 3. 启动类上添加 **`@EnableCatServer`**注解，启用*catserver*服务端
+#### 3. 启动类上添加`@EnableCatServer`注解，启用*catserver*服务端
 ```
 @EnableCatServer("com.bugcat")
 @SpringBootApplication
@@ -184,19 +184,19 @@ public class CatServerApplication {
 ### 其他说明
 被`@CatServer`标记的类，最后仍然充当Controller角色。但是又可以像普通*Service*一样，可以被其他组件注入调用！
 
-1. 生成的Controller类，支持swagger框架：
+1. 生成的Controller类，支持swagger框架：  
 在interface的方法、输入模型、输出模型上，使用swagger注解，同样可以生成API文档，并且能正常调用
 
-2. 可以为每个生成的Controller单独配置拦截器：
+2. 可以为每个生成的Controller单独配置拦截器：   
 仅当通过API调用，作为Controller角色时，拦截器生效；而一般情况，作为组件注入调用时，不拦截！
 
-3. 可以为Controller的响应，自动加上包装器类：
+3. 可以为Controller的响应，自动加上包装器类：  
 很多情况下，API接口的响应是同一个类，具体的业务数据，是响应类的一个泛型属性。CatServer组件，可以让开发人员专注业务数据，程序将业务对象自动封装到公共的响应类中
 
-4. 通过类的继承特性，实现对API接口升级：
+4. 通过类的继承特性，实现对API接口升级：   
 例如有个新类`UserServiceExtImpl`继承`UserServiceImpl`，并且重写了父类方法，那么这个API便升级成了子类重新的方法！
 
-5. 可搭配`FeignClient`使用：  
+5. 可搭配`FeignClient`使用：    
 可以实现如同`dubbo`框架风格，客户端与服务器通过*interface*耦合。*客户端注入interface，服务端实现interface*
 
 
@@ -205,14 +205,14 @@ public class CatServerApplication {
 
 ---
 
-## cat-client：猫脸客户端
-和`cat-server`搭配使用的客户端组件，也可以单独使用的轻量级*仿FeignClient*组件。
+## cat-client：猫脸客户端 
+和`cat-server`搭配使用的客户端，也可以单独使用的轻量级*仿FeignClient*组件。  
 
-### 使用方式类似于`FeignClient`
+### 使用方式类似于`FeignClient`   
 
-#### 1. 定义客户端  
+#### 1. 定义客户端    
 
-可以在*interface*上直接添加 **@CatClient** ，通过注解扫描加载：
+可以在*interface*上直接添加 **@CatClient** ，通过注解扫描加载：   
 ```java
 @CatClient(host = "${user-server}", connect = 3000, logs = RequestLogs.All2)
 public interface UserService {
@@ -231,8 +231,8 @@ public interface UserService {
 
 <br>
 
-#### 2. 通过 CatClients 子类定义
-通过**CatClients**子类，集中批量定义：
+#### 2. 通过 CatClients 子类定义 
+通过**CatClients**子类，集中批量定义：  
 
 ```java
 public interface Remotes extends CatClients {
@@ -249,7 +249,7 @@ public interface Remotes extends CatClients {
 
 <br>
 
-#### 3. 启动类上添加 **`@EnableCatClient`**注解，启用*catclient*客户端
+#### 3. 启动类上添加`@EnableCatClient`注解，启用*catclient*客户端
 
 ```java
 @EnableCatClient(value = "com.bugcat",  classes = Remotes.class)
@@ -286,19 +286,19 @@ public class UserController {
 ### 其他说明
 
 为什么在已经有了`FeignClient`的情况下，还要开发`cat-client`？
-在第一次使用FeignClient时，被他的设计理念惊艳到。一边读源码学习，一边决心按照自己的想法写点什么。等回过神的时候，cat-client已经成型。
-不要嘲讽我重复造轮子，你在嘲笑我时候，我已经把全套技术栈熟记于心。借此机会，同时也诞生了cat-server！
+bugcat在第一次使用FeignClient时，被他的设计理念惊艳到。一边读源码学习，一边决心按照自己的想法写点什么。等回过神的时候，cat-client已经成型。
+不要嘲讽bugcat重复造轮子，你在嘲笑我时候，我已经把相关技术熟记于心。同时也借此机会，诞生了cat-server！
 
-1. 轻量级  
+1. 轻量级    
 整个项目，核心代码不到3000行。只要是springboot项目，都可以使用，仅额外需要引入fastjson。（Springmvc项目，也仅需要改一下自定义扫描地方）
 
-2. 支持扩展
+2. 支持扩展    
 http模块、对象序列化与反序列化模块、负载均衡模块，全部是预留接口、使用插件方式引入，可以自由搭配、按需使用；
 
-3. 精细化控制每个API方法
+3. 精细化控制每个API方法   
 精确到具体的某个API方法，设置http链接超时，是否打印输入、输出日志；调用前添加签名、添加token；http失败回调、http失败重连机制等。
 
-4. 自动去包装器类
+4. 自动去包装器类   
 这是`cat-server`自动添加包装器的逆操作。开发人员应该关注具体的业务代码，重复的事、公共的事，交给程序做。
 
 
@@ -372,9 +372,12 @@ cat-server服务端核心模块
 
 
 
-
+----
 
 <br><br>
+
+~~如果觉得还不错，点个赞再走呗~~
+
 <br><br>
 
 
