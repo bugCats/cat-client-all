@@ -8,6 +8,7 @@ import org.springframework.cglib.core.ReflectUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +64,8 @@ public final class CatAsm implements Opcodes {
         // 如果这个interface曾经被增强过，直接返回增强后的扩展interface
         try { return classLoader.loadClass(className); } catch ( Exception ex ) { }
 
-        ClassReader cr = new ClassReader(inter.getName());
+        InputStream stream = classLoader.getResourceAsStream(inter.getName().replace('.', '/') + ".class");
+        ClassReader cr = new ClassReader(stream);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
 
         Map<String, Class> returnTypeMap = new HashMap<>();
