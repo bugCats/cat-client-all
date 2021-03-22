@@ -20,7 +20,7 @@ import java.util.function.IntFunction;
  * 将动态生成的interface实现类，注册成Controller
  * @author: bugcat
  * */
-public class CatServerInitBean implements InitializingBean {
+public class CatServerInitBean implements InitializingBean{
 
 
     private List<Class> catServerList;
@@ -51,12 +51,10 @@ public class CatServerInitBean implements InitializingBean {
 
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( BeanInfo info : beanInfos ){
-            
-            // 原始方法
-            info.thisMethods.forEach((sign, metadata) -> {
-
+            for(Map.Entry<String, StandardMethodMetadata> entry : info.thisMethods.entrySet() ){
+                String sign = entry.getKey();
+                StandardMethodMetadata metadata = entry.getValue();
                 Method method = metadata.getIntrospectedMethod();
-                
                 // RequestMapping必须指向桥接方法
                 Method bridgeMethod = info.bridgeMethods.get(CatToosUtil.signature(CatServerUtil.bridgeName + method.getName(), method));
                 if( bridgeMethod != null ){
@@ -73,7 +71,7 @@ public class CatServerInitBean implements InitializingBean {
                     mapper.unregisterMapping(mappingInfo);
                     mapper.registerMapping(mappingInfo, info.bean, bridgeMethod); // 注册映射处理
                 }  
-            });
+            }
         }
     }
 

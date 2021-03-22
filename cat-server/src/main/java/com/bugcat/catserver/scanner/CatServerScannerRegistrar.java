@@ -32,7 +32,7 @@ import java.util.Set;
  *
  * @author: bugcat
  * */
-public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
+public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware{
     
     private static Logger log = LoggerFactory.getLogger(CatServerScannerRegistrar.class);
 
@@ -164,6 +164,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         definition.setPrimary(true);
         definition.setDependsOn(dependsOn);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
+        definition.setLazyInit(true);
         
         return className;
     }
@@ -172,7 +173,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
     /**
      * 自定义扫描
      * */
-    private static class CatServerScanner extends ClassPathBeanDefinitionScanner {
+    private static class CatServerScanner extends ClassPathBeanDefinitionScanner{
 
         private Set<AbstractBeanDefinition> definitions = new HashSet<>();
         

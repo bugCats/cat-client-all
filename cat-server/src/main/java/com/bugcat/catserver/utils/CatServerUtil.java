@@ -1,15 +1,12 @@
 package com.bugcat.catserver.utils;
 
-import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author bugcat
  * */
 @ComponentScan("com.bugcat.catserver")
-public class CatServerUtil implements ApplicationContextAware {
+public class CatServerUtil implements ApplicationContextAware{
 
     public static final String bridgeName = "$bugcat$";
     public static final String annName = RequestMapping.class.getName();
@@ -40,6 +37,10 @@ public class CatServerUtil implements ApplicationContextAware {
         context = applicationContext;
     }
 
+    public static AutowireCapableBeanFactory getBeanFactory(){
+        return context.getAutowireCapableBeanFactory();
+    }
+    
     /**
      * 得到原始方法名
      * */
@@ -88,21 +89,9 @@ public class CatServerUtil implements ApplicationContextAware {
     }
     
     
-    /**
-     * 给new出的对象，自动注入属性
-     * */
-    public static void processInjection(Object bean){
-        AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
-        bpp.setBeanFactory(context.getAutowireCapableBeanFactory());
-        bpp.processInjection(bean);
-    }
-    
-    
     public static ClassLoader getClassLoader(){
         return context.getClassLoader();
     }
-
-
 
 
     public static final void addInitBean(InitializingBean bean){
@@ -113,7 +102,7 @@ public class CatServerUtil implements ApplicationContextAware {
     
     @Order
     @Component
-    public static class BeanInitHandler implements InitializingBean {
+    public static class BeanInitHandler implements InitializingBean{
 
         private static BlockingQueue<InitializingBean> beans = new LinkedBlockingQueue<>();
 
@@ -137,7 +126,5 @@ public class CatServerUtil implements ApplicationContextAware {
         }
     }
 
-
-    
     
 }

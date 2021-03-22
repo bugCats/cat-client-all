@@ -3,6 +3,7 @@ package com.bugcat.catserver.handler;
 import com.bugcat.catface.spi.ResponesWrapper;
 import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.spi.CatInterceptor;
+import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -21,13 +22,12 @@ import java.util.function.Function;
  * 单例
  * @author bugcat
  * */
-public final class CatMethodInterceptor implements MethodInterceptor {
+public final class CatMethodInterceptor implements MethodInterceptor{
     
     
-    private StandardMethodMetadata interMethod;         //interface上对于的方法
-    private Method realMethod;
+    private StandardMethodMetadata interMethod;         //interface上对应的桥接方法
+    private Method realMethod;                          //interface上对应的真实方法
 
-    private MethodProxy realMethodProxy;
     private List<CatInterceptor> handers;
     
     private Function<Object, Object> successToEntry;
@@ -38,8 +38,6 @@ public final class CatMethodInterceptor implements MethodInterceptor {
         
         interMethod = builder.getInterMethod();
         realMethod = builder.getRealMethod();
-        
-        realMethodProxy = builder.getMethodProxy();
         handers = builder.getHanders();
         
         ResponesWrapper wrapper = builder.getWrapper();
@@ -68,7 +66,10 @@ public final class CatMethodInterceptor implements MethodInterceptor {
         HttpServletRequest request = attr.getRequest();
         HttpServletResponse response = attr.getResponse();
 
-        CatInterceptPoint point = new CatInterceptPoint(request, response, target, realMethod, interMethod, args);
+        Class<?> targetClass = target.getClass().getSuperclass();
+        Object targetObj = CatServerUtil.getBean(targetClass);
+
+        CatInterceptPoint point = new CatInterceptPoint(request, response, targetObj, realMethod, interMethod, args);
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());
 
@@ -86,7 +87,7 @@ public final class CatMethodInterceptor implements MethodInterceptor {
                 hander.befor(point);
             }
 
-            point.result = successToEntry.apply(realMethodProxy.invokeSuper(target, args));
+            point.result = successToEntry.apply(realMethod.invoke(targetObj, args));
 
             for(int i = active.size() - 1; i >= 0; i -- ){
                 CatInterceptor hander = active.get(i);

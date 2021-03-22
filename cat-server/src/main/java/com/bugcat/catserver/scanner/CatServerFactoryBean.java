@@ -7,6 +7,9 @@ import com.bugcat.catserver.handler.CatInterceptorBuilders;
 import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.cglib.core.DefaultNamingPolicy;
+import org.springframework.cglib.core.Predicate;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -21,12 +24,11 @@ import java.util.Map;
 /**
  * @author: bugcat
  * */
-public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
+public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
     
     
     private Class<T> clazz;
 
-    
     
     @Override
     public Class<T> getObjectType() {
@@ -76,20 +78,18 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
         // 此时thisInters中，全部为增强后的扩展interface
 
         CatInterceptorBuilders builders = CatInterceptorBuilders.builders();
+        builders.registryInitializingBean(catServerInfo);
+        
         for(Class inter : thisInters ){
             for(Method method : inter.getMethods()){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
                 Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
-                
-                // 遍历每个interface的方法，筛选只有包含CatServerInitBean.annName注解的
-                if( attr != null ){
-                    String name = method.getName();
-                    if ( CatServerUtil.isBridgeMethod(method) ) {
-                        //桥接方法 noop
-                    } else {
-                        // 原始方法
-                        MethodBuilder builder = builders.builder(name);
-                        builder.interMethod(metadata);
+                if( attr != null ){// 遍历每个interface的方法，筛选只有包含CatServerInitBean.annName注解的
+                    if ( CatServerUtil.isBridgeMethod(method) ) {//桥接方法
+                        MethodBuilder builder = builders.builder(method, true);
+                        builder.interMethod(metadata);                        
+                    } else {    //原始方法
+                        MethodBuilder builder = builders.builder(method, false);
                         builder.realMethod(method);
                     }
                 }
@@ -100,11 +100,10 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
             
             @Override
             protected Object getCallback (Method method) {
-                String name = method.getName();
-                MethodBuilder builder = builders.getBuilder(name);
-                if ( builder != null ) {
+                if ( CatServerUtil.isBridgeMethod(method) ) {
+                    MethodBuilder builder = builders.getBuilder(method);
                     return builder.build();
-                }  else {
+                } else {
                     return new MethodInterceptor() {    //默认方法
                         @Override
                         public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -120,20 +119,19 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T> {
         enhancer.setInterfaces(thisInters);
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
-        enhancer.setClassLoader(classLoader);
-        
+//        enhancer.setNamingPolicy(new DefaultNamingPolicy(){
+//            @Override
+//            public String getClassName(String prefix, String source, Object key, Predicate names) {
+//                return prefix + "$$ByBugcat";
+//            }
+//        });
         Object obj = enhancer.create();
-        Class<?> server = obj.getClass();
-
-        /**
-         * 通过动态代理生成的obj，不会自动注入属性，需要借助Srping容器实现自动注入
-         * */
-        CatServerUtil.processInjection(obj);
-
-        builders.registryInitializingBean(server, catServerInfo);
-
+        
+        
+        AutowireCapableBeanFactory beanFactory = CatServerUtil.getBeanFactory();
+        beanFactory.autowireBeanProperties(obj, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
+        
         return (T) obj;
-
     }
     
     
