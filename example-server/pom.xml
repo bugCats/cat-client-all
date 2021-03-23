@@ -9,9 +9,9 @@
         <relativePath/>
     </parent>
 	<groupId>com.bugcat</groupId>
-	<artifactId>server-example</artifactId>
+	<artifactId>example-server</artifactId>
 	<version>1.0.0</version>
-	<name>server-example</name>
+	<name>example-server</name>
 	<description>服务端呆毛</description>
 
 	<developers>
@@ -41,13 +41,13 @@
 
 		<dependency>
 			<groupId>com.bugcat</groupId>
-			<artifactId>server-example-api</artifactId>
+			<artifactId>cat-server-swagger</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.bugcat</groupId>
-			<artifactId>cat-server-swagger</artifactId>
+			<artifactId>example-server-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		

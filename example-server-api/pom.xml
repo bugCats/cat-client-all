@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.bugcat</groupId>
-	<artifactId>server-example-api</artifactId>
+	<artifactId>example-server-api</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<description>服务器示例</description>

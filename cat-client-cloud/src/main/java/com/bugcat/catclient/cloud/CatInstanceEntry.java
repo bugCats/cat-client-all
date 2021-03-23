@@ -3,7 +3,7 @@ package com.bugcat.catclient.cloud;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class CatInstanceEntry{
+public final class CatInstanceEntry {
 
     /**
      * 截取服务名

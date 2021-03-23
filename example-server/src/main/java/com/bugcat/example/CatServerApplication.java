@@ -13,6 +13,7 @@ import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 @EnableCatServer("com.bugcat")
@@ -42,6 +43,7 @@ public class CatServerApplication {
         }
 
         @GetMapping("/userInfo")
+        @ResponseBody
         public ResponseEntity<UserInfo> userInfo(){
             UserInfo userInfo = userService.userInfo("666");
             return ResponseEntity.ok(userInfo);

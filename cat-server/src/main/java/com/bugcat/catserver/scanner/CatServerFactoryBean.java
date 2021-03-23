@@ -8,8 +8,6 @@ import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.cglib.core.DefaultNamingPolicy;
-import org.springframework.cglib.core.Predicate;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -78,8 +76,6 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
         // 此时thisInters中，全部为增强后的扩展interface
 
         CatInterceptorBuilders builders = CatInterceptorBuilders.builders();
-        builders.registryInitializingBean(catServerInfo);
-        
         for(Class inter : thisInters ){
             for(Method method : inter.getMethods()){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
@@ -97,12 +93,11 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
         }
         
         CallbackHelper helper = new CallbackHelper(clazz, thisInters) {
-            
             @Override
             protected Object getCallback (Method method) {
                 if ( CatServerUtil.isBridgeMethod(method) ) {
                     MethodBuilder builder = builders.getBuilder(method);
-                    return builder.build();
+                    return builder.getCatMethodInterceptor(catServerInfo);
                 } else {
                     return new MethodInterceptor() {    //默认方法
                         @Override
@@ -119,14 +114,7 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
         enhancer.setInterfaces(thisInters);
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
-//        enhancer.setNamingPolicy(new DefaultNamingPolicy(){
-//            @Override
-//            public String getClassName(String prefix, String source, Object key, Predicate names) {
-//                return prefix + "$$ByBugcat";
-//            }
-//        });
         Object obj = enhancer.create();
-        
         
         AutowireCapableBeanFactory beanFactory = CatServerUtil.getBeanFactory();
         beanFactory.autowireBeanProperties(obj, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);

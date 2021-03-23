@@ -9,9 +9,9 @@
         <relativePath/>
     </parent>
 	<groupId>com.bugcat</groupId>
-	<artifactId>client-example</artifactId>
+	<artifactId>example-client</artifactId>
 	<version>1.0.0</version>
-	<name>client-example</name>
+	<name>example-client</name>
 	<description>客户端呆毛</description>
 
 	<developers>
@@ -48,9 +48,11 @@
 			<artifactId>cat-client-jackson</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+		
+		
 		<dependency>
 			<groupId>com.bugcat</groupId>
-			<artifactId>server-example-api</artifactId>
+			<artifactId>example-server-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		

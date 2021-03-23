@@ -136,6 +136,10 @@
 		<module>cat-client-cloud</module>
 		<module>cat-server</module>
 		<module>cat-server-swagger</module>
+		
+		<module>example-server</module>
+		<module>example-server-api</module>
+		<module>example-client</module>
 	</modules>
 
 	<build>

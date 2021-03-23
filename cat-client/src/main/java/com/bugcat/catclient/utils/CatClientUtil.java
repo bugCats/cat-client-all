@@ -284,11 +284,11 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
 
         public static final void doInitBean() {
             while ( true ) {
-                InitializingBean bean = beans.poll();
-                if( bean == null ){
-                    break;
-                }
                 try {
+                    InitializingBean bean = beans.poll();
+                    if( bean == null ){
+                        break;
+                    }
                     bean.afterPropertiesSet();
                 } catch ( Exception ex ) {
                     throw new RuntimeException(ex);

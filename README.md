@@ -199,6 +199,7 @@ public class CatServerApplication {
 5. 可搭配`FeignClient`使用：    
 可以实现如同`dubbo`框架风格，客户端与服务器通过*interface*耦合。*客户端注入interface，服务端实现interface*
 
+6. 可以像普通Service类一样，支持`@Transactional`事务配置。
 
 <br>
 <br>
@@ -358,13 +359,13 @@ cat-server服务端核心模块
 <br>
 
 
-#### client-example-xxxx
+#### example-client-xxxx
 客户端调用示例
 
 
 <br>
 
-#### server-example-xxx
+#### example-server-xxx
 服务端示例
 
 

@@ -24,17 +24,16 @@ import java.util.function.Function;
  * */
 public final class CatMethodInterceptor implements MethodInterceptor{
     
-    
-    private StandardMethodMetadata interMethod;         //interface上对应的桥接方法
-    private Method realMethod;                          //interface上对应的真实方法
+    private final StandardMethodMetadata interMethod;         //interface上对应的桥接方法
+    private final Method realMethod;                          //interface上对应的真实方法
 
-    private List<CatInterceptor> handers;
+    private final List<CatInterceptor> handers;
     
-    private Function<Object, Object> successToEntry;
-    private Function<Throwable, Object> errorToEntry;
+    private final Function<Object, Object> successToEntry;
+    private final Function<Throwable, Object> errorToEntry;
 
-    
-    protected void initializing(MethodBuilder builder) {
+
+    public CatMethodInterceptor(MethodBuilder builder) {
         
         interMethod = builder.getInterMethod();
         realMethod = builder.getRealMethod();
