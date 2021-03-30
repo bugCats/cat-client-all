@@ -140,15 +140,16 @@ public final class CatAsm implements Opcodes {
             
             // 包装器类存在，并且方法返回类型，不是包装器类
             if( warp != null && !warp.isAssignableFrom(returnType) ) {
-                
+
                 // warp描述
                 String warpDesc = Type.getDescriptor(warp);
 
+                String[] desc = descriptor.split("\\)");
                 String[] sign = (signature == null ? descriptor : signature).split("\\)");
-                String returnDesc = warpDesc.replace(";", "<" + sign[1] + ">;");
+                String returnSign = warpDesc.replace(";", "<" + sign[1] + ">;");
 
-                this.desc = sign[0] + ")" + warpDesc;
-                this.sign = sign[0] + ")" + returnDesc;
+                this.desc = desc[0] + ")" + warpDesc;
+                this.sign = sign[0] + ")" + returnSign;
                 
             } else {
                 this.desc = descriptor;
