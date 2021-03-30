@@ -1,7 +1,6 @@
 package com.bugcat.catserver.handler;
 
 import com.bugcat.catface.spi.ResponesWrapper;
-import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
 import com.bugcat.catserver.spi.CatInterceptor;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -33,10 +32,10 @@ public final class CatMethodInterceptor implements MethodInterceptor{
     private final Function<Throwable, Object> errorToEntry;
 
 
-    public CatMethodInterceptor(MethodBuilder builder) {
+    public CatMethodInterceptor(CatInterceptorMethodBuilder builder) {
         
         interMethod = builder.getInterMethod();
-        realMethod = builder.getRealMethod();
+        realMethod = interMethod.getIntrospectedMethod();
         handers = builder.getHanders();
         
         ResponesWrapper wrapper = builder.getWrapper();
@@ -65,10 +64,10 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         HttpServletRequest request = attr.getRequest();
         HttpServletResponse response = attr.getResponse();
 
-        Class<?> targetClass = target.getClass().getSuperclass();
-        Object targetObj = CatServerUtil.getBean(targetClass);
+        Class<?> serverClass = CatServerUtil.getServerClass(target.getClass());
+        Object server = CatServerUtil.getBean(serverClass);
 
-        CatInterceptPoint point = new CatInterceptPoint(request, response, targetObj, realMethod, interMethod, args);
+        CatInterceptPoint point = new CatInterceptPoint(request, response, server, realMethod, interMethod, args);
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());
 
@@ -86,7 +85,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
                 hander.befor(point);
             }
 
-            point.result = successToEntry.apply(realMethod.invoke(targetObj, args));
+            point.result = successToEntry.apply(realMethod.invoke(server, args));
 
             for(int i = active.size() - 1; i >= 0; i -- ){
                 CatInterceptor hander = active.get(i);

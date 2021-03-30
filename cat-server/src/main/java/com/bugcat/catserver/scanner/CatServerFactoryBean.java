@@ -1,13 +1,15 @@
 package com.bugcat.catserver.scanner;
 
 import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.asm.CatAsm;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
-import com.bugcat.catserver.handler.CatInterceptorBuilders;
-import com.bugcat.catserver.handler.CatInterceptorBuilders.MethodBuilder;
+import com.bugcat.catserver.handler.CatInterceptorMethodBuilder;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.cglib.core.DefaultNamingPolicy;
+import org.springframework.cglib.core.Predicate;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -16,6 +18,7 @@ import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,37 +70,31 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
             }
         }
         
+        Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
         Class[] thisInters = new Class[inters.size()];
         for(int i = 0; i < inters.size(); i ++ ){ // 遍历每个interface
             Class inter = inters.get(i);
             Class enhancer = asm.enhancer(inter, warp); //使用asm增强interface
             thisInters[i] = enhancer;
-        }
-        // 此时thisInters中，全部为增强后的扩展interface
-
-        CatInterceptorBuilders builders = CatInterceptorBuilders.builders();
-        for(Class inter : thisInters ){
             for(Method method : inter.getMethods()){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
                 Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
                 if( attr != null ){// 遍历每个interface的方法，筛选只有包含CatServerInitBean.annName注解的
-                    if ( CatServerUtil.isBridgeMethod(method) ) {//桥接方法
-                        MethodBuilder builder = builders.builder(method, true);
-                        builder.interMethod(metadata);                        
-                    } else {    //原始方法
-                        MethodBuilder builder = builders.builder(method, false);
-                        builder.realMethod(method);
-                    }
+                    metadataMap.put(CatToosUtil.signature(method), metadata);
                 }
             }
         }
+        // 此时thisInters中，全部为增强后的扩展interface
+
         
-        CallbackHelper helper = new CallbackHelper(clazz, thisInters) {
+        CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
             @Override
             protected Object getCallback (Method method) {
-                if ( CatServerUtil.isBridgeMethod(method) ) {
-                    MethodBuilder builder = builders.getBuilder(method);
-                    return builder.getCatMethodInterceptor(catServerInfo);
+                StandardMethodMetadata metadata = metadataMap.get(CatToosUtil.signature(method));
+                if ( metadata != null ) {
+                    CatInterceptorMethodBuilder builder = CatInterceptorMethodBuilder.builder();
+                    builder.interMethod(metadata);
+                    return builder.build(catServerInfo); // ;
                 } else {
                     return new MethodInterceptor() {    //默认方法
                         @Override
@@ -110,18 +107,20 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
         };
         
         Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(clazz);
+        enhancer.setSuperclass(Object.class);
         enhancer.setInterfaces(thisInters);
         enhancer.setCallbackFilter(helper);
         enhancer.setCallbacks(helper.getCallbacks());
-        Object obj = enhancer.create();
+        
+        Object ctrl = enhancer.create();
+        CatServerUtil.setCtrlClass(clazz, ctrl);
         
         AutowireCapableBeanFactory beanFactory = CatServerUtil.getBeanFactory();
-        beanFactory.autowireBeanProperties(obj, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
-        
-        return (T) obj;
+        Object impl = beanFactory.autowire(clazz, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
+
+        return (T) impl;
     }
-    
+
     
     
     public Class<T> getClazz() {
@@ -133,4 +132,5 @@ public class CatServerFactoryBean<T> extends AbstractFactoryBean<T>{
     }
     
     
+
 }

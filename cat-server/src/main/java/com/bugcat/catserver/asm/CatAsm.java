@@ -2,7 +2,13 @@ package com.bugcat.catserver.asm;
 
 import com.bugcat.catface.spi.ResponesWrapper;
 import com.bugcat.catserver.utils.CatServerUtil;
-import org.springframework.asm.*;
+import org.springframework.asm.AnnotationVisitor;
+import org.springframework.asm.ClassReader;
+import org.springframework.asm.ClassVisitor;
+import org.springframework.asm.ClassWriter;
+import org.springframework.asm.MethodVisitor;
+import org.springframework.asm.Opcodes;
+import org.springframework.asm.Type;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
 
@@ -12,7 +18,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-
 
 
 /**
@@ -35,12 +40,13 @@ import java.util.Map;
  * 
  * 最后使用cglib动态生成类时，采用扩展interface
  * */
-public final class CatAsm implements Opcodes {
+public final class CatAsm implements Opcodes{
     
     
     // 设置动态生成扩展interface的目录
     private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
     
+    private final static String RESPONSE_BODY = "Lorg/springframework/web/bind/annotation/ResponseBody;";
     private final ClassLoader classLoader;
     
     /**
@@ -77,6 +83,10 @@ public final class CatAsm implements Opcodes {
         CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, returnTypeMap, warp);
         cr.accept(catServer, ClassReader.EXPAND_FRAMES);
 
+        if ( !catServer.hasResponseBody ) {
+            catServer.visitAnnotation(RESPONSE_BODY, true);
+        }
+        
         byte[] newbs = cw.toByteArray();
         Class gen = ReflectUtils.defineClass(className, newbs, classLoader);
         
@@ -87,11 +97,12 @@ public final class CatAsm implements Opcodes {
 
 
     
-    private static class CatServerClassVisitor extends ClassVisitor implements Opcodes {
+    private static class CatServerClassVisitor extends ClassVisitor implements Opcodes{
 
-        private Class inter;
         private Map<String, Class> returnTypeMap;
+        private Class inter;
         private Class warp;
+        private boolean hasResponseBody = false;
         
         public CatServerClassVisitor(ClassVisitor cv, Class inter, Map<String, Class> returnTypeMap, Class warp) {
             super(ASM4, cv);
@@ -101,16 +112,23 @@ public final class CatAsm implements Opcodes {
         }
         
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            super.visit(version, access, className(inter).replace(".", "/"), signature, superName, new String[]{inter.getName().replace(".", "/")});
+            super.visit(version, access, className(inter).replace(".", "/"), signature, superName, interfaces);
         }
-        
-        
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+            if( !hasResponseBody && RESPONSE_BODY.equals(desc) ){
+                hasResponseBody = true;
+            }
+            return super.visitAnnotation(desc, visible);
+        }
+
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
             MethodVisitor mv = null;
             Class returnType = returnTypeMap.get(descriptor);
             if( returnType != null ){
-                Signature sign = new Signature(CatServerUtil.bridgeMethodName(name), returnType);
+                Signature sign = new Signature(name, returnType);
                 sign.transform(warp, descriptor, signature);
                 mv = super.visitMethod(access, sign.getName(), sign.getDesc(), sign.getSign(), exceptions);
             } else {
