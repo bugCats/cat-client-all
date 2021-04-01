@@ -12,13 +12,15 @@ import com.bugcat.catserver.handler.CatMethodInterceptor;
  * 被{@code CatServer}标记的类，会作为Controller注册到系统中，
  * 如果需要对这些类权限控制，可以通过Aop切面控制，也可以使用自定义拦截器处理
  * 
+ * 注意，此拦截器只会通过http访问时生效，如果直接内部调用标记类，是不会生效！
+ * 
  * @see CatMethodInterceptor
  * 
  * */
 public class CatInterceptor {
 
     
-    public static final CatInterceptor instance = new CatInterceptor();
+    public static final CatInterceptor defaults = new CatInterceptor();
     
     
     /**

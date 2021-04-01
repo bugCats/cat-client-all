@@ -1,6 +1,7 @@
 package com.bugcat.catserver.handler;
 
 import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.spi.CatInterceptor;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -32,13 +34,24 @@ public final class CatMethodInterceptor implements MethodInterceptor{
     private final Function<Throwable, Object> errorToEntry;
 
 
-    public CatMethodInterceptor(CatInterceptorMethodBuilder builder) {
-        
-        interMethod = builder.getInterMethod();
-        realMethod = interMethod.getIntrospectedMethod();
-        handers = builder.getHanders();
-        
-        ResponesWrapper wrapper = builder.getWrapper();
+    public CatMethodInterceptor(StandardMethodMetadata interMethod, CatServerInfo catServerInfo) {
+
+        Class<? extends CatInterceptor>[] handerList = catServerInfo.getHanders();
+        List<CatInterceptor> handers = new ArrayList<>(handerList.length);
+        for(Class<? extends CatInterceptor> clazz : handerList) {
+            if( CatInterceptor.class.equals(clazz) ){
+                handers.add(CatInterceptor.defaults);
+            } else {
+                handers.add(CatServerUtil.getBean(clazz));
+            }
+        }
+        handers.sort(Comparator.comparingInt(CatInterceptor::getOrder));
+
+        this.interMethod = interMethod;
+        this.realMethod = interMethod.getIntrospectedMethod();
+        this.handers = handers;
+
+        ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
         if( wrapper != null ){
             Class wrap = wrapper.getWrapperClass();
             Class<?> returnType = realMethod.getReturnType();
@@ -58,16 +71,16 @@ public final class CatMethodInterceptor implements MethodInterceptor{
     
     
     @Override
-    public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+    public Object intercept (Object ctrl, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
         
         ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attr.getRequest();
         HttpServletResponse response = attr.getResponse();
 
-        Class<?> serverClass = CatServerUtil.getServerClass(target.getClass());
+        Class serverClass = CatServiceCtrlInterceptor.getServerClass(ctrl);
         Object server = CatServerUtil.getBean(serverClass);
 
-        CatInterceptPoint point = new CatInterceptPoint(request, response, server, realMethod, interMethod, args);
+        CatInterceptPoint point = new CatInterceptPoint(request, response, server, interMethod, args);
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());
 

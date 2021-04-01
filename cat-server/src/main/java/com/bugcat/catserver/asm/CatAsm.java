@@ -24,21 +24,12 @@ import java.util.Map;
  * 
  * {@link ResponesWrapper} 自动添加包装器类实现
  * 
- * interface中的原始方法，均是返回真正的业务响应
- * 要实现自动添加包装器类，可以为原始方法，用asm动态添加桥接方法。
+ * 被@CatServer标记类的interface，使用cglib代理，动态生成类充当Controller角色
  * 
- * 使用桥接方法调用原始返回，再把业务响应进行包装。
+ * 在动态代理类中，再使用反射调用被标记类的方法
  * 
+ * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类
  * 
- * 由于原始方法上有注解，使用asm动态生成的方法，会丢失这些注解，
- * 最终导致Controller框架中的RequestMapping解析入参异常，swagger框架也会失效
- * 
- * 
- * 此处做法为：先使用asm动态生成一个扩展interface，继承原始interface。
- * 再解析原始interface、原始方法，修改方法名、响应类型，变成扩展interface的桥接方法；
- * 这样，扩展interface中的桥接方法，就会保留注解信息
- * 
- * 最后使用cglib动态生成类时，采用扩展interface
  * */
 public final class CatAsm implements Opcodes{
     
@@ -46,7 +37,10 @@ public final class CatAsm implements Opcodes{
     // 设置动态生成扩展interface的目录
     private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
     
+    // 为interface添加@ResponseBody注解
     private final static String RESPONSE_BODY = "Lorg/springframework/web/bind/annotation/ResponseBody;";
+    
+    
     private final ClassLoader classLoader;
     
     /**
@@ -83,7 +77,7 @@ public final class CatAsm implements Opcodes{
         CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, returnTypeMap, warp);
         cr.accept(catServer, ClassReader.EXPAND_FRAMES);
 
-        if ( !catServer.hasResponseBody ) {
+        if ( !catServer.hasResponseBody ) { //如果interface上没有@ResponseBody，自动添加一个
             catServer.visitAnnotation(RESPONSE_BODY, true);
         }
         
@@ -195,10 +189,6 @@ public final class CatAsm implements Opcodes{
     public static boolean isBridgeClass(Class clazz){
         return clazz != null && clazz.getSimpleName().contains(CatServerUtil.bridgeName);
     }
-    public static String trimClassName(String className){
-        return className.contains(CatServerUtil.bridgeName) ? className.substring(0, className.length() - CatServerUtil.bridgeName.length()) : className;
-    }
-
     
     
     private void print(Class ext, byte[] newbs){

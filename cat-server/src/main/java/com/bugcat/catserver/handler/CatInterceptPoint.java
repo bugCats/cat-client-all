@@ -28,7 +28,6 @@ public final class CatInterceptPoint {
     // 注解属性
     private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>();
     
-    
     //自定义属性
     private final Map<String, Object> attrMap = new HashMap<>();
     
@@ -39,11 +38,11 @@ public final class CatInterceptPoint {
     
     
     public CatInterceptPoint(HttpServletRequest request, HttpServletResponse response,
-                             Object target, Method method, StandardMethodMetadata interMethod, Object[] args) {
+                             Object target, StandardMethodMetadata interMethod, Object[] args) {
         this.request = request;
         this.response = response;
         this.target = target;
-        this.method = method;
+        this.method = interMethod.getIntrospectedMethod();
         this.interMethod = interMethod;
         this.args = args;
     }

@@ -2,6 +2,7 @@ package com.bugcat.catserver.utils;
 
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.asm.CatAsm;
+import com.bugcat.catserver.handler.CatServiceCtrlInterceptor;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Multimaps;
@@ -46,10 +47,11 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
             HandlerMethod handlerMethod = handler.getHandlerMethod();
 
             Class<?> beanType = handlerMethod.getBeanType();
-            
             if( CatAsm.isBridgeClass(beanType) ){
 
-                Class serverClass = CatServerUtil.getServerClass(beanType);
+                Object ctrl = handlerMethod.getBean();
+                
+                Class serverClass = CatServiceCtrlInterceptor.getServerClass(ctrl);
                 Class methodFrom = getMethodFrom(serverClass, CatToosUtil.signature(handlerMethod.getMethod()));
                 
                 CatHandlerMethod method = new CatHandlerMethod(methodFrom, handlerMethod);

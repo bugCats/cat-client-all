@@ -27,29 +27,29 @@ public class CatServerInfo {
 
     
 
-    public final static CatServerInfo buildServerInfo(Class inter) {
-        AnnotationAttributes attributes = CatServerInfo.getAttributes(inter);
+    public final static CatServerInfo buildServerInfo(Class serverClass) {
+        AnnotationAttributes attributes = CatServerInfo.getAttributes(serverClass);
         CatServerInfo serverInfo = new CatServerInfo(attributes);
         return serverInfo;
     }
     
-    private static AnnotationAttributes getAttributes(Class inter) {
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+    private static AnnotationAttributes getAttributes(Class serverClass) {
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(serverClass);
         AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
-        Map<String, Object> wrapper = responesWrap(inter);
-        if( wrapper != null ){
-            client.put("wrapper", wrapper.get("value"));
-        } else {
+        Map<String, Object> wrapper = responesWrap(serverClass);
+        if( wrapper == null ){
             client.put("wrapper", ResponesWrapper.Default.class);
+        } else {
+            client.put("wrapper", wrapper.get("value"));
         }
         return client;
     }
 
-    private static Map<String, Object> responesWrap(Class inter){
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
+    private static Map<String, Object> responesWrap(Class serverClass){
+        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(serverClass);
         Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
         if( wrapper == null ){
-            for ( Class clazz : inter.getInterfaces() ) {
+            for ( Class clazz : serverClass.getInterfaces() ) {
                 wrapper = responesWrap(clazz);
                 if( wrapper != null ){
                     return wrapper;

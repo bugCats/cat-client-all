@@ -2,16 +2,12 @@ package com.bugcat.catserver.utils;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 
 /**
@@ -27,15 +23,10 @@ public class CatServerUtil implements ApplicationContextAware{
     
     private static ApplicationContext context;
 
-
-
+    
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
-    }
-
-    public static AutowireCapableBeanFactory getBeanFactory(){
-        return context.getAutowireCapableBeanFactory();
     }
     
     
@@ -65,25 +56,8 @@ public class CatServerUtil implements ApplicationContextAware{
         }
     }
     
-    
     public static ClassLoader getClassLoader(){
         return context.getClassLoader();
-    }
-    
-    
-    private static ConcurrentMap<Class, Object> ctrlMap = new ConcurrentHashMap<>();
-    private static Map<Class, Class> serverMap = new HashMap<>();
-    
-    public static void setCtrlClass(Class server, Object ctrl){
-        ctrlMap.put(server, ctrl);
-        serverMap.put(ctrl.getClass(), server);
-    }
-    public static Object getCtrlClass(Class server){
-        Object ctrl = ctrlMap.remove(server);
-        return ctrl;
-    }
-    public static Class getServerClass(Class ctrl){
-        return serverMap.get(ctrl);
     }
     
 }
