@@ -101,17 +101,13 @@ public class CatServerInitBean implements InitializingBean{
             
             CatServerInfo serverInfo = CatServerInfo.buildServerInfo(serverClass);
             ctrl = createCatCtrl(serverClass, serverInfo);
-
-            Class thisClazz = ctrl.getClass(); //cglib动态生成的class => interface的实现类
-            List<Class> inters = new ArrayList<>();
-            Class superClass = thisClazz;
-            while ( superClass != Object.class ) {
-                for ( Class inter : superClass.getInterfaces() ) {
-                    inters.add(inter);
-                }
-                superClass = superClass.getSuperclass();
+            
+            for (Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass() ) {
                 level = level + 1;
             }
+            
+            Class thisClazz = ctrl.getClass(); //cglib动态生成的class => interface的实现类
+            Class[] inters = thisClazz.getInterfaces();
 
             for( Class inter : inters ){ //增强后的interface
                 if ( CatAsm.isBridgeClass(inter) ) {
