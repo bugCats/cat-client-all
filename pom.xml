@@ -137,9 +137,7 @@
 		<module>cat-server</module>
 		<module>cat-server-swagger</module>
 		
-		<module>example-server</module>
-		<module>example-server-api</module>
-		<module>example-client</module>
+		<module>examples</module>
 	</modules>
 
 	<build>
