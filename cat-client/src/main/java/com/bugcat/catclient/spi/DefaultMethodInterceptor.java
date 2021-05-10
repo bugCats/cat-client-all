@@ -7,7 +7,7 @@ import com.bugcat.catclient.config.CatHttpRetryConfigurer;
 import com.bugcat.catclient.handler.CatHttpException;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.CatSendContextHolder;
-import com.bugcat.catclient.handler.ResultProcessor;
+import com.bugcat.catclient.handler.AbstractResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -100,7 +100,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
             sendHandler = factory.getSendHandler();
         }
 
-        ResultProcessor resultHandler = factory.getResultHandler();
+        AbstractResultProcessor resultHandler = factory.getResultHandler();
 
         //处理参数列表，如果存在PathVariable参数，将参数映射到url上
         CatParameter param = methodInfo.parseArgs(args);
@@ -165,7 +165,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
      * 执行http请求，如果开启了重连、并且满足重连设置，此处会循环调用，直至成功、或者重试次数耗尽
      * 重连次数，不包含第一次调用！
      */
-    private String doRequest(CatClientInfo clientInfo, SendProcessor sendHandler, ResultProcessor resultHandler) throws Exception {
+    private String doRequest(CatClientInfo clientInfo, SendProcessor sendHandler, AbstractResultProcessor resultHandler) throws Exception {
         try {
             String respStr = sendHandler.httpSend();
             return respStr;

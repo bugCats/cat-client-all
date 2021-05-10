@@ -6,9 +6,9 @@ import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
 import com.bugcat.catclient.handler.CatHttpException;
-import com.bugcat.catclient.handler.ResultProcessor;
+import com.bugcat.catclient.handler.AbstractResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Constructor;
@@ -20,7 +20,7 @@ import java.util.Date;
  * 默认的结果处理类
  * @author bugcat
  * */
-public class DefaultResultHandler extends ResultProcessor {
+public class DefaultResultHandler extends AbstractResultProcessor{
 
 
     @Override
@@ -66,7 +66,7 @@ public class DefaultResultHandler extends ResultProcessor {
         
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 
-        ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
+        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
 
         // 没有设置包装器类
         if ( wrapper == null ) {
@@ -104,7 +104,7 @@ public class DefaultResultHandler extends ResultProcessor {
 
     @Override
     public Object doFinally(Object resp, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) throws Exception {
-        ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
+        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
         if ( wrapper == null || resp == null ) {
             return resp;
         }

@@ -1,6 +1,5 @@
 package com.bugcat.catface.spi;
 
-import com.alibaba.fastjson.TypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 
@@ -26,21 +25,21 @@ import java.util.Map;
  * 
  * @author bugcat
  * */
-public abstract class ResponesWrapper<T> {
+public abstract class AbstractResponesWrapper<T> {
 
 
     /**
      * 响应包装器类map
      * */
-    private final static Map<Class, ResponesWrapper> wrapperMap = new HashMap<>();
+    private final static Map<Class, AbstractResponesWrapper> wrapperMap = new HashMap<>();
 
     
     
-    public final static ResponesWrapper getResponesWrapper(Class<? extends ResponesWrapper> clazz){
+    public final static AbstractResponesWrapper getResponesWrapper(Class<? extends AbstractResponesWrapper> clazz){
         if( clazz == null ){
             return null;
         }
-        ResponesWrapper wrapper = wrapperMap.get(clazz);
+        AbstractResponesWrapper wrapper = wrapperMap.get(clazz);
         if( wrapper == null ){
             synchronized ( wrapperMap ) {
                 wrapper = wrapperMap.get(clazz);
@@ -100,7 +99,7 @@ public abstract class ResponesWrapper<T> {
     /**
      * 默认值
      * */
-    public final static class Default extends ResponesWrapper<Object>{
+    public final static class Default extends AbstractResponesWrapper<Object>{
         @Override
         public Class<Object> getWrapperClass() {
             return null;

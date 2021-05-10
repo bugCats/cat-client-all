@@ -2,7 +2,7 @@ package com.bugcat.catclient.annotation;
 
 import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
-import com.bugcat.catclient.handler.ResultProcessor;
+import com.bugcat.catclient.handler.AbstractResultProcessor;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.spi.DefaultMethodInterceptor;
@@ -51,7 +51,7 @@ public @interface CatClient {
     /**
      * 异常处理类，当接口发生http异常（40x、50x），执行的回调方法。类似FeignClient的fallback
      * 异常处理类，必须实现被@CatClient标记的interface
-     * 默认使用{@link ResultProcessor#onHttpError}处理
+     * 默认使用{@link AbstractResultProcessor#onHttpError}处理
      * @see DefaultMethodInterceptor#intercept
      * */
     Class fallback() default Object.class;

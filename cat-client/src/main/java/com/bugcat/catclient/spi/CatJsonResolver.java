@@ -1,6 +1,6 @@
 package com.bugcat.catclient.spi;
 
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Type;
 
@@ -11,7 +11,7 @@ public interface CatJsonResolver {
 
     <T> T toJavaBean(String text, Type type);
 
-    <T> T toJavaBean(String text, ResponesWrapper<T> wrapper, Type type);
+    <T> T toJavaBean(String text, AbstractResponesWrapper<T> wrapper, Type type);
 
     String toJsonString(Object object);
 

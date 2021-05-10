@@ -1,6 +1,6 @@
 package com.bugcat.catserver.scanner;
 
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.asm.CatAsm;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
@@ -126,9 +126,9 @@ public class CatServerInitBean implements InitializingBean{
         ClassLoader classLoader = CatServerUtil.getClassLoader();
         
         Class warp = null;  //@CatServer上设置的统一响应包装器类
-        Class<? extends ResponesWrapper> wrapper = catServerInfo.getWrapper();
+        Class<? extends AbstractResponesWrapper> wrapper = catServerInfo.getWrapper();
         if( wrapper != null ){
-            ResponesWrapper responesWrapper = ResponesWrapper.getResponesWrapper(wrapper);
+            AbstractResponesWrapper responesWrapper = AbstractResponesWrapper.getResponesWrapper(wrapper);
             warp = responesWrapper.getWrapperClass();
         }
 

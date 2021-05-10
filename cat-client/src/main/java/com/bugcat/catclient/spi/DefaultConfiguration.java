@@ -4,7 +4,7 @@ import com.bugcat.catclient.handler.CatFastJsonResolver;
 import com.bugcat.catclient.handler.CatMethodInterceptor;
 import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.utils.CatClientUtil;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 
 
 /**
@@ -15,7 +15,7 @@ public class DefaultConfiguration {
     
     
     // 初始值
-    public static final Class wrapper = ResponesWrapper.Default.class;
+    public static final Class wrapper = AbstractResponesWrapper.Default.class;
     public static final Class factory = CatClientFactory.class;
     public static final Class interceptor = DefaultMethodInterceptor.class;
     public static final RequestLogs logs = RequestLogs.Def;
@@ -26,7 +26,7 @@ public class DefaultConfiguration {
     /**
      * 统一的响应实体包装器类
      * */
-    public Class<? extends ResponesWrapper> wrapper(){
+    public Class<? extends AbstractResponesWrapper> wrapper(){
         return wrapper;
     }
 

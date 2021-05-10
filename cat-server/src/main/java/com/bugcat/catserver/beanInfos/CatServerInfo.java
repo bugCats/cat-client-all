@@ -1,7 +1,7 @@
 package com.bugcat.catserver.beanInfos;
 
 import com.bugcat.catface.annotation.CatResponesWrapper;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.spi.CatInterceptor;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -11,15 +11,15 @@ import java.util.Map;
 
 public class CatServerInfo {
 
-    private Class<? extends ResponesWrapper> wrapper;      //响应包装器类
+    private Class<? extends AbstractResponesWrapper> wrapper;      //响应包装器类
     
     private Class<? extends CatInterceptor>[] handers;
 
     private CatServerInfo(AnnotationAttributes attr) {
         
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
-        this.wrapper = wrapper == null || ResponesWrapper.Default.class.equals(wrapper) ? null : wrapper;
+        Class<? extends AbstractResponesWrapper> wrapper = attr.getClass("wrapper");
+        this.wrapper = wrapper == null || AbstractResponesWrapper.Default.class.equals(wrapper) ? null : wrapper;
         
         this.handers = (Class<? extends CatInterceptor>[]) attr.getClassArray("handers");
     }
@@ -38,7 +38,7 @@ public class CatServerInfo {
         AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
         Map<String, Object> wrapper = responesWrap(serverClass);
         if( wrapper == null ){
-            client.put("wrapper", ResponesWrapper.Default.class);
+            client.put("wrapper", AbstractResponesWrapper.Default.class);
         } else {
             client.put("wrapper", wrapper.get("value"));
         }
@@ -60,7 +60,7 @@ public class CatServerInfo {
     }
     
 
-    public Class<? extends ResponesWrapper> getWrapper() {
+    public Class<? extends AbstractResponesWrapper> getWrapper() {
         return wrapper;
     }
     public Class<? extends CatInterceptor>[] getHanders() {

@@ -1,7 +1,7 @@
 package com.bugcat.catclient.spi;
 
 
-import com.bugcat.catclient.handler.ResultProcessor;
+import com.bugcat.catclient.handler.AbstractResultProcessor;
 import com.bugcat.catclient.handler.SendProcessor;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ public class CatClientFactory {
     
     private DefaultConfiguration configuration;
     
-    private ResultProcessor resultHandler;
+    private AbstractResultProcessor resultHandler;
     private CatHttp http;
     private CatJsonResolver jsonResolver;
     
@@ -57,7 +57,7 @@ public class CatClientFactory {
      * 获取结果处理类
      * 单例
      * */
-    public final ResultProcessor getResultHandler(){
+    public final AbstractResultProcessor getResultHandler(){
         synchronizSetValueIfNull(this.resultHandler, () -> resultHandler(), CatClientFactory::setResultHandler);
         return resultHandler;
     }
@@ -103,7 +103,7 @@ public class CatClientFactory {
      * 默认响应处理类
      * 提供给子类重写
      * */
-    protected ResultProcessor resultHandler(){
+    protected AbstractResultProcessor resultHandler(){
         return new DefaultResultHandler();
     }
 
@@ -132,7 +132,7 @@ public class CatClientFactory {
     private void setConfiguration(DefaultConfiguration configuration) {
         this.configuration = configuration;
     }
-    private void setResultHandler(ResultProcessor resultHandler) {
+    private void setResultHandler(AbstractResultProcessor resultHandler) {
         this.resultHandler = resultHandler;
     }
     private void setHttp(CatHttp http) {

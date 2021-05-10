@@ -2,17 +2,17 @@ package com.bugcat.example.tools;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Type;
 
 /**
  * http响应包装器类处理
  * 
- * @see ResponesWrapper
+ * @see AbstractResponesWrapper
  * @author bugcat
  * */
-public class ResponseEntityWrapper extends ResponesWrapper<ResponseEntity> {
+public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntity>{
 
     
     @Override

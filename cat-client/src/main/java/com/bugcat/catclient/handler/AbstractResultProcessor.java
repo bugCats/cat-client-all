@@ -4,13 +4,13 @@ package com.bugcat.catclient.handler;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 
 /**
  * http响应处理类
  * @author bugcat
  * */
-public abstract class ResultProcessor {
+public abstract class AbstractResultProcessor{
 
 
     
@@ -41,7 +41,7 @@ public abstract class ResultProcessor {
 
     /**
      * 在resultToBean之后执行
-     * 获取到对象之后，再进行拆包装器处理{@link ResponesWrapper}
+     * 获取到对象之后，再进行拆包装器处理{@link AbstractResponesWrapper}
      *
      * @param resp 经过resultToBean方法转换后的参数
      * */

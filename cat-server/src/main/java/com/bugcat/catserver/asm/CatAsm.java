@@ -1,6 +1,6 @@
 package com.bugcat.catserver.asm;
 
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.ClassReader;
@@ -22,7 +22,7 @@ import java.util.Map;
 
 /**
  * 
- * {@link ResponesWrapper} 自动添加包装器类实现
+ * {@link AbstractResponesWrapper} 自动添加包装器类实现
  * 
  * 被@CatServer标记类的interface，使用cglib代理，动态生成类充当Controller角色
  * 

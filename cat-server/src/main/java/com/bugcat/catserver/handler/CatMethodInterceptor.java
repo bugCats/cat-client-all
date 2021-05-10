@@ -1,6 +1,6 @@
 package com.bugcat.catserver.handler;
 
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.spi.CatInterceptor;
 import com.bugcat.catserver.utils.CatServerUtil;
@@ -51,7 +51,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         this.realMethod = interMethod.getIntrospectedMethod();
         this.handers = handers;
 
-        ResponesWrapper wrapper = ResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
+        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
         if( wrapper != null ){
             Class wrap = wrapper.getWrapperClass();
             Class<?> returnType = realMethod.getReturnType();

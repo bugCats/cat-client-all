@@ -7,7 +7,7 @@ import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.annotation.CatResponesWrapper;
-import com.bugcat.catface.spi.ResponesWrapper;
+import com.bugcat.catface.spi.AbstractResponesWrapper;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardAnnotationMetadata;
@@ -43,9 +43,9 @@ public final class CatClientInfo {
 
     /**
      * 响应包装器类处理
-     * {@link ResponesWrapper}
+     * {@link AbstractResponesWrapper}
      * */
-    private final Class<? extends ResponesWrapper> wrapper;
+    private final Class<? extends AbstractResponesWrapper> wrapper;
 
 
 
@@ -81,7 +81,7 @@ public final class CatClientInfo {
         this.fallbackMod = fallback != Object.class;
         
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        Class<? extends ResponesWrapper> wrapper = attr.getClass("wrapper");
+        Class<? extends AbstractResponesWrapper> wrapper = attr.getClass("wrapper");
         wrapper = DefaultConfiguration.wrapper.equals(wrapper) ? config.wrapper() : wrapper;
         this.wrapper = wrapper == DefaultConfiguration.wrapper ? null : wrapper;
         
@@ -173,7 +173,7 @@ public final class CatClientInfo {
     public boolean isFallbackMod() {
         return fallbackMod;
     }
-    public Class<? extends ResponesWrapper> getWrapper() {
+    public Class<? extends AbstractResponesWrapper> getWrapper() {
         return wrapper;
     }
 
