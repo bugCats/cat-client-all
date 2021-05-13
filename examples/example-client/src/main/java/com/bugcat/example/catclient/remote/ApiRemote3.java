@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
  * @author: bugcat
  * */
 @CatResponesWrapper(ResponseEntityWrapper.class)
-@CatClient(host = "${demo.remoteApi}")
+@CatClient(host = "${core-server.remoteApi}")
 public interface ApiRemote3 {
 
 
@@ -48,7 +48,7 @@ public interface ApiRemote3 {
      *
      * @param req 入参
      * */
-    @CatMethod(value = "/server/demo1", method = RequestMethod.POST)
+    @CatMethod(value = "/cat/demo1", method = RequestMethod.POST)
     Demo demo1(@RequestBody Demo req);
 
 
@@ -58,7 +58,7 @@ public interface ApiRemote3 {
      * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意
      * @param req   对象的属性，不能有Map
      * */
-    @CatMethod(value = "/server/demo2", method = RequestMethod.POST)
+    @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
     String demo2(SendProcessor send, @ModelAttribute("req") DemoEntity req);
 
 
@@ -68,7 +68,7 @@ public interface ApiRemote3 {
      * @param req   对象的属性，不能有Map
      * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意（对比demo2）
      * */
-    @CatMethod(value = "/server/demo3", method = RequestMethod.GET, connect = 60000)
+    @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
     PageInfo<Demo> demo3(Demo req, SendProcessor send);
 
 
@@ -77,7 +77,7 @@ public interface ApiRemote3 {
      * @param name 参数。必须需要使用@RequestParam指定参数的名称
      * @param mark 参数
      * */
-    @CatMethod(value = "/server/demo4", method = RequestMethod.GET)
+    @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     Demo demo4(@RequestParam("name") String name, @RequestParam("mark") String mark);
 
 
@@ -85,8 +85,10 @@ public interface ApiRemote3 {
      * 将参数拼接在url上
      *
      * @param userId url上的参数，同样必须使用@PathVariable指定参数的名称，参数位置随意
+     * @throws Exception 这个会提示异常，class上包含了@CatResponesWrapper，意思是希望通过 ResponseEntityWrapper 拆包装器类
+     *                  但是实际上，服务端仅返回了 Demo 对象 
      * */
-    @CatMethod(value = "/server/demo5/{userId}", method = RequestMethod.GET)
+    @CatMethod(value = "/cat/demo5/{userId}", method = RequestMethod.GET)
     Demo demo5(@PathVariable("userId") Long userId);
 
 
@@ -97,14 +99,14 @@ public interface ApiRemote3 {
      * @param send 请求协助类
      * @param name 键值对参数
      * */
-    @CatMethod(value = "/server/demo6/{userId}", method = RequestMethod.GET)
+    @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
     Void demo6(@PathVariable("userId") Long userId, SendProcessor send, @RequestParam("name") String name);
 
 
     /**
      * 模拟发生http异常
      * */
-    @CatMethod(value = "/server/demo9", method = RequestMethod.GET)
+    @CatMethod(value = "/cat/demo9", method = RequestMethod.GET)
     String demo9();
 
 

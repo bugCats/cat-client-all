@@ -1,7 +1,9 @@
 package com.bugcat.catserver.asm;
 
+import com.bugcat.catface.annotation.Catface;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
-import com.bugcat.catserver.utils.CatServerUtil;
+import com.bugcat.catface.utils.CatToosUtil;
+import com.bugcat.catserver.beanInfos.CatServerInfo;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.ClassReader;
 import org.springframework.asm.ClassVisitor;
@@ -11,6 +13,8 @@ import org.springframework.asm.Opcodes;
 import org.springframework.asm.Type;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,12 +37,14 @@ import java.util.Map;
  * */
 public final class CatAsm implements Opcodes{
     
-    
     // 设置动态生成扩展interface的目录
     private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
     
     // 为interface添加@ResponseBody注解
-    private final static String RESPONSE_BODY = "Lorg/springframework/web/bind/annotation/ResponseBody;";
+    private final static String RESPONSE_BODY = Type.getDescriptor(ResponseBody.class);
+    
+    // 精简模式下添加别名
+    private final static String REQUEST_PARAM = Type.getDescriptor(RequestParam.class);
     
     
     private final ClassLoader classLoader;
@@ -55,9 +61,9 @@ public final class CatAsm implements Opcodes{
 
     /**
      * @param inter 被@CatServer标记类的interface
-     * @param warp  统一响应类
+     * @param serverInfo  CatServer注解类
      * */
-    public Class enhancer(Class inter, Class warp) throws Exception {
+    public Class enhancer(Class inter, CatServerInfo serverInfo) throws Exception {
 
         String className = className(inter);
 
@@ -68,13 +74,13 @@ public final class CatAsm implements Opcodes{
         ClassReader cr = new ClassReader(stream);
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
 
-        Map<String, Class> returnTypeMap = new HashMap<>();
-        Method[] methods = inter.getMethods();
-        for ( Method method : methods ) {
-            returnTypeMap.put(Type.getMethodDescriptor(method), method.getReturnType());
+        Map<String, MethodInfo> returnTypeMap = new HashMap<>();
+        for ( Method method : inter.getMethods() ) {
+            MethodInfo info = new MethodInfo(method);
+            returnTypeMap.put(info.descriptor, info);
         }
         
-        CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, returnTypeMap, warp);
+        CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, returnTypeMap, serverInfo);
         cr.accept(catServer, ClassReader.EXPAND_FRAMES);
 
         if ( !catServer.hasResponseBody ) { //如果interface上没有@ResponseBody，自动添加一个
@@ -89,20 +95,19 @@ public final class CatAsm implements Opcodes{
         return gen;
     }
 
-
     
     private static class CatServerClassVisitor extends ClassVisitor implements Opcodes{
 
-        private Map<String, Class> returnTypeMap;
+        private Map<String, MethodInfo> infoMap;
         private Class inter;
-        private Class warp;
+        private CatServerInfo serverInfo;
         private boolean hasResponseBody = false;
         
-        public CatServerClassVisitor(ClassVisitor cv, Class inter, Map<String, Class> returnTypeMap, Class warp) {
+        public CatServerClassVisitor(ClassVisitor cv, Class inter, Map<String, MethodInfo> infoMap, CatServerInfo serverInfo) {
             super(ASM4, cv);
             this.inter = inter;
-            this.returnTypeMap = returnTypeMap;
-            this.warp = warp;
+            this.infoMap = infoMap;
+            this.serverInfo = serverInfo;
         }
         
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
@@ -120,19 +125,27 @@ public final class CatAsm implements Opcodes{
         @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
             MethodVisitor mv = null;
-            Class returnType = returnTypeMap.get(descriptor);
-            if( returnType != null ){
-                Signature sign = new Signature(name, returnType);
-                sign.transform(warp, descriptor, signature);
+            MethodInfo info = infoMap.get(descriptor);
+            if( info != null ){
+                Signature sign = new Signature(name, info.returnType);
+                sign.transform(serverInfo.getWarpClass(), descriptor, signature);
                 mv = super.visitMethod(access, sign.getName(), sign.getDesc(), sign.getSign(), exceptions);
+                if( serverInfo.isCatface() ){//精简模式下，为所有入参添加别名
+                    for(int idx = 0; idx < info.params.length; idx ++ ){
+                        AnnotationVisitor av = mv.visitParameterAnnotation(idx, REQUEST_PARAM, true);
+                        av.visit("value", "arg" + idx);
+                        av.visit("required", false);
+                        av.visitEnd();
+                    }
+                }
             } else {
                 mv = super.visitMethod(access, name, descriptor, signature, exceptions);
             }
             return mv;
         }
     }
-
-
+    
+    
     
     private static class Signature {
         
@@ -159,7 +172,7 @@ public final class CatAsm implements Opcodes{
                 String[] desc = descriptor.split("\\)");
                 String[] sign = (signature == null ? descriptor : signature).split("\\)");
                 String returnSign = warpDesc.replace(";", "<" + sign[1] + ">;");
-
+                
                 this.desc = desc[0] + ")" + warpDesc;
                 this.sign = sign[0] + ")" + returnSign;
                 
@@ -168,7 +181,6 @@ public final class CatAsm implements Opcodes{
                 this.sign = signature;
             }
         }
-        
 
         public String getName() {
             return name;
@@ -182,12 +194,23 @@ public final class CatAsm implements Opcodes{
     }
 
     
+    private static class MethodInfo {
+        private String descriptor;
+        private Class returnType;
+        private Class<?>[] params;
+        public MethodInfo(Method method) {
+            this.descriptor = Type.getMethodDescriptor(method);
+            this.returnType = method.getReturnType();
+            this.params = method.getParameterTypes();
+        }
+    }
+    
     
     private static String className(Class inter){
-        return inter.getName() + CatServerUtil.bridgeName;
+        return inter.getName() + CatToosUtil.bridgeName;
     }
     public static boolean isBridgeClass(Class clazz){
-        return clazz != null && clazz.getSimpleName().contains(CatServerUtil.bridgeName);
+        return clazz != null && clazz.getSimpleName().contains(CatToosUtil.bridgeName);
     }
     
     
@@ -205,5 +228,5 @@ public final class CatAsm implements Opcodes{
             }
         }
     }
-    
+
 }

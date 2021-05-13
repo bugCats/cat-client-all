@@ -8,15 +8,10 @@ import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.example.tools.ResponseEntity;
 
 public class TokenSendProcessor extends SendProcessor {
-
     
     
     @Override
     public void setSendVariable(CatParameter param) {
-        
-        super.setSendVariable(param);
-
-
         //使用note，标记是否需要添加签名
         String need = notes.getString("needToken");
         
@@ -58,7 +53,6 @@ public class TokenSendProcessor extends SendProcessor {
         
         @Override
         public void setSendVariable(CatParameter param) {
-            super.setSendVariable(param);
             String pwd = notes.getString("pwd");
             String username = notes.getString("username");
             keyValueParam.put("username", username);

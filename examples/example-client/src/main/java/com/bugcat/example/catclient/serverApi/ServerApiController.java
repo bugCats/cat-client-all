@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 
  * 
  * */
-@Api(tags = "客户端 - cat-server")
+@Api(tags = "客户端 - userService")
 @RestController
 public class ServerApiController {
 
@@ -52,9 +52,8 @@ public class ServerApiController {
     @GetMapping("/test/userSave")
     public void userSave(){
         try {
-            
             UserSaveVi vi = new UserSaveVi();
-            vi.setName("bugcat");
+//            vi.setName("bugcat");
             vi.setEmail("972245132@qq.com");
             ResponseEntity<Void> status = userService.userSave(vi);
             System.out.println(JSONObject.toJSONString(status));
@@ -70,5 +69,12 @@ public class ServerApiController {
         Void status = userService.status("6666", "1");
         System.out.println(JSONObject.toJSONString(status));
     }
+
+    @GetMapping("/test/method")
+    public void method(){
+        ResponseEntity<Void> resp = userService.method("{\"name\":\"method\"}");
+        System.out.println(JSONObject.toJSONString(resp));
+    }
+    
     
 }

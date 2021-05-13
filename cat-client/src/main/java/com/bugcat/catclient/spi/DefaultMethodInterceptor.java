@@ -84,10 +84,10 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
      * 
      */
     @Override
-    public Object intercept(CatClientInfo catClientInfo, CatMethodInfo methodInfo, Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+    public Object intercept(CatClientInfo clientInfo, CatMethodInfo methodInfo, Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 
         //处理器，如果在@CatClient中指定了处理器，此处应该返回其子类
-        CatClientFactory factory = methodInfo.getFactory();
+        CatClientFactory factory = methodInfo.getClientFactory();
 
         SendProcessor sendHandler = null;
         Integer handlerIndex = methodInfo.getHandlerIndex();
@@ -108,7 +108,10 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
         //设置http请求配置
         sendHandler.setConfigInfo(methodInfo, param);
 
-        //设置参数，子类可以重写此方法，可以追加签名等信息
+        //设置参数
+        sendHandler.pretreatment(param);
+        
+        //子类可以重写此方法，可以追加签名等信息
         sendHandler.setSendVariable(param);
 
         //原始响应字符串
@@ -118,10 +121,10 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
         try {
 
             //执行发送http请求
-            respStr = doRequest(catClientInfo, sendHandler, resultHandler);
+            respStr = doRequest(clientInfo, sendHandler, resultHandler);
 
             //执行字符串转对象，此时对象，为方法的返回值类型
-            respObj = resultHandler.resultToBean(respStr, sendHandler, catClientInfo, methodInfo);
+            respObj = resultHandler.resultToBean(respStr, sendHandler, clientInfo, methodInfo);
 
         } catch ( Exception ex ) {
             
@@ -130,7 +133,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
             
             try {
                 //开启了异常回调模式
-                if ( catClientInfo.isFallbackMod() ) {
+                if ( clientInfo.isFallbackMod() ) {
     
                     // 说明自定义了http异常处理类
                     respObj = methodProxy.invokeSuper(target, args);
@@ -139,10 +142,10 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
                 if ( respObj == null ) {
     
                     //执行默认的http异常处理类
-                    Object resp = resultHandler.onHttpError(ex, sendHandler, catClientInfo, methodInfo);
+                    Object resp = resultHandler.onHttpError(ex, sendHandler, clientInfo, methodInfo);
                     if ( resp != null ) {
                         if ( resp instanceof String ) {
-                            respObj = resultHandler.resultToBean((String) resp, sendHandler, catClientInfo, methodInfo);
+                            respObj = resultHandler.resultToBean((String) resp, sendHandler, clientInfo, methodInfo);
                         } else {
                             respObj = resp;
                         }
@@ -156,7 +159,7 @@ public class DefaultMethodInterceptor implements CatMethodInterceptor{
         }
 
         // 如果开启了包装器模式，拆包装
-        return resultHandler.doFinally(respObj, sendHandler, catClientInfo, methodInfo);
+        return resultHandler.doFinally(respObj, sendHandler, clientInfo, methodInfo);
 
     }
 

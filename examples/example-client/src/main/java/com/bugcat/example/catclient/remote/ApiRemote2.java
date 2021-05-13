@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * 
  * @author: bugcat
  * */
-@CatClient(host = "${demo.remoteApi}", fallback = ApiRemote2Error.class)
+@CatClient(host = "${core-server.remoteApi}", fallback = ApiRemote2Error.class)
 public interface ApiRemote2 {
     
     /**
@@ -38,7 +38,7 @@ public interface ApiRemote2 {
      * 
      * @param req 入参
      * */
-    @CatMethod(value = "/server/demo21", method = RequestMethod.POST)
+    @CatMethod(value = "/cat/demo21", method = RequestMethod.POST)
     ResponseEntity<Demo> demo1(@RequestBody Demo req);
 
 
@@ -48,13 +48,13 @@ public interface ApiRemote2 {
      * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意
      * @param req   对象的属性，不能有Map
      * */
-    @CatMethod(value = "/server/demo22", method = RequestMethod.POST)
+    @CatMethod(value = "/cat/demo22", method = RequestMethod.POST)
     String demo2(SendProcessor send, Demo req);
 
     /**
      * 模拟发生http异常
      * */
-    @CatMethod(value = "/server/demo29", method = RequestMethod.GET)
+    @CatMethod(value = "/cat/demo29", method = RequestMethod.GET)
     ResponseEntity<String> demo9(PageInfo<Demo> pageInfo);
 
 

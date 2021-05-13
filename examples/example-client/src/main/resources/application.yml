@@ -13,11 +13,8 @@ spring:
       enabled: true
       force: true
       
-      
-demo.remoteApi: http://127.0.0.1:8010  
 
-
-core-server.remoteApi: http://127.0.0.1:8012
+core-server.remoteApi: http://127.0.0.1:8012 
 
 
 retry:

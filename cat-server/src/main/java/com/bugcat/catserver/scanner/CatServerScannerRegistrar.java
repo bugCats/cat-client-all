@@ -86,7 +86,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         log.info("catServer 服务端数量：" + servers.size() );
         BeanDefinitionBuilder catServerInitBean = BeanDefinitionBuilder.genericBeanDefinition(CatServerInitBean.class);
-        catServerInitBean.addPropertyValue("servers", servers);
+        catServerInitBean.addConstructorArgValue(servers);
         registry.registerBeanDefinition(CatToosUtil.uncapitalize(CatServerInitBean.class.getSimpleName()), catServerInitBean.getBeanDefinition());
 
 

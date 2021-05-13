@@ -4,6 +4,8 @@ package com.bugcat.example.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
+
 /**
  *
  * @author bugcat
@@ -11,6 +13,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel
 public class Demo {
 	
+	@NotNull
 	@ApiModelProperty("主键")
 	private Long id;  // 主键
 

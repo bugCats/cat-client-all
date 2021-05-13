@@ -9,6 +9,7 @@ import com.bugcat.example.dto.DemoEntity;
 import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;

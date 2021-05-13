@@ -104,6 +104,30 @@ public class UserServiceImpl implements UserService {
 仔细观察*feign-interface*，方法上已经包含了 *@PostMapping*、*@GetMapping*、*@RequestBody*、*@RequestParam* 等注解，作为*Controller*的一些必要元素已经包含了。这使得通过*feign-interface*类定义*Controller*变为可能！
 
 
+<br><br>
+
+**新增精简模式** 在interface上添加`@Catface`注解。包含了该注解之后，方法上可以省略所有的注解：
++ 默认interface中所有方法均为API（interface中不能同名方法）
++ 默认所有请求都是 post + json 方式
++ 默认url为 namespace + interface类名 + 方法名组成
+
+
+```java
+@Catface
+@CatResponesWrapper(ResponseEntityWrapper.class)
+public interface DemoService {
+    
+    UserInfo param0();
+
+    UserInfo param1(String userId);
+    
+    UserInfo param2(String userId, Integer status);
+
+    UserInfo param3(UserPageVi vi);
+}
+```
+
+
 <br>
 
 ---

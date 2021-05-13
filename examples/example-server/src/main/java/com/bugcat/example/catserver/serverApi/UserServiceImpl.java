@@ -76,6 +76,11 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    public ResponseEntity<Void> method(String body) {
+        System.out.println(body);
+        return ResponseEntity.ok(null);
+    }
 
     @Override
     public UserInfo delete(String userId) {

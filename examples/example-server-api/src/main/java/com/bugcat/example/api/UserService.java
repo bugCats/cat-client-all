@@ -1,7 +1,5 @@
 package com.bugcat.example.api;
 
-
-import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.annotation.CatNote;
 import com.bugcat.catface.annotation.CatResponesWrapper;
@@ -13,6 +11,7 @@ import com.bugcat.example.api.vo.UserInfo;
 import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -29,7 +28,15 @@ import org.springframework.web.bind.annotation.*;
  * CatClient 可以忽略，在客户端重新新建一个interface，继承UserService，在新interface上加@CatClient
  * 参见com.bugcat.example.catclient.remote.ApiRemote4Ext
  * 
- * 
+ * 或者使用 CatClients 方式：
+ * <pre>
+ * public interface Config extends CatClients {
+ *
+ *      @CatClient(host = "${core-server.remoteApi}", connect = 3000, socket = 3000)
+ *      UserService service();
+ *      
+ * }
+ * </pre>
  * 
  * CatResponesWrapper 统一为响应添加包装器类。如果响应本身就是包装器类，则忽略
  * 可以仔细查看swagger文档、和接口响应日志
@@ -70,6 +77,14 @@ public interface UserService {
     @ApiOperation("删除用户状态")
     @CatMethod(value = "/user/delete/{uid}", method = RequestMethod.GET)
     UserInfo delete(@RequestParam("uid") String userId);
+
+
+
+
+    @ApiOperation("删除用户状态")
+    @CatMethod(value = "/user/method", method = RequestMethod.POST)
+    ResponseEntity<Void> method(@RequestBody String body);
+
 
 
 }

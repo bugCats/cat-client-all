@@ -3,7 +3,7 @@ package com.bugcat.catclient.config;
 import com.bugcat.catclient.spi.CatJsonResolver;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.bugcat.catface.spi.CatTypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -38,18 +38,19 @@ public class CatJacksonResolver implements CatJsonResolver{
             JavaType javaType = mapper.getTypeFactory().constructType(type);
             return mapper.readValue(jsonString, javaType);
         } catch ( Exception ex ) {
-            throw new RuntimeException("对象反序列化异常", ex);
+            throw new RuntimeException("对象反序列化异常：" + ex.getMessage(), ex);
         }
     }
 
     
     @Override
     public <T> T toJavaBean(String jsonString, AbstractResponesWrapper<T> wrapper, Type type) {
-        TypeReference<T> typeRef = (TypeReference<T>) wrapper.getWrapperType(type);
+        CatTypeReference typeRef = wrapper.getWrapperType(type);
         try {
-            return mapper.readValue(jsonString, typeRef);
+            JavaType javaType = mapper.getTypeFactory().constructType(typeRef.getType());
+            return mapper.readValue(jsonString, javaType);
         } catch ( Exception ex ) {
-            throw new RuntimeException("对象反序列化异常", ex);
+            throw new RuntimeException("对象反序列化异常：" + ex.getMessage(), ex);
         }
     }
 

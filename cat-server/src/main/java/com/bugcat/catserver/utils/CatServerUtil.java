@@ -5,7 +5,6 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Map;
 
@@ -17,10 +16,7 @@ import java.util.Map;
 @ComponentScan("com.bugcat.catserver")
 public class CatServerUtil implements ApplicationContextAware{
 
-    public static final String bridgeName = "$bugcat$";
-    public static final String annName = RequestMapping.class.getName();
-    
-    
+
     private static ApplicationContext context;
 
     

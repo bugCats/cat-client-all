@@ -8,7 +8,9 @@ import com.bugcat.catserver.spi.CatInterceptor;
 
 import java.util.Map;
 
-
+/**
+ * 拦截器
+ * */
 public class UserInterceptor extends CatInterceptor{
 
 

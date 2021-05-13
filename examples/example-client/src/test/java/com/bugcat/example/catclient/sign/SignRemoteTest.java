@@ -26,7 +26,7 @@ public class SignRemoteTest {
         CatClientUtil.registerBean(SignFactory.class, factory);
         
         Properties prop = new Properties();
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         prop.put("demo.apikey", "bugcat");
         remote = CatClientUtil.proxy(SignRemote.class, prop);
     }

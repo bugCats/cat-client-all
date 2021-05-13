@@ -14,9 +14,9 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Properties;
@@ -39,7 +39,7 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
     public static final Pattern keyPat2 = Pattern.compile("^\\#\\{(.+)\\}$");
     
     
-    private static Map<Class, Object> catClinetMap = new ConcurrentHashMap<>();
+    private static Map<Class, Object> catClinetMap = new ConcurrentHashMap<>(); //自定义组件容器
     private static ApplicationContext context;
 
 
@@ -102,9 +102,18 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
     public static void refreshBean(Class type, Object bean){
         catClinetMap.put(type, bean);
     }
+
     
-    
-    
+    /**
+     * 手动注册一些非Spring组件的初始化
+     * */
+    public static final void addInitBean(InitializingBean bean){
+        BeanInitHandler.beans.add(bean);
+    }
+
+
+
+
     /**
      * 通过静态方法创建
      * */
@@ -136,16 +145,20 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
     public static Properties envProperty(){
         return context != null ? new EnvironmentProperty(context.getEnvironment()) : new Properties();
     }
-
+    
+    public static Properties envProperty(Environment environment){
+        return new EnvironmentProperty(environment);
+    }
+    
     
     /**
      * 自定义环境参数
      * */
-    public static class ToosProperty extends Properties {
+    private static class ToosProperty extends Properties {
 
         private Properties prop;
 
-        public ToosProperty(Properties prop) {
+        private ToosProperty(Properties prop) {
             this.prop = prop;
         }
         
@@ -177,11 +190,11 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
     /**
      * 环境参数
      * */
-    public static class EnvironmentProperty extends Properties {
+    private static class EnvironmentProperty extends Properties {
 
         private Environment environment;
 
-        public EnvironmentProperty(Environment environment) {
+        private EnvironmentProperty(Environment environment) {
             this.environment = environment;
         }
         
@@ -199,16 +212,7 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
             return defaultValue != null && key.equals(value) ? defaultValue : value;
         }
     }
-    
-    
-    /**
-     * 手动注册一些非Spring组件的初始化
-     * */
-    public static final void addInitBean(InitializingBean bean){
-        BeanInitHandler.beans.add(bean);
-    }
-    
-   
+
     
     /**
      * 如果使用main方法执行，需要初始化加载一些bean
@@ -265,14 +269,13 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
         
         private static final void noop(){}
     }
-
     
     
     /**
      * 在所有的组件初始后执行
      * */
     @Order
-    @Component
+    @Configuration
     public static class BeanInitHandler implements InitializingBean {
         
         private static BlockingQueue<InitializingBean> beans = new LinkedBlockingQueue<>();

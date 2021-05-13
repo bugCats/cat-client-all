@@ -1,70 +1,60 @@
 package com.bugcat.catserver.beanInfos;
 
 import com.bugcat.catface.annotation.CatResponesWrapper;
+import com.bugcat.catface.annotation.Catface;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
+import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.annotation.CatServer;
 import com.bugcat.catserver.spi.CatInterceptor;
-import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.type.StandardAnnotationMetadata;
 
 import java.util.Map;
 
 public class CatServerInfo {
 
-    private Class<? extends AbstractResponesWrapper> wrapper;      //响应包装器类
-    
-    private Class<? extends CatInterceptor>[] handers;
 
-    private CatServerInfo(AnnotationAttributes attr) {
+    private final Class warpClass;      //响应包装器类
+    private final AbstractResponesWrapper warp;      //响应包装器类
+    
+    private final Class<? extends CatInterceptor>[] handers;
+
+    private final Catface catface;  //是否使用精简模式
+    private final boolean isCatface;
+    
+    private CatServerInfo(CatServer catServer, Map<String, Object> paramMap) {
+
+        this.handers = catServer.handers();
         
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        Class<? extends AbstractResponesWrapper> wrapper = attr.getClass("wrapper");
-        this.wrapper = wrapper == null || AbstractResponesWrapper.Default.class.equals(wrapper) ? null : wrapper;
+        CatResponesWrapper responesWrapper = (CatResponesWrapper) paramMap.get("wrapper");
+        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? null : responesWrapper.value();
+        this.warp = wrapper == null || AbstractResponesWrapper.Default.class.equals(wrapper) ? null : AbstractResponesWrapper.getResponesWrapper(wrapper);
+        this.warpClass = warp == null ? null : warp.getWrapperClass();
         
-        this.handers = (Class<? extends CatInterceptor>[]) attr.getClassArray("handers");
+        this.catface = (Catface) paramMap.get("catface");
+        this.isCatface = catface != null;
     }
 
-
-    
 
     public final static CatServerInfo buildServerInfo(Class serverClass) {
-        AnnotationAttributes attributes = CatServerInfo.getAttributes(serverClass);
-        CatServerInfo serverInfo = new CatServerInfo(attributes);
+        CatServer catServer = (CatServer) serverClass.getAnnotation(CatServer.class);
+        Map<String, Object> paramMap = CatToosUtil.getAttributes(serverClass);
+        CatServerInfo serverInfo = new CatServerInfo(catServer, paramMap);
         return serverInfo;
     }
-    
-    private static AnnotationAttributes getAttributes(Class serverClass) {
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(serverClass);
-        AnnotationAttributes client = new AnnotationAttributes(metadata.getAnnotationAttributes(CatServer.class.getName()));
-        Map<String, Object> wrapper = responesWrap(serverClass);
-        if( wrapper == null ){
-            client.put("wrapper", AbstractResponesWrapper.Default.class);
-        } else {
-            client.put("wrapper", wrapper.get("value"));
-        }
-        return client;
-    }
 
-    private static Map<String, Object> responesWrap(Class serverClass){
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(serverClass);
-        Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
-        if( wrapper == null ){
-            for ( Class clazz : serverClass.getInterfaces() ) {
-                wrapper = responesWrap(clazz);
-                if( wrapper != null ){
-                    return wrapper;
-                }
-            }
-        }
-        return wrapper;
+    public Class getWarpClass() {
+        return warpClass;
     }
-    
-
-    public Class<? extends AbstractResponesWrapper> getWrapper() {
-        return wrapper;
+    public AbstractResponesWrapper getWarp() {
+        return warp;
     }
     public Class<? extends CatInterceptor>[] getHanders() {
         return handers;
     }
-    
+    public Catface getCatface() {
+        return catface;
+    }
+    public boolean isCatface() {
+        return isCatface;
+    }
 }

@@ -22,7 +22,7 @@ public class TokenRemoteTest {
         CatClientUtil.registerBean(TokenFactory.class, factory);
         
         Properties prop = new Properties();
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         prop.put("demo.username", "bugcat");
         prop.put("demo.pwd", "[密码]");
         remote = CatClientUtil.proxy(TokenRemote.class, prop);
@@ -42,7 +42,7 @@ public class TokenRemoteTest {
         ResponseEntity<String> token2 = remote.token2(demo, token);
         System.out.println("remote.token2=" + token2.getData());
         
-        String url = "/server/token";
+        String url = "/cat/token";
         ResponseEntity<String> token3 = remote.token3(url, "TokenRemoteTest-token3", JSONObject.toJSONString(demo));
         System.out.println("remote.token3=" + token3.getData());
 

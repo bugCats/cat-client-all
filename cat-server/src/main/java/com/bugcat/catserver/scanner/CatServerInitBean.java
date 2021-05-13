@@ -1,5 +1,6 @@
 package com.bugcat.catserver.scanner;
 
+import com.bugcat.catface.annotation.Catface;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.asm.CatAsm;
@@ -32,8 +33,11 @@ import java.util.function.IntFunction;
 public class CatServerInitBean implements InitializingBean{
 
 
-    private Set<Class> servers;
+    private final Set<Class> servers;
     
+    public CatServerInitBean(Set<Class> servers){
+        this.servers = servers;
+    }
     
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -57,19 +61,27 @@ public class CatServerInitBean implements InitializingBean{
         
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
-
+        
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( CtrlFactory factory : factories ){
+            CatServerInfo serverInfo = factory.serverInfo;
+            Catface catface = serverInfo.getCatface(); 
+            
             for(Method method : factory.bridgeMethods ){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
+                Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.annName);
+                if( serverInfo.isCatface() ){
+                    attrs = new HashMap<>();
+                    attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method)});
+                    attrs.put("method", new RequestMethod[]{RequestMethod.POST});
+                }
                 RequestMappingInfo mappingInfo = RequestMappingInfo
-                        .paths(getValue(attr, "value", stringToArray))
-                        .methods(getValue(attr, "method", requestMethodToArray))
-                        .params(getValue(attr, "params", stringToArray))
-                        .headers(getValue(attr, "headers", stringToArray))
-                        .produces(getValue(attr, "produces", stringToArray))
-                        .consumes(getValue(attr, "consumes", stringToArray))
+                        .paths(getValue(attrs, "value", stringToArray))
+                        .methods(getValue(attrs, "method", requestMethodToArray))
+                        .params(getValue(attrs, "params", stringToArray))
+                        .headers(getValue(attrs, "headers", stringToArray))
+                        .produces(getValue(attrs, "produces", stringToArray))
+                        .consumes(getValue(attrs, "consumes", stringToArray))
                         .build();
                 mapper.unregisterMapping(mappingInfo);
                 mapper.registerMapping(mappingInfo, factory.ctrl, method); // 注册映射处理
@@ -81,6 +93,7 @@ public class CatServerInitBean implements InitializingBean{
     
     private static class CtrlFactory implements Comparable<CtrlFactory> {
         
+        private CatServerInfo serverInfo;
         private Class serverClass;
         private int level = 0;  //继承关系：如果是子类，那么level比父类大，排在后面
         private Object ctrl;
@@ -99,7 +112,7 @@ public class CatServerInitBean implements InitializingBean{
         
         private void parse() throws Exception {
             
-            CatServerInfo serverInfo = CatServerInfo.buildServerInfo(serverClass);
+            serverInfo = CatServerInfo.buildServerInfo(serverClass);
             ctrl = createCatCtrl(serverClass, serverInfo);
             
             for (Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass() ) {
@@ -121,16 +134,10 @@ public class CatServerInitBean implements InitializingBean{
 
     
     
-    private final static Object createCatCtrl(Class serverClass, CatServerInfo catServerInfo) throws Exception {
+    private final static Object createCatCtrl(Class serverClass, CatServerInfo serverInfo) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
         
-        Class warp = null;  //@CatServer上设置的统一响应包装器类
-        Class<? extends AbstractResponesWrapper> wrapper = catServerInfo.getWrapper();
-        if( wrapper != null ){
-            AbstractResponesWrapper responesWrapper = AbstractResponesWrapper.getResponesWrapper(wrapper);
-            warp = responesWrapper.getWrapperClass();
-        }
 
         //类加载器
         CatAsm asm = new CatAsm(classLoader);
@@ -146,23 +153,24 @@ public class CatServerInitBean implements InitializingBean{
         Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
         
         Class[] thisInters = new Class[inters.size() + 1];
-        thisInters[inters.size()] = CatServiceCtrlInterceptor.getServerClass();
+        thisInters[inters.size()] = CatServiceCtrlInterceptor.getCatServiceCtrlClass();
         for(int i = 0; i < inters.size(); i ++ ){ // 遍历每个interface
             Class inter = inters.get(i);
-            Class enhancer = asm.enhancer(inter, warp); //使用asm增强interface
+            Class enhancer = asm.enhancer(inter, serverInfo); //使用asm增强interface
             thisInters[i] = enhancer;
             for(Method method : inter.getMethods()){
-                StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                Map<String, Object> attr = metadata.getAnnotationAttributes(CatServerUtil.annName);
-                if( attr != null ){// 遍历每个interface的方法，筛选只有包含CatServerInitBean.annName注解的
-                    metadataMap.put(CatToosUtil.signature(method), metadata);
+                String signature = CatToosUtil.signature(method);
+                if( CatToosUtil.isObjectMethod(signature) ){
+                    continue;
                 }
+                StandardMethodMetadata metadata = new StandardMethodMetadata(method);
+                metadataMap.put(signature, metadata);
             }
         }
         // 此时thisInters中，全部为增强后的扩展interface
         
         
-        MethodInterceptor handerInterceptor = CatServiceCtrlInterceptor.getInstance();
+        MethodInterceptor handerInterceptor = CatServiceCtrlInterceptor.create();
         MethodInterceptor defaults = CatServiceCtrlInterceptor.getDefault();
         
         CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
@@ -170,10 +178,10 @@ public class CatServerInitBean implements InitializingBean{
             protected Object getCallback (Method method) {
                 StandardMethodMetadata metadata = metadataMap.get(CatToosUtil.signature(method));
                 if ( metadata != null ) {
-                    return new CatMethodInterceptor(metadata, catServerInfo); // ;
+                    return new CatMethodInterceptor(metadata, method, serverInfo); // ;
                 } else {
                     String methodName = method.getName();
-                    if( methodName.startsWith(CatServerUtil.bridgeName) ){
+                    if( methodName.startsWith(CatToosUtil.bridgeName) ){
                         return handerInterceptor;
                     } else {
                         return defaults; 
@@ -201,6 +209,9 @@ public class CatServerInitBean implements InitializingBean{
 
     private final <T> T[] getValue(Map<String, Object> map, String key, IntFunction<T[]> func){
         Object value = map.get(key);
+        if( value == null ){
+            return func.apply(0);
+        }
         if( value instanceof List ){
             List<T> list = ((List<T>)value);
             return list.toArray(func.apply(list.size()));
@@ -213,12 +224,4 @@ public class CatServerInitBean implements InitializingBean{
         }
     }
 
-
-    
-    public Set<Class> getServers() {
-        return servers;
-    }
-    public void setServers(Set<Class> servers) {
-        this.servers = servers;
-    }
 }

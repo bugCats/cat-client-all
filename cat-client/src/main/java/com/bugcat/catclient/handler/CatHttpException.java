@@ -10,7 +10,6 @@ public class CatHttpException extends Exception {
     
     
     public CatHttpException(Integer status, Exception exception) {
-        super(exception);
         this.status = status;
         this.exception = exception;
     }
@@ -27,5 +26,6 @@ public class CatHttpException extends Exception {
     public Class<? extends Exception> getIntrospectedClass() {
         return exception.getClass();
     }
-    
+
+
 }

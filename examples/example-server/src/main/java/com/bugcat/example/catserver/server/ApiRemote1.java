@@ -6,11 +6,15 @@ import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 
 /**
- *
+ * 定义Controller
+ * 可以直接在swagger测试调用
  * @author: bugcat
  * */
 @Api(tags = "服务端API - 一般场景1")

@@ -29,7 +29,7 @@ public class ApiRemote4Test {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         DefaultConfiguration configuration = new DefaultConfiguration(){
             @Override
             public int socket() {
@@ -49,8 +49,10 @@ public class ApiRemote4Test {
         prop.put(DefaultConfiguration.class, configuration);
         remote = CatClientUtil.proxy(ApiRemote4Ext.class, prop);
     }
-    
 
+
+
+    
     
     @Test
     public void demo1() throws Exception {
@@ -108,6 +110,13 @@ public class ApiRemote4Test {
     public void demo6() throws Exception {
         SendProcessor sendHandler = new SendProcessor();
         Void nul = remote.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
+    }
+
+    @Test
+    public void demo7() throws Exception {
+        SendProcessor sendHandler = new SendProcessor();
+        Demo resp = remote.demo7("bug猫");
+        System.out.println(JSONObject.toJSONString(resp));
     }
 
     @Test

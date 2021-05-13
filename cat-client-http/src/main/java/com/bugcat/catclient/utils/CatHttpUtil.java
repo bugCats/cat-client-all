@@ -74,11 +74,11 @@ public class CatHttpUtil implements CatHttp {
             response = httpclient.execute(httpget);
 			StatusLine statusLine = response.getStatusLine();
 			HttpEntity entity = response.getEntity();
-            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                return EntityUtils.toString(entity, charset);
-            } else {
-                throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
-            }
+			if (statusLine.getStatusCode() / 100 == 2) {
+				return EntityUtils.toString(entity, charset);
+			} else {
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.toString());
+			}
         } catch (Exception ex) {
 			throwException(response, ex);
         } finally {
@@ -123,10 +123,10 @@ public class CatHttpUtil implements CatHttp {
 			response = httpclient.execute(httpPost);
 			StatusLine statusLine = response.getStatusLine();
 			HttpEntity entity = response.getEntity();
-			if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+			if (statusLine.getStatusCode() / 100 == 2) {
 				return EntityUtils.toString(entity, charset);
 			} else {
-				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.toString());
 			}
 		} catch (Exception ex) {
 			throwException(response, ex);
@@ -155,10 +155,10 @@ public class CatHttpUtil implements CatHttp {
 			response = httpclient.execute(httpPost);
 			StatusLine statusLine = response.getStatusLine();
 			HttpEntity entity = response.getEntity();
-			if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+			if (statusLine.getStatusCode() / 100 == 2) {
 				return EntityUtils.toString(entity, charset);
 			} else {
-				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.toString());
 			}
 		} catch (Exception ex) {
 			throwException(response, ex);

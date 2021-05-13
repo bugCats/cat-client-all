@@ -26,12 +26,13 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.core.type.filter.AssignableTypeFilter;
-import org.springframework.core.type.filter.TypeFilter;
-import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * 扫描自定义注解
@@ -64,7 +65,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
     @Override
     public void setEnvironment(Environment environment) {
-        this.prop = new CatClientUtil.EnvironmentProperty(environment);
+        this.prop = CatClientUtil.envProperty(environment);
     }
 
 
@@ -106,6 +107,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         
         int count = 0;
         
+        // 通过class直接注册
         Class<?>[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
             count = count + registerCatClient(classes, registry);
@@ -155,7 +157,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     private int registerCatClient(Class<?>[] inters, BeanDefinitionRegistry registry) {
         int count = 0;
         for ( Class<?> inter : inters ){
-            if( CatClients.class.isAssignableFrom(inter) ){
+            if( CatClients.class.isAssignableFrom(inter) ){ // interface是CatClients子类，表示使用method批量注册
                 Method[] methods = inter.getMethods();
                 for ( Method method : methods ) {
                     CatClient client = method.getAnnotation(CatClient.class);
@@ -166,7 +168,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
                     Class clazz = method.getReturnType();
                     registerClass(client, clazz, registry);
                 }
-            } else {
+            } else {    //单个指定interface注册
                 CatClient client = inter.getAnnotation(CatClient.class);
                 if( client == null ){
                     log.warn(inter.getName() + "上没有找到@CatClient注解");

@@ -7,7 +7,7 @@ import com.bugcat.catclient.beanInfos.CatMethodInfo;
 import com.bugcat.catclient.beanInfos.CatParameter;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatJsonResolver;
-import com.bugcat.catclient.spi.Stringable;
+import com.bugcat.catface.handler.Stringable;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class SendProcessor {
     protected static Logger logger = LoggerFactory.getLogger(SendProcessor.class);
     
     private CatMethodInfo methodInfo;
-    private CatClientFactory factory;
+    private CatClientFactory clientFactory;
     
     private String methodName;  //api方法名
     private RequestMethod requestType;
@@ -59,9 +59,11 @@ public class SendProcessor {
     public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param){
         
         this.methodInfo = methodInfo;
-        this.factory = methodInfo.getFactory();
+        this.clientFactory = methodInfo.getClientFactory();
         
-        this.methodName = methodInfo.getName();
+        this.methodName = methodInfo.getMethodName();
+        this.postString = methodInfo.isPostString();
+        
         this.path = methodInfo.getHost() + param.getPath();
 
         this.notes = new JSONObject();
@@ -89,23 +91,19 @@ public class SendProcessor {
         this.headerMap.putAll(param.getHeaderMap());
         
         this.requestType = methodInfo.getRequestType();
-        
         this.connect = methodInfo.getConnect();
         this.socket = methodInfo.getSocket();
 
-        this.postString = methodInfo.isPostString();
     }
 
-    
-    
     /**
      * 2、设置参数，如果在调用远程API，需要额外的签名等，可在此步骤添加
      * */
-    public void setSendVariable(CatParameter param){
+    public final void pretreatment(CatParameter param){
         
-        Object value = param.getValue();
+        Object value = methodInfo.getParameterProcess().apply(param.getValue());
 
-        CatJsonResolver resolver = factory.getJsonResolver();
+        CatJsonResolver resolver = clientFactory.getJsonResolver();
 
         // 使用post发送字符串
         if( isPostString() ){
@@ -117,22 +115,29 @@ public class SendProcessor {
             } else {
                 reqStr = resolver.toJsonString(value);
             }
-            
-        //使用post、get发送键值对
+
+            //使用post、get发送键值对
         } else {
-            
-            if( value instanceof Map ){
-                keyValueParam = (Map<String, Object>) value;
+            if( value instanceof String ){
+                keyValueParam = new HashMap<>(param.getArgMap());
             } else {// 传入了一个对象，转换成键值对
                 keyValueParam = beanToMap(value);
             }
-            
+
             // 请求入参转换成String，方便记录日志
             if(printInLog(false) || printInLog(true)){
                 reqStr = resolver.toJsonString(keyValueParam);
             }
-            
         }
+    }
+    
+    
+    
+    /**
+     * 3、如果在调用远程API，需要额外的签名等，可在此步骤添加
+     * */
+    public void setSendVariable(CatParameter param){
+        
     }
     
     
@@ -150,19 +155,19 @@ public class SendProcessor {
         try {
             switch ( requestType ) {
                 case GET:
-                    respStr = factory.getCatHttp().doGet(path, keyValueParam, headerMap, socket, connect);
+                    respStr = clientFactory.getCatHttp().doGet(path, keyValueParam, headerMap, socket, connect);
                     break;
                 case POST:
                     if( postString ){
-                        respStr = factory.getCatHttp().jsonPost(path, reqStr, headerMap, socket, connect);
+                        respStr = clientFactory.getCatHttp().jsonPost(path, reqStr, headerMap, socket, connect);
                     } else {
-                        respStr = factory.getCatHttp().doPost(path, keyValueParam, headerMap, socket, connect);
+                        respStr = clientFactory.getCatHttp().doPost(path, keyValueParam, headerMap, socket, connect);
                     }
                     break;
             }
         } catch ( CatHttpException ex ) {
 
-            logInfo.put("err", CatToosUtil.defaultIfBlank(ex.getMessage(), "null"));
+            logInfo.put("err", ex.getStatus() != null ? String.valueOf(ex.getStatus()) : ex.getMessage());
             hasErr = true;
             
             throw ex;
@@ -214,13 +219,9 @@ public class SendProcessor {
         if( bean == null ){
             return new HashMap<>();
         }
-        
-        /**
-         * 此处使用fastjson，将对象，转换成JSONObject。
-         * fastjson的注解都可以生效
-         * */
         Object value = JSON.toJSON(bean);
-        return transform(value);
+        Map<String, Object> result = transform(value);
+        return result;
     }
 
     /**

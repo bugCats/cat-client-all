@@ -3,6 +3,7 @@ package com.bugcat.example.tools;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
+import com.bugcat.catface.spi.CatTypeReference;
 
 import java.lang.reflect.Type;
 
@@ -24,8 +25,8 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
      * 获取json转对象泛型
      */
     @Override
-    public <T> Object getWrapperType(Type type){
-        return new TypeReference<ResponseEntity<T>>(type){};
+    public <T> CatTypeReference getWrapperType(Type type){
+        return new CatTypeReference<ResponseEntity<T>>(type){};
     }
 
     /**

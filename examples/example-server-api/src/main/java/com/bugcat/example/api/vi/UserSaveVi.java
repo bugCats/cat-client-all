@@ -4,12 +4,15 @@ package com.bugcat.example.api.vi;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
+
 @ApiModel
 public class UserSaveVi {
 
     @ApiModelProperty("用户id，不为空时，表示更新")
     private String uid;
 
+    @NotNull(message = "名称不能为空")
     @ApiModelProperty("名称")
     private String name;
 

@@ -4,6 +4,8 @@ package com.bugcat.example.api.vi;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
+
 @ApiModel
 public class UserPageVi {
 
@@ -17,6 +19,7 @@ public class UserPageVi {
     @ApiModelProperty("用户id")
     private String uid;
 
+    @NotNull(message = "姓名不能为空")
     @ApiModelProperty("姓名")
     private String name;
 

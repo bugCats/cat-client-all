@@ -25,18 +25,22 @@ import java.util.function.Function;
  * */
 public final class CatMethodInterceptor implements MethodInterceptor{
     
-    private final StandardMethodMetadata interMethod;         //interface上对应的桥接方法
+   
+    private final StandardMethodMetadata interMethod;         //interface上对应的真实方法
     private final Method realMethod;                          //interface上对应的真实方法
 
     private final List<CatInterceptor> handers;
+    
+    private final CatArgumentResolver argumentResolver;    //参数预处理器
     
     private final Function<Object, Object> successToEntry;
     private final Function<Throwable, Object> errorToEntry;
 
 
-    public CatMethodInterceptor(StandardMethodMetadata interMethod, CatServerInfo catServerInfo) {
-
-        Class<? extends CatInterceptor>[] handerList = catServerInfo.getHanders();
+    public CatMethodInterceptor(StandardMethodMetadata interMethod, Method catInterMethod, CatServerInfo serverInfo) {
+        this.argumentResolver = CatArgumentResolver.build(serverInfo, catInterMethod);
+        
+        Class<? extends CatInterceptor>[] handerList = serverInfo.getHanders();
         List<CatInterceptor> handers = new ArrayList<>(handerList.length);
         for(Class<? extends CatInterceptor> clazz : handerList) {
             if( CatInterceptor.class.equals(clazz) ){
@@ -50,15 +54,15 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         this.interMethod = interMethod;
         this.realMethod = interMethod.getIntrospectedMethod();
         this.handers = handers;
-
-        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catServerInfo.getWrapper());
-        if( wrapper != null ){
-            Class wrap = wrapper.getWrapperClass();
+        
+        Class wrap = serverInfo.getWarpClass();
+        if( wrap != null ){
             Class<?> returnType = realMethod.getReturnType();
             if( wrap.equals(returnType) || wrap.isAssignableFrom(returnType.getClass()) ){
                 successToEntry = value -> value;
                 errorToEntry = value -> value;
             } else {
+                AbstractResponesWrapper wrapper = serverInfo.getWarp();
                 successToEntry = value -> wrapper.createEntryOnSuccess(value, realMethod.getGenericReturnType());
                 errorToEntry = value -> wrapper.createEntryOnException(value, realMethod.getGenericReturnType());
             }
@@ -67,8 +71,6 @@ public final class CatMethodInterceptor implements MethodInterceptor{
             errorToEntry = value -> value;
         }
     }
-
-    
     
     @Override
     public Object intercept (Object ctrl, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -77,13 +79,14 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         HttpServletRequest request = attr.getRequest();
         HttpServletResponse response = attr.getResponse();
 
+        args = argumentResolver.resolveNameArgument(request, args);
+        
         Class serverClass = CatServiceCtrlInterceptor.getServerClass(ctrl);
         Object server = CatServerUtil.getBean(serverClass);
-
+        
         CatInterceptPoint point = new CatInterceptPoint(request, response, server, interMethod, args);
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());
-
         for( CatInterceptor hander : handers ){
             if( hander.preHandle(point) ){
                 active.add(hander);

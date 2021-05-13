@@ -25,7 +25,7 @@ public class ApiRemote3Test {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
-        prop.put("demo.remoteApi", "http://127.0.0.1:8010");
+        prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         remote = CatClientUtil.proxy(ApiRemote3.class, prop);
     }
     

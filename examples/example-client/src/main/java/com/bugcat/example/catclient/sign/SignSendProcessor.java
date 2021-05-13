@@ -15,8 +15,6 @@ public class SignSendProcessor extends SendProcessor {
     @Override
     public void setSendVariable(CatParameter param) {
         
-        super.setSendVariable(param);
-
         //使用note，标记是否需要添加签名
         String need = notes.getString("needSign");
         if( CatToosUtil.isNotBlank(need) && keyValueParam != null && keyValueParam.size() > 0 ){

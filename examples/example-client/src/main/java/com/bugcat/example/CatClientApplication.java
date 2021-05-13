@@ -18,6 +18,8 @@ public class CatClientApplication {
 	public static void main(String[] args) {
         SpringApplication app = new SpringApplication(CatClientApplication.class);
         app.run(args);
+        System.out.println("http://localhost:8010/swagger-ui.html");
+        System.out.println("测试时，请同时启动 example-server");
 	}
 
 	

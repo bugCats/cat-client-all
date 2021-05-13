@@ -7,12 +7,10 @@ import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.DefaultConfiguration;
 import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.catface.annotation.CatResponesWrapper;
+import com.bugcat.catface.annotation.Catface;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
-import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.type.StandardAnnotationMetadata;
+import com.bugcat.catface.utils.CatToosUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -24,22 +22,21 @@ import java.util.Properties;
  * */
 public final class CatClientInfo {
     
-    private final String host;
+    private final String host;  //远程服务器主机
     
-    private final int connect;
-    private final int socket;
+    private final int connect;  //连接超时
+    private final int socket;   //读取超时
     
-    private final RequestLogs logs;
+    private final RequestLogs logs; //日志记录方案
     
-    private final String[] tags;
+    private final String[] tags;    //api标签归类
     
-    private final Class<? extends CatClientFactory> factoryClass;   //处理类
+    private final Class<? extends CatClientFactory> factoryClass;   //http发送工厂类
     
-    private final Class<? extends CatMethodInterceptor> interceptor;
-    
-    private final Class fallback;
-    private final boolean fallbackMod;    //是否启用了fallback模式
+    private final Class<? extends CatMethodInterceptor> interceptor;    //http发送流程类
 
+    private final boolean fallbackMod;    //是否启用了fallback模式
+    private final Class fallback;       //回调类
 
     /**
      * 响应包装器类处理
@@ -47,44 +44,51 @@ public final class CatClientInfo {
      * */
     private final Class<? extends AbstractResponesWrapper> wrapper;
 
+    /**
+     * 是否使用精简模式
+     * */
+    private final Catface catface;
+    
 
-
-    private CatClientInfo(AnnotationAttributes attr, Properties prop){
+    
+    
+    private CatClientInfo(CatClient client, Map<String, Object> paramMap, Properties prop){
         
         //全局默认配置
         DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
         
-        String host = attr.getString("host");
+        String host = client.host();
         this.host = prop.getProperty(host);
         
-        int connect = attr.getNumber("connect");
+        int connect = client.connect();
         connect = connect < 0 ? -1 : connect;
         this.connect = DefaultConfiguration.connect == connect ? config.connect() : connect;
 
-        int socket = attr.getNumber("socket");
+        int socket = client.socket();
         socket = socket < 0 ? -1 : socket;
         this.socket = DefaultConfiguration.socket == socket ? config.socket() : socket;
         
-        RequestLogs logs = attr.getEnum("logs");
+        RequestLogs logs = client.logs();
         logs = DefaultConfiguration.logs.equals(logs) ? config.logs() : logs;
         this.logs = RequestLogs.Def.equals(logs) ? RequestLogs.All2 : logs;
         
-        this.tags = attr.getStringArray("tags");
+        this.tags = client.tags();
         
-        Class<? extends CatClientFactory> factoryClass = attr.getClass("factory");
+        Class<? extends CatClientFactory> factoryClass = client.factory();
         this.factoryClass = DefaultConfiguration.factory.equals(factoryClass) ? config.clientFactory() : factoryClass;
 
-        Class<? extends CatMethodInterceptor> interceptor = attr.getClass("interceptor");
+        Class<? extends CatMethodInterceptor> interceptor = client.interceptor();
         this.interceptor = DefaultConfiguration.interceptor.equals(interceptor) ? config.interceptor() : interceptor;
 
-        this.fallback = attr.getClass("fallback");
+        this.fallback = client.fallback();
         this.fallbackMod = fallback != Object.class;
         
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        Class<? extends AbstractResponesWrapper> wrapper = attr.getClass("wrapper");
-        wrapper = DefaultConfiguration.wrapper.equals(wrapper) ? config.wrapper() : wrapper;
+        CatResponesWrapper responesWrapper = (CatResponesWrapper) paramMap.get("wrapper");
+        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? config.wrapper() : responesWrapper.value();
         this.wrapper = wrapper == DefaultConfiguration.wrapper ? null : wrapper;
         
+        this.catface = (Catface) paramMap.get("catface");
     }
 
     
@@ -96,53 +100,21 @@ public final class CatClientInfo {
         return build(inter, null, prop);
     }
     
+    
+    /**
+     * 构建CatClientInfo对象
+     * @param inter     interface
+     * @param client    可以为null。为null表示直接使用interface上的注解；否则，该interface，强制使用传入的client注解
+     * @param prop      环境变量
+     * */
     public final static CatClientInfo build(Class inter, CatClient client, Properties prop) {
-        if( client == null ){
+        if( client == null ){ 
             client = (CatClient) inter.getAnnotation(CatClient.class);
         }
-        Map<String, Object> attrMap = AnnotationUtils.getAnnotationAttributes(client);
-        AnnotationAttributes attributes = getAttributes(inter, attrMap);
-        CatClientInfo clientInfo = new CatClientInfo(attributes, prop);
+        Map<String, Object> paramMap = CatToosUtil.getAttributes(inter);
+        CatClientInfo clientInfo = new CatClientInfo(client, paramMap, prop);
         return clientInfo;
     }
-    
-
-    private static AnnotationAttributes getAttributes(Class inter, Map<String, Object> attrMap) {
-        /**
-         * 如果通过{@link CatClients}生成，则attrMap为null
-         * */
-        if( attrMap == null ){ 
-            attrMap = new HashMap<>();
-        }
-        AnnotationAttributes client = new AnnotationAttributes(attrMap);
-        Map<String, Object> wrapper = responesWrap(inter);
-        if( wrapper != null ){
-            client.put("wrapper", wrapper.get("value"));
-        } else {
-            client.put("wrapper", DefaultConfiguration.wrapper);
-        }
-        return client;
-    }
-
-    /**
-     * 递归遍历父类、以及interface，获取@CatResponesWrapper注解
-     * */
-    private static Map<String, Object> responesWrap(Class inter){
-        StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(inter);
-        Map<String, Object> wrapper = metadata.getAnnotationAttributes(CatResponesWrapper.class.getName());
-        if( wrapper == null ){
-            for ( Class clazz : inter.getInterfaces() ) {
-                wrapper = responesWrap(clazz);
-                if( wrapper != null ){
-                    return wrapper;
-                }
-            }
-        }
-        return wrapper;
-    }
-
-
-
 
 
 
@@ -167,14 +139,16 @@ public final class CatClientInfo {
     public Class<? extends CatMethodInterceptor> getInterceptor() {
         return interceptor;
     }
-    public Class getFallback() {
-        return fallback;
-    }
     public boolean isFallbackMod() {
         return fallbackMod;
+    }
+    public Class getFallback() {
+        return fallback;
     }
     public Class<? extends AbstractResponesWrapper> getWrapper() {
         return wrapper;
     }
-
+    public Catface getCatface() {
+        return catface;
+    }
 }

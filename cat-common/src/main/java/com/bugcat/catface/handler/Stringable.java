@@ -1,4 +1,4 @@
-package com.bugcat.catclient.spi;
+package com.bugcat.catface.handler;
 
 /**
  * 使用post发送字符串
@@ -7,11 +7,6 @@ package com.bugcat.catclient.spi;
 public interface Stringable {
 
     
-    String toString();
-    
-    
-    default String serialize() {
-        return toString();
-    }
+    String serialize();
     
 }

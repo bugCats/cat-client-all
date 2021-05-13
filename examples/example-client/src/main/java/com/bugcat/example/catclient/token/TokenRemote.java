@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author: bugcat
  * */
-@CatClient(host = "${demo.remoteApi}", factory = TokenFactory.class, connect = 3000, socket = 3000)
+@CatClient(host = "${core-server.remoteApi}", factory = TokenFactory.class, connect = 3000, socket = 3000)
 public interface TokenRemote {
     
 
     
 
-    @CatMethod(value = "/server/getToken", method = RequestMethod.POST, 
+    @CatMethod(value = "/cat/getToken", method = RequestMethod.POST, 
             notes = {@CatNote(key = "username", value = "${demo.username}"),
                     @CatNote(key = "pwd", value = "${demo.pwd}")})
     ResponseEntity<String> getToken(SendProcessor sender, @RequestParam("username") String username, @RequestParam("pwd") String pwd);
@@ -33,12 +33,12 @@ public interface TokenRemote {
 
 
 
-    @CatMethod(value = "/server/token", method = RequestMethod.POST, notes = @CatNote("needToken"))
+    @CatMethod(value = "/cat/token", method = RequestMethod.POST, notes = @CatNote("needToken"))
     ResponseEntity<String> token1(@RequestBody Demo demo);
 
 
 
-    @CatMethod(value = "/server/token", method = RequestMethod.POST)
+    @CatMethod(value = "/cat/token", method = RequestMethod.POST)
     ResponseEntity<String> token2(@RequestBody Demo demo, @RequestHeader("token") String token);
 
 

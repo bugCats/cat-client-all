@@ -1,18 +1,18 @@
-package com.bugcat.example.catclient.server;
+package com.bugcat.example.catclient;
 
 
 import com.alibaba.fastjson.JSONObject;
 import com.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.TreeMap;
 
 
 /**
- * 模拟远程服务端API接口
- * 使用单元测试类
+ * 供 example-server 模块调用
  * */
 @Api(tags = "服务端API - 签名")
 @RestController
@@ -25,7 +25,7 @@ public class SignServerController {
      * 
      * */
 
-    @PostMapping(value = "/server/sign1")
+    @PostMapping(value = "/cat/sign1")
     public ResponseEntity<String> demo11(HttpServletRequest request){
 
         TreeMap<String, String> treeMap = new TreeMap<>();

@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author: bugcat
  * */
-@CatClient(host = "${demo.remoteApi}", factory = SignFactory.class, connect = 3000, socket = 3000)
+@CatClient(host = "${core-server.remoteApi}", factory = SignFactory.class, connect = 3000, socket = 3000)
 public interface SignRemote {
     
 
@@ -25,7 +25,7 @@ public interface SignRemote {
     /**
      * 密钥是固定的，通过配置文件获取
      * */
-    @CatMethod(value = "/server/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "${demo.apikey}")}, method = RequestMethod.POST)
+    @CatMethod(value = "/cat/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "${demo.apikey}")}, method = RequestMethod.POST)
     ResponseEntity<String> demo11(Map<String, Object> param);
 
 
@@ -34,7 +34,7 @@ public interface SignRemote {
     /**
      * 密钥是可变的，通过方法上的参数获取
      * */
-    @CatMethod(value = "/server/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
+    @CatMethod(value = "/cat/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
     ResponseEntity<String> demo12(@ModelAttribute("demo") DemoDTO demo);
     
     
@@ -43,7 +43,7 @@ public interface SignRemote {
      * 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
      * 不再列举
      * */
-    @CatMethod(value = "/server/sign1", notes = @CatNote("needSign"), method = RequestMethod.POST)
+    @CatMethod(value = "/cat/sign1", notes = @CatNote("needSign"), method = RequestMethod.POST)
     ResponseEntity<String> demo13(SignSendProcessor sender, @ModelAttribute("demo") DemoDTO demo);
 
 

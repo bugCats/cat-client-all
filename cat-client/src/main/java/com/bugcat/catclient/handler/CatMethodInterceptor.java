@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 public interface CatMethodInterceptor {
 
     
-    Object intercept (CatClientInfo catClientInfo, 
+    Object intercept (CatClientInfo clientInfo,
                       CatMethodInfo methodInfo,
                       Object target,
                       Method method, 

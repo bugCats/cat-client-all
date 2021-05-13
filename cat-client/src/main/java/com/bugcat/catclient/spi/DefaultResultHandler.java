@@ -62,7 +62,7 @@ public class DefaultResultHandler extends AbstractResultProcessor{
             return null;
         }
 
-        CatJsonResolver resolver = methodInfo.getFactory().getJsonResolver();
+        CatJsonResolver resolver = methodInfo.getClientFactory().getJsonResolver();
         
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
 
@@ -103,8 +103,8 @@ public class DefaultResultHandler extends AbstractResultProcessor{
 
 
     @Override
-    public Object doFinally(Object resp, SendProcessor sendHandler, CatClientInfo catClientInfo, CatMethodInfo methodInfo) throws Exception {
-        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
+    public Object doFinally(Object resp, SendProcessor sendHandler, CatClientInfo clientInfo, CatMethodInfo methodInfo) throws Exception {
+        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(clientInfo.getWrapper());
         if ( wrapper == null || resp == null ) {
             return resp;
         }
