@@ -1,6 +1,5 @@
 package com.bugcat.catserver.asm;
 
-import com.bugcat.catface.annotation.Catface;
 import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
@@ -13,12 +12,14 @@ import org.springframework.asm.Opcodes;
 import org.springframework.asm.Type;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +84,8 @@ public final class CatAsm implements Opcodes{
         CatServerClassVisitor catServer = new CatServerClassVisitor(cw, inter, returnTypeMap, serverInfo);
         cr.accept(catServer, ClassReader.EXPAND_FRAMES);
 
-        if ( !catServer.hasResponseBody ) { //如果interface上没有@ResponseBody，自动添加一个
+        //如果interface上没有@ResponseBody，自动添加一个
+        if ( AnnotationUtils.findAnnotation(inter, ResponseBody.class) == null ) { 
             catServer.visitAnnotation(RESPONSE_BODY, true);
         }
         
@@ -101,10 +103,9 @@ public final class CatAsm implements Opcodes{
         private Map<String, MethodInfo> infoMap;
         private Class inter;
         private CatServerInfo serverInfo;
-        private boolean hasResponseBody = false;
         
         public CatServerClassVisitor(ClassVisitor cv, Class inter, Map<String, MethodInfo> infoMap, CatServerInfo serverInfo) {
-            super(ASM4, cv);
+            super(ASM6, cv);
             this.inter = inter;
             this.infoMap = infoMap;
             this.serverInfo = serverInfo;
@@ -116,9 +117,6 @@ public final class CatAsm implements Opcodes{
 
         @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            if( !hasResponseBody && RESPONSE_BODY.equals(desc) ){
-                hasResponseBody = true;
-            }
             return super.visitAnnotation(desc, visible);
         }
 
@@ -127,15 +125,28 @@ public final class CatAsm implements Opcodes{
             MethodVisitor mv = null;
             MethodInfo info = infoMap.get(descriptor);
             if( info != null ){
+                
                 Signature sign = new Signature(name, info.returnType);
                 sign.transform(serverInfo.getWarpClass(), descriptor, signature);
+
                 mv = super.visitMethod(access, sign.getName(), sign.getDesc(), sign.getSign(), exceptions);
+                
                 if( serverInfo.isCatface() ){//精简模式下，为所有入参添加别名
-                    for(int idx = 0; idx < info.params.length; idx ++ ){
-                        AnnotationVisitor av = mv.visitParameterAnnotation(idx, REQUEST_PARAM, true);
-                        av.visit("value", "arg" + idx);
-                        av.visit("required", false);
-                        av.visitEnd();
+                    mv = new CatMethodVisitor(mv);
+                    for(int idx = 0; idx < info.parameterCount; idx ++ ){
+                        boolean haspr = false;
+                        for(Annotation an : info.anns[idx]){
+                            if( RequestParam.class.equals(an.annotationType()) ){
+                                haspr = true;
+                                break;
+                            }
+                        }
+                        if(haspr){
+                            // 入参上存在 RequestParam 注解，需要修改required为fasle
+                        } else {
+                            AnnotationVisitor av = mv.visitParameterAnnotation(idx, REQUEST_PARAM, true);
+                            av.visitEnd();
+                        }
                     }
                 }
             } else {
@@ -143,7 +154,49 @@ public final class CatAsm implements Opcodes{
             }
             return mv;
         }
+        
+        
     }
+
+    private static class CatMethodVisitor extends MethodVisitor implements Opcodes{
+        
+        public CatMethodVisitor(MethodVisitor mv) {
+            super(ASM6, mv);
+        }
+
+        @Override
+        public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
+            AnnotationVisitor anv = super.visitParameterAnnotation(parameter, desc, visible);
+            if( desc.equals(REQUEST_PARAM)){
+                return new CatParameterAnnotationVisitor(anv, parameter);
+            } else {
+                return anv;
+            }
+        }
+    }
+    
+    private static class CatParameterAnnotationVisitor extends AnnotationVisitor implements Opcodes {
+
+        private final int index;
+        
+        public CatParameterAnnotationVisitor(AnnotationVisitor anv, int index) {
+            super(ASM6, anv);
+            this.index = index;
+        }
+
+        @Override
+        public void visit(String name, Object value) {
+            return;
+        }
+
+        @Override
+        public void visitEnd() {
+            super.visit("value", "arg" + index);
+            super.visit("required", false);
+            super.visitEnd();
+        }
+    }
+    
     
     
     
@@ -195,13 +248,17 @@ public final class CatAsm implements Opcodes{
 
     
     private static class MethodInfo {
-        private String descriptor;
-        private Class returnType;
-        private Class<?>[] params;
+        
+        private final String descriptor;
+        private final Class returnType;
+        private final int parameterCount;
+        private final Annotation[][] anns;
+        
         public MethodInfo(Method method) {
             this.descriptor = Type.getMethodDescriptor(method);
             this.returnType = method.getReturnType();
-            this.params = method.getParameterTypes();
+            this.parameterCount = method.getParameterCount();
+            this.anns = method.getParameterAnnotations();
         }
     }
     

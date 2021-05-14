@@ -9,6 +9,7 @@ import com.bugcat.example.tools.ResponseEntity;
 import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
@@ -28,7 +29,7 @@ public interface FaceDemoService{
 
     UserInfo param1(String userId);
     
-    UserInfo param2(String userId, Integer status);
+    UserInfo param2(@RequestParam("userId") String userId, @RequestParam(value = "status", required = false) Integer status);
 
     UserInfo param3(UserPageVi vi);
 

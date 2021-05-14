@@ -27,24 +27,16 @@ import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-
 /**
- * 
+ * 如果是精简模式情况，需要从Request中读流方式，获取到入参
+ * 入参为json字符串，再解析成入参对象
  * */
 abstract class CatArgumentResolver {
-
-    
-    private static Validator validator;
-    static {
-        try { 
-            Class validClass = Class.forName("javax.validation.Validator");
-            validator = getExisting(validClass);
-        } catch ( Exception e ) {
-            validator = null;
-        }
-    }
     
     
+    /**
+     * 每个CatMethodInterceptor初始化时执行
+     * */
     public static CatArgumentResolver build(CatServerInfo serverInfo, Method method){
         if( serverInfo.isCatface() ){
             return new CatfaceArgumentResolver(method);
@@ -58,11 +50,16 @@ abstract class CatArgumentResolver {
     private CatArgumentResolver(){}
     
     
+    /**
+     * 解析入参
+     * */
     protected abstract Object[] resolveNameArgument(HttpServletRequest request, Object[] args) throws Exception;
     
     
     
-    
+    /**
+     * 普通模式，直接返回 args
+     * */
     private static class NomalArgumentResolver extends CatArgumentResolver {
         @Override
         protected Object[] resolveNameArgument(HttpServletRequest request, Object[] args) {
@@ -79,16 +76,16 @@ abstract class CatArgumentResolver {
 
         public CatfaceArgumentResolver(Method method) {
             Parameter[] params = method.getParameters();
+            
+            BeanGenerator generator = new BeanGenerator();
             this.propertyMap = new LinkedHashMap<>(params.length * 2);
             for ( int i = 0; i < params.length; i++ ) {
                 ParameterInfo info = new ParameterInfo(method, i);
                 propertyMap.put(info.pname, info);
+                generator.addProperty(info.pname, info.parameterType);
             }
-            BeanGenerator generator = new BeanGenerator();
-            propertyMap.forEach((key, value) -> {
-                generator.addProperty(key, value.parameterType);
-            });
-            this.clazz = (Class)generator.createClass();
+            this.clazz = (Class)generator.createClass();    //构建一个虚拟入参对象
+            
             FastClass fastClass = FastClass.create(clazz);
             propertyMap.forEach((key, value) -> {
                 value.fastMethod = fastClass.getMethod("get" + CatToosUtil.capitalize(key), new Class[0]);
@@ -101,6 +98,9 @@ abstract class CatArgumentResolver {
                 return args;
             }
             String body = readString(request);
+            if( CatToosUtil.isBlank(body) ){
+                return args;
+            }
             Object resp = JSONObject.parseObject(body, clazz);
             int idx = 0;
             for(Map.Entry<String, ParameterInfo> entry : propertyMap.entrySet() ){
@@ -119,7 +119,7 @@ abstract class CatArgumentResolver {
     private final static void validateIfApplicable(ParameterInfo info, Object value) throws MethodArgumentNotValidException{
         if( info.needValid ){
             BeanPropertyBindingResult result = new BeanPropertyBindingResult(value, info.pname);
-            ValidationUtils.invokeValidator(validator, value, result, info.validationHints);
+            ValidationUtils.invokeValidator(ParameterInfo.validator, value, result, info.validationHints);
             if (result.hasErrors()) {
                 throw new MethodArgumentNotValidException(info.parameter, result);
             }
@@ -128,6 +128,17 @@ abstract class CatArgumentResolver {
     
     
     private static class ParameterInfo {
+
+        private static Validator validator; //需要延时加载
+        static {
+            try {
+                Class validClass = Class.forName("javax.validation.Validator");
+                validator = getExisting(validClass);
+            } catch ( Exception e ) {
+                validator = null;
+            }
+        }
+        
         
         private MethodParameter parameter;
         private String pname;

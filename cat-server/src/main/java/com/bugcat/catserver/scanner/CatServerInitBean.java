@@ -1,11 +1,11 @@
 package com.bugcat.catserver.scanner;
 
 import com.bugcat.catface.annotation.Catface;
-import com.bugcat.catface.spi.AbstractResponesWrapper;
 import com.bugcat.catface.utils.CatToosUtil;
 import com.bugcat.catserver.asm.CatAsm;
 import com.bugcat.catserver.beanInfos.CatServerInfo;
 import com.bugcat.catserver.handler.CatMethodInterceptor;
+import com.bugcat.catserver.handler.CatMethodInterceptorBuilder;
 import com.bugcat.catserver.handler.CatServiceCtrlInterceptor;
 import com.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
@@ -172,13 +172,17 @@ public class CatServerInitBean implements InitializingBean{
         
         MethodInterceptor handerInterceptor = CatServiceCtrlInterceptor.create();
         MethodInterceptor defaults = CatServiceCtrlInterceptor.getDefault();
+
+        CatMethodInterceptorBuilder builder = CatMethodInterceptorBuilder.builder();
+        builder.serverInfo(serverInfo).serverClass(serverClass);
         
         CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
             @Override
             protected Object getCallback (Method method) {
                 StandardMethodMetadata metadata = metadataMap.get(CatToosUtil.signature(method));
                 if ( metadata != null ) {
-                    return new CatMethodInterceptor(metadata, method, serverInfo); // ;
+                    builder.cglibInterMethod(method).interMethodMetadata(metadata);
+                    return builder.build();
                 } else {
                     String methodName = method.getName();
                     if( methodName.startsWith(CatToosUtil.bridgeName) ){

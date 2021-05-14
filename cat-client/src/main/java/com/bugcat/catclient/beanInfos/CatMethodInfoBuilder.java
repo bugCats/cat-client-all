@@ -153,25 +153,31 @@ public class CatMethodInfoBuilder{
 
     
     private AnnotationAttributes getAttributes(Method method){
+
         StandardMethodMetadata metadata = new StandardMethodMetadata(method);
         Map<String, Object> map = metadata.getAnnotationAttributes(CatMethod.class.getName());
-        if( map == null ){ //精简模式
-            map = new HashMap<>();
-            Catface catface = clientInfo.getCatface();
+        
+        Catface catface = clientInfo.getCatface();
+        if( catface != null ) {//精简模式
+            if( map == null ){
+                map = new HashMap<>();
+                map.put("notes", new CatNote[0]);
+                map.put("socket", clientInfo.getSocket());
+                map.put("connect", clientInfo.getConnect());
+                map.put("logs", clientInfo.getLogs());
+                map.put("postString", true);
+            }
             String path = CatToosUtil.getDefaultRequestUrl(catface, method);
             map.put("value", path);
             map.put("method", RequestMethod.POST);
-            map.put("notes", new CatNote[0]);
-            map.put("socket", clientInfo.getSocket());
-            map.put("connect", clientInfo.getConnect());
-            map.put("logs", clientInfo.getLogs());
-            map.put("postString", true);
             this.parameterProcess = FACE_PROCESS;
         } else {
             map.put("postString", false);
         }
+
         AnnotationAttributes attrs = AnnotationAttributes.fromMap(map);
         return attrs;
+        
     }
  
     

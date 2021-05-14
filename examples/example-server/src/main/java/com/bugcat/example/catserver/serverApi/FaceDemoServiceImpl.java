@@ -26,7 +26,7 @@ public class FaceDemoServiceImpl implements FaceDemoService{
 
     @Override
     public UserInfo param1(String userId) {
-        System.out.println("param1: userId=");
+        System.out.println("param1: userId=" + userId);
         return info();
     }
 
