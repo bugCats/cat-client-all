@@ -20,6 +20,7 @@ import java.util.Map;
 /**
  * 精简模式
  * */
+@Api
 @Catface
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface FaceDemoService{
@@ -29,7 +30,7 @@ public interface FaceDemoService{
 
     UserInfo param1(String userId);
     
-    UserInfo param2(@RequestParam("userId") String userId, @RequestParam(value = "status", required = false) Integer status);
+    UserInfo param2(String userId, @RequestParam(value = "status", required = false) Integer status);
 
     UserInfo param3(UserPageVi vi);
 

@@ -84,7 +84,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfo delete(String userId) {
-        if( 1 == 1 ){
+        System.out.println("模拟异常");
+        if( true ){
             throw new RuntimeException("异常");
         }
         return null;

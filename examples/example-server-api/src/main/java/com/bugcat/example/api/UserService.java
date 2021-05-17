@@ -76,7 +76,7 @@ public interface UserService {
 
     @ApiOperation("删除用户状态")
     @CatMethod(value = "/user/delete/{uid}", method = RequestMethod.GET)
-    UserInfo delete(@RequestParam("uid") String userId);
+    UserInfo delete(@PathVariable("uid") String userId);
 
 
 

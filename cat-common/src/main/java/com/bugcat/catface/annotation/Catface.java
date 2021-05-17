@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  * 
  * @author bugcat
  * */
-@Target({ ElementType.TYPE, ElementType.PARAMETER})
+@Target({ ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component

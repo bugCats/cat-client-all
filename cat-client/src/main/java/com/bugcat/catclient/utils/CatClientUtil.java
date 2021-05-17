@@ -1,7 +1,9 @@
 package com.bugcat.catclient.utils;
 
+import com.bugcat.catclient.annotation.CatClient;
 import com.bugcat.catclient.beanInfos.CatClientInfo;
 import com.bugcat.catclient.config.CatHttpRetryConfigurer;
+import com.bugcat.catclient.handler.CatClients;
 import com.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catclient.spi.CatHttp;
@@ -18,12 +20,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -125,30 +130,69 @@ public class CatClientUtil implements ApplicationContextAware, DisposableBean {
      * 通过静态方法创建，包含读取环境变量情况
      * */
     public static <T> T proxy(Class<T> inter, Properties properties){
+        return proxy(inter, inter.getAnnotation(CatClient.class), properties);
+    }
+    
+    /**
+     * 通过CatClients创建
+     * */
+    public static <T> T proxy(Class<? extends CatClients> clients, Class<T> inter, Properties properties){
+        Map<Class, Object> clientMap = proxys(clients, clazz -> clazz.equals(inter), properties);
+        return (T) clientMap.get(inter);
+    }
+    
+    /**
+     * 通过CatClients创建
+     * */
+    public static Map<Class, Object> proxys(Class<? extends CatClients> catClients, Properties properties){
+        return proxys(catClients, clazz -> Boolean.TRUE, properties);
+    }
+
+    private static Map<Class, Object> proxys(Class<? extends CatClients> clients, Predicate<Class> filter, Properties properties){
+        Map<Class, Object> clientMap = new HashMap<>();
+        Method[] methods = clients.getMethods();
+        for ( Method method : methods ) {
+            CatClient client = method.getAnnotation(CatClient.class);
+            if( client == null ){
+                continue;
+            }
+            Class clazz = method.getReturnType();
+            if( filter.test(clazz) ){
+                Object value = proxy(clazz, client, properties);
+                clientMap.put(clazz, value);
+            }
+        }
+        return clientMap;
+    }
+    
+    private final static <T> T proxy(Class<T> inter, CatClient client, Properties properties){
         if( catClinetMap.containsKey(inter) ){
             return (T) catClinetMap.get(inter);
         }
         Inner.noop();
         DefaultConfiguration config = (DefaultConfiguration) properties.get(DefaultConfiguration.class);
         if( config != null ){
-             refreshBean(DefaultConfiguration.class, config);
+            refreshBean(DefaultConfiguration.class, config);
         }
         ToosProperty prop = new ToosProperty(properties);
-        CatClientInfo clientInfo = CatClientInfo.build(inter, prop);
+        CatClientInfo clientInfo = CatClientInfo.build(inter, client, prop);
         T bean = CatClientInfoFactoryBean.createCatClient(inter, clientInfo, prop);
         registerBean(inter, bean);
         return bean;
     }
-
+    
+    
     
     
     public static Properties envProperty(){
         return context != null ? new EnvironmentProperty(context.getEnvironment()) : new Properties();
     }
     
+    
     public static Properties envProperty(Environment environment){
         return new EnvironmentProperty(environment);
     }
+    
     
     
     /**

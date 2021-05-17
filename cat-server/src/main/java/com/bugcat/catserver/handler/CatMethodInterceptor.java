@@ -72,7 +72,12 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         this.realMethodproxy = builder.getServiceProxy();
         this.handers = handers;
         this.interMethod = builder.getInterMethodMetadata();
-        this.argumentResolver = CatArgumentResolver.build(serverInfo, builder.getCglibInterMethod());
+        
+        if( serverInfo.isCatface() ){
+            this.argumentResolver = CatArgumentResolver.build(builder.getCglibInterMethod());
+        } else {
+            this.argumentResolver = null;
+        }
         
         Class wrap = serverInfo.getWarpClass();
         if ( wrap != null ) {
@@ -99,7 +104,10 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         HttpServletRequest request = attr.getRequest();
         HttpServletResponse response = attr.getResponse();
 
-        args = argumentResolver.resolveNameArgument(request, args);
+        if( argumentResolver != null ){
+            argumentResolver.resolveNameArgument(request, args);
+
+        }
         CatInterceptPoint point = new CatInterceptPoint(request, response, server, interMethod, args);
 
         List<CatInterceptor> active = new ArrayList<>(handers.size());

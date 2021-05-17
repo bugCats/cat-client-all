@@ -25,6 +25,7 @@ import java.util.Map;
  * 
  * 
  * 此处模拟客户端环境，通过注入FaceDemoService，调用方法，发起http请求
+ * 或者com.bugcat.example.api.FaceDemoServiceTest调用
  * 
  * 服务类在：com.bugcat.example.catserver.serverApi.FaceDemoServiceImpl
  * 

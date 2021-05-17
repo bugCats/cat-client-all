@@ -1,41 +1,34 @@
-package com.bugcat.example.catclient.serverApi;
+package com.bugcat.example.api;
 
-
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import com.bugcat.example.api.UserService;
+import com.bugcat.catclient.utils.CatClientUtil;
 import com.bugcat.example.api.vi.UserPageVi;
 import com.bugcat.example.api.vi.UserSaveVi;
+import com.bugcat.example.api.vo.UserInfo;
+import com.bugcat.example.catclient.serverApi.Config;
 import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
-import com.bugcat.example.api.vo.UserInfo;
-import io.swagger.annotations.Api;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
 
-/**
- * 
- * 联合服务端完整示例
- * 必须启动 server-example
- * 
- * 
- * 此处模拟客户端环境，通过注入UserService，调用方法，发起http请求
- * 或者com.bugcat.example.api.UserServiceTest调用
- * 
- * 服务类在：com.bugcat.example.catserver.serverApi.UserServiceImpl
- * 
- * 
- * */
-@Api(tags = "客户端 - userService")
-@RestController
-public class ServerApiController {
+public class UserServiceTest{
 
-    @Autowired
-    private UserService userService;
+    private static UserService userService;
 
+    static {
+        ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
-    @GetMapping("/test/userPage")
+        Properties prop = new Properties();
+        prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
+        userService = CatClientUtil.proxy(Config.class, UserService.class, prop);
+    }
+    
+
+    @Test
     public void userPage(){
         UserPageVi vi = new UserPageVi();
         vi.setName("bugcat");
@@ -44,38 +37,49 @@ public class ServerApiController {
     }
 
 
-    @GetMapping("/test/userInfo")
+    @Test
     public void userInfo(){
         UserInfo userInfo = userService.userInfo("6666");
         System.out.println(JSONObject.toJSONString(userInfo));
     }
 
-    @GetMapping("/test/userSave")
+
+    @Test
     public void userSave(){
         try {
             UserSaveVi vi = new UserSaveVi();
-//            vi.setName("bugcat");
+            //            vi.setName("bugcat");
             vi.setEmail("972245132@qq.com");
             ResponseEntity<Void> status = userService.userSave(vi);
             System.out.println(JSONObject.toJSONString(status));
-            
+
         } catch ( Exception e ) {
             e.printStackTrace();
         }
     }
-    
 
-    @GetMapping("/test/status")
+
+    @Test
     public void status(){
         Void status = userService.status("6666", "1");
         System.out.println(JSONObject.toJSONString(status));
     }
 
-    @GetMapping("/test/method")
+
+    @Test
+    public void delete(){
+        UserInfo delete = userService.delete("3622");
+        System.out.println(JSONObject.toJSONString(delete));
+    }
+
+
+
+    @Test
     public void method(){
-        ResponseEntity<Void> resp = userService.method("{\"name\":\"method\"}");
+        ResponseEntity<Void> resp = userService.method("hello world");
         System.out.println(JSONObject.toJSONString(resp));
     }
-    
-    
+
+
+
 }
