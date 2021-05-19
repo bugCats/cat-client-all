@@ -46,7 +46,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
     
     private final List<CatInterceptor> handers;
 
-    private final CatArgumentResolver argumentResolver;    //参数预处理器
+    private final CatFaceResolver argumentResolver;    //参数预处理器
 
     private final Function<Object, Object> successToEntry;
     private final Function<Throwable, Object> errorToEntry;
@@ -72,12 +72,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         this.realMethodproxy = builder.getServiceProxy();
         this.handers = handers;
         this.interMethod = builder.getInterMethodMetadata();
-        
-        if( serverInfo.isCatface() ){
-            this.argumentResolver = CatArgumentResolver.build(builder.getCglibInterMethod());
-        } else {
-            this.argumentResolver = null;
-        }
+        this.argumentResolver = builder.getArgumentResolver();
         
         Class wrap = serverInfo.getWarpClass();
         if ( wrap != null ) {
@@ -105,8 +100,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         HttpServletResponse response = attr.getResponse();
 
         if( argumentResolver != null ){
-            argumentResolver.resolveNameArgument(request, args);
-
+            args = argumentResolver.resolveArgument(args);
         }
         CatInterceptPoint point = new CatInterceptPoint(request, response, server, interMethod, args);
 

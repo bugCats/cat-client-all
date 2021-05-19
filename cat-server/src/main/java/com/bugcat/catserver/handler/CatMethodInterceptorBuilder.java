@@ -16,13 +16,10 @@ public class CatMethodInterceptorBuilder {
 
     private CatServerInfo serverInfo;
     
-    private Class serverClass;
-    
     private Object serverBean;
     private Class serverBeanClass;
     
     private FastClass fastClass;
-    
     
     
     private StandardMethodMetadata interMethodMetadata;
@@ -32,21 +29,23 @@ public class CatMethodInterceptorBuilder {
     
     private ServiceProxy serviceProxy;
 
+    private CatFaceResolver argumentResolver;
     
-    private CatMethodInterceptorBuilder(){
-        
-    }
+    private CatMethodInterceptorBuilder(){}
+    
     
     public static CatMethodInterceptorBuilder builder(){
         return new CatMethodInterceptorBuilder();
     }
 
+    
+    
+    
     public CatMethodInterceptorBuilder serverInfo(CatServerInfo serverInfo){
         this.serverInfo = serverInfo;
         return this;
     }
     public CatMethodInterceptorBuilder serverClass(Class serverClass){
-        this.serverClass = serverClass;
         this.serverBean = CatServerUtil.getBean(serverClass);
         this.serverBeanClass = serverBean.getClass();
         if( !ClassUtils.isCglibProxy(serverBeanClass) ){
@@ -61,12 +60,13 @@ public class CatMethodInterceptorBuilder {
         this.realMethod = interMethod.getIntrospectedMethod();
         return this;
     }
-    public CatMethodInterceptorBuilder cglibInterMethod(Method cglibInterMethod){
-        this.cglibInterMethod = cglibInterMethod;
+    public CatMethodInterceptorBuilder argumentResolver(CatFaceResolver resolver){
+        this.argumentResolver = resolver;
         return this;
     }
 
 
+    
     public CatMethodInterceptor build(){
         if( fastClass == null ){
             MethodProxy proxy = MethodProxy.find(serverBeanClass, new Signature(realMethod.getName(), Type.getMethodDescriptor(realMethod)));
@@ -130,10 +130,10 @@ public class CatMethodInterceptorBuilder {
     public Method getRealMethod() {
         return realMethod;
     }
-    public Method getCglibInterMethod() {
-        return cglibInterMethod;
-    }
     public ServiceProxy getServiceProxy() {
         return serviceProxy;
+    }
+    public CatFaceResolver getArgumentResolver() {
+        return argumentResolver;
     }
 }

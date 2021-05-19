@@ -29,7 +29,7 @@ public class NomalController {
     @GetMapping("/cat1")
     public String cat1(){
         Demo demo = creart();
-        demo.setId(null);
+        demo.setId(123L);
         ResponseEntity<Demo> resp = catRemoteApi.demo1(demo);
         return JSONObject.toJSONString(resp);
     }

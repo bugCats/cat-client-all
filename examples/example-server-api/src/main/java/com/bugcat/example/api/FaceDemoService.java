@@ -8,8 +8,9 @@ import com.bugcat.example.tools.PageInfo;
 import com.bugcat.example.tools.ResponseEntity;
 import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
@@ -20,7 +21,7 @@ import java.util.Map;
 /**
  * 精简模式
  * */
-@Api
+@Api(tags = "精简模式")
 @Catface
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface FaceDemoService{
@@ -30,7 +31,8 @@ public interface FaceDemoService{
 
     UserInfo param1(String userId);
     
-    UserInfo param2(String userId, @RequestParam(value = "status", required = false) Integer status);
+    @ApiOperation("api - param2")
+    UserInfo param2(String userId, Integer status);
 
     UserInfo param3(UserPageVi vi);
 
@@ -42,12 +44,18 @@ public interface FaceDemoService{
 
     UserInfo param7(UserPageVi vi1, UserPageVi vi2, Integer status, Map<String, Object> map);
 
-    UserInfo param8(Map<String, Object> map, UserPageVi vi1, UserPageVi vi2, Integer status, ResponseEntity<PageInfo<UserPageVi>> vi3);
+    UserInfo param8(@ApiParam("参数map") Map<String, Object> map,
+                    @ApiParam("参数vi1") @Valid UserPageVi vi1,
+                    @ApiParam("参数vi2") UserPageVi vi2,
+                    @ApiParam("参数status") Integer status,
+                    @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
 
-    UserInfo param9(Map<String, Object> map, @Validated UserPageVi vi1, 
-                    Date date, Integer status, 
-                    BigDecimal decimal,
-                    @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
-
+    UserInfo param9(@ApiParam("参数map") Map<String, Object> map, 
+                    @ApiParam("参数vi1") @Validated UserPageVi vi1,
+                    @ApiParam("参数date") Date date,
+                    @ApiParam("参数status") Integer status,
+                    @ApiParam("参数decimal") BigDecimal decimal,
+                    @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
+    
 
 }

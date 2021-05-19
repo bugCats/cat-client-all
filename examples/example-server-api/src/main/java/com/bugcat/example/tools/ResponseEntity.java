@@ -3,6 +3,7 @@ package com.bugcat.example.tools;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import java.io.Serializable;
 
 /**
@@ -16,6 +17,7 @@ public class ResponseEntity<T> implements Serializable {
 
 	public static final String succ = "10000";
 	
+	@Valid
 	@ApiModelProperty("业务参数")
 	private T data;
 

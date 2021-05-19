@@ -1,5 +1,6 @@
 package com.bugcat.example.tools;
 
+import javax.validation.Valid;
 import java.util.List;
 
 
@@ -26,6 +27,7 @@ public class PageInfo<T> {
 	/**
 	 * 当前结果集合
 	 */
+	@Valid
 	private List<T> list;
 
 	/**

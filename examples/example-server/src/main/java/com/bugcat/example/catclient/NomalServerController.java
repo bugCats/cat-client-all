@@ -30,7 +30,7 @@ public class NomalServerController {
 
     
     @PostMapping(value = "/cat/demo1")
-    public ResponseEntity<Demo> demo11(@RequestBody Demo req){
+    public ResponseEntity<Demo> demo11(@Valid @RequestBody Demo req){
         System.out.println("demo1 >>> req: " + JSONObject.toJSONString(req));
         Demo resp = creart();
         return ResponseEntity.ok(resp);

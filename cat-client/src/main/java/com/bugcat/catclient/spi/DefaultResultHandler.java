@@ -43,7 +43,7 @@ public class DefaultResultHandler extends AbstractResultProcessor{
                 return true;
             }
         }
-        
+        sendHandler.getNotes().remove(CatHttpRetryConfigurer.RETRY_COUNT);
         return false;
     }
 

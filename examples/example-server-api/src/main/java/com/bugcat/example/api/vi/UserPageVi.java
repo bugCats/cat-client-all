@@ -3,6 +3,7 @@ package com.bugcat.example.api.vi;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.NotNull;
 
@@ -14,12 +15,12 @@ public class UserPageVi {
 
     @ApiModelProperty("每页条数")
     private int count = 15;
-
+    
 
     @ApiModelProperty("用户id")
     private String uid;
 
-    @NotNull(message = "姓名不能为空")
+    @NotBlank(message = "姓名不能为空")
     @ApiModelProperty("姓名")
     private String name;
 

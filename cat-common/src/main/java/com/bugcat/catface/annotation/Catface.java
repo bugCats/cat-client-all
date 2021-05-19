@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Component
 public @interface Catface {
 
-    String value() default "";  //别名
+    String value() default "";  //别名，默认是interface类名。最终url => /namespace()/value()/method.name
 
     String namespace() default "";  //统一url前缀
 

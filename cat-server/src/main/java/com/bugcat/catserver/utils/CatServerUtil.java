@@ -1,16 +1,11 @@
 package com.bugcat.catserver.utils;
 
-import com.bugcat.catserver.handler.CatfaceHandlerMethodArgumentResolver;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -60,16 +55,5 @@ public class CatServerUtil implements ApplicationContextAware{
     public static ClassLoader getClassLoader(){
         return context.getClassLoader();
     }
-
-
-
-    @Configuration
-    public static class CatWebConfig extends WebMvcConfigurerAdapter{
-        @Override
-        public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-            argumentResolvers.add(new CatfaceHandlerMethodArgumentResolver());
-            super.addArgumentResolvers(argumentResolvers);
-        }
-        
-    }
+    
 }

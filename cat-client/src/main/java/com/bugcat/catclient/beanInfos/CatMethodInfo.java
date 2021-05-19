@@ -3,6 +3,7 @@ package com.bugcat.catclient.beanInfos;
 
 import com.bugcat.catclient.annotation.CatMethod;
 import com.bugcat.catclient.spi.CatClientFactory;
+import com.bugcat.catclient.spi.CatJsonResolver;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -45,6 +47,12 @@ public class CatMethodInfo {
      * 发送方式 get|post|delete
      * */
     private final RequestMethod requestType;
+
+    /**
+     * 是否为精简模式
+     * */
+    private final boolean isCatface;
+
     /**
      * 是否为post发送字符串模式
      * */
@@ -87,11 +95,6 @@ public class CatMethodInfo {
      * 为null，表示需要通过{@link CatClientFactory#getSendHandler()}自动生成
      * */
     private final Integer handlerIndex;
-
-    /**
-     * 在入参序列化之前执行
-     * */
-    private final Function<Object, Object> parameterProcess;
     
     /**
      * 工厂类
@@ -118,7 +121,7 @@ public class CatMethodInfo {
 
         this.returnInfo = builder.getReturnInfo();
         this.handlerIndex = builder.getHandlerIndex();
-        this.parameterProcess = builder.getParameterProcess();
+        this.isCatface = builder.isCatface();
         
         this.notes = Collections.unmodifiableMap(builder.getNotes());
         this.params = Collections.unmodifiableMap(builder.getParams());
@@ -231,11 +234,11 @@ public class CatMethodInfo {
     public CatMethodReturnInfo getReturnInfo () {
         return returnInfo;
     }
+    public boolean isCatface() {
+        return isCatface;
+    }
     public boolean isPostString() {
         return postString;
-    }
-    public Function<Object, Object> getParameterProcess() {
-        return parameterProcess;
     }
     public CatClientFactory getClientFactory() {
         return clientFactory;

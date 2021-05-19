@@ -82,6 +82,11 @@
 			<version>4.3.5</version>
         </dependency>
 
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+		</dependency>
+		
 		<!-- swagger 文档类 -->
 		<dependency>
 			<groupId>io.springfox</groupId>

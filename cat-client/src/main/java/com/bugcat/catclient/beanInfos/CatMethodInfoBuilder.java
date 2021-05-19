@@ -6,7 +6,6 @@ import com.bugcat.catclient.handler.RequestLogs;
 import com.bugcat.catclient.handler.SendProcessor;
 import com.bugcat.catclient.spi.CatClientFactory;
 import com.bugcat.catface.annotation.Catface;
-import com.bugcat.catface.handler.CatTransport;
 import com.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -21,16 +20,15 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
 
-public class CatMethodInfoBuilder{
 
-    private Method method;
-    private CatClientInfo clientInfo;
-    private Properties prop;
+public class CatMethodInfoBuilder {
+
+    private final Method method;
+    private final CatClientInfo clientInfo;
+    private final Properties prop;
 
     
     public static CatMethodInfoBuilder builder(Method method, CatClientInfo clientInfo, Properties prop){
@@ -44,23 +42,7 @@ public class CatMethodInfoBuilder{
         this.clientInfo = clientInfo;
         this.prop = prop;
     }
-
-    /**
-     * 如果是精简模式，直接使用fastjson序列化
-     * */
-    private final static Function<Object, Object> FACE_PROCESS = value -> {
-        if( value == null ){
-            return null;
-        }
-        if( value instanceof Map ){
-            return new CatTransport(value);
-        } else { //精简模式下，入参都是键值对
-            Map<String, Object> map = new HashMap<>();
-            map.put("arg0", value);
-            return new CatTransport(map);
-        }
-    };
-
+    
     
     /**
      * 方法名称
@@ -81,6 +63,12 @@ public class CatMethodInfoBuilder{
      * 发送方式 get|post|delete
      * */
     private RequestMethod requestType;
+
+
+    /**
+     * 是否为精简模式
+     * */
+    private boolean isCatface = false;
     
     /**
      * 是否为post发送字符串模式
@@ -131,15 +119,7 @@ public class CatMethodInfoBuilder{
     private boolean nomalLogOut = false;
     private boolean onErrLogIn = false;
     private boolean onErrLogOut = false;
-
     
-    /**
-     * 在入参序列化之前执行
-     * */
-    private Function<Object, Object> parameterProcess = Function.identity();
-
-
-
     public CatMethodInfo build() {
 
         AnnotationAttributes attrs = getAttributes(method);
@@ -165,14 +145,11 @@ public class CatMethodInfoBuilder{
                 map.put("socket", clientInfo.getSocket());
                 map.put("connect", clientInfo.getConnect());
                 map.put("logs", clientInfo.getLogs());
-                map.put("postString", true);
             }
             String path = CatToosUtil.getDefaultRequestUrl(catface, method);
             map.put("value", path);
             map.put("method", RequestMethod.POST);
-            this.parameterProcess = FACE_PROCESS;
-        } else {
-            map.put("postString", false);
+            isCatface = true;
         }
 
         AnnotationAttributes attrs = AnnotationAttributes.fromMap(map);
@@ -229,7 +206,7 @@ public class CatMethodInfoBuilder{
         //方法返回对象
         this.returnInfo = new CatMethodReturnInfo(method.getReturnType(), method.getGenericReturnType());
         
-        this.postString = attrs.getBoolean("postString");
+        this.postString = isCatface;    // 如果是精简模式，默认是post+json
         
         //是否已经出现过主要入参对象
         boolean hasPrimary = false;
@@ -327,6 +304,9 @@ public class CatMethodInfoBuilder{
     public RequestMethod getRequestType() {
         return requestType;
     }
+    public boolean isCatface() {
+        return isCatface;
+    }
     public boolean isPostString() {
         return postString;
     }
@@ -365,8 +345,5 @@ public class CatMethodInfoBuilder{
     }
     public boolean isOnErrLogOut() {
         return onErrLogOut;
-    }
-    public Function<Object, Object> getParameterProcess() {
-        return parameterProcess;
     }
 }

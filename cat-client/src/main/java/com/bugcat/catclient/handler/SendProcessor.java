@@ -100,11 +100,20 @@ public class SendProcessor {
      * 2、设置参数，如果在调用远程API，需要额外的签名等，可在此步骤添加
      * */
     public final void pretreatment(CatParameter param){
-        
-        Object value = methodInfo.getParameterProcess().apply(param.getValue());
 
         CatJsonResolver resolver = clientFactory.getJsonResolver();
-
+        
+        Object value = param.getValue();
+        if( methodInfo.isCatface() ){
+            if( value instanceof Map ){
+                value = resolver.toJsonString(value);
+            } else {
+                Map<String, Object> map = new HashMap<>();
+                map.put("arg0", value);
+                value = resolver.toJsonString(map);
+            }
+        }
+        
         // 使用post发送字符串
         if( isPostString() ){
 
@@ -134,7 +143,7 @@ public class SendProcessor {
     
     
     /**
-     * 3、如果在调用远程API，需要额外的签名等，可在此步骤添加
+     * 3、如果在调用远程API，需要额外处理参数、添加签名等，可在此步骤添加
      * */
     public void setSendVariable(CatParameter param){
         
@@ -143,7 +152,7 @@ public class SendProcessor {
     
     
     /**
-     * 3、发送http
+     * 4、发送http
      * */
     public String httpSend() throws CatHttpException {
         
@@ -270,19 +279,15 @@ public class SendProcessor {
     public RequestMethod getRequestType() {
         return requestType;
     }
-
     public JSONObject getNotes() {
         return notes;
     }
-
     public String getReqStr () {
         return reqStr;
     }
-
     public String getRespStr () {
         return respStr;
     }
-
 
     
 }
