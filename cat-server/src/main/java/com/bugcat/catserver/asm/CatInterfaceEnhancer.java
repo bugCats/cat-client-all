@@ -16,6 +16,7 @@ import org.springframework.asm.Type;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -165,12 +166,30 @@ public final class CatInterfaceEnhancer implements Opcodes{
     }
 
     private static class CatMethodVisitor extends MethodVisitor {
+        
+        private static Method method;
+        static {
+            method = ReflectionUtils.findMethod(MethodVisitor.class, "visitAnnotableParameterCount", Integer.class, Boolean.class);
+            if( method != null ){
+                ReflectionUtils.makeAccessible(method);
+            }
+        }
+
         public CatMethodVisitor(MethodVisitor mv) {
             super(ASM6, mv);
         }
+        
         @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
             return null;
+        }
+
+
+        // @Override Spring 5.x以上才有
+        public void visitAnnotableParameterCount(int parameterCount, boolean visible) {
+            if( method != null ){
+                ReflectionUtils.invokeMethod(method, 1, visible);
+            }
         }
     }
     
