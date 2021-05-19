@@ -9,6 +9,8 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -268,13 +270,20 @@ public class CatVirtualParameterEnhancer{
             this.resolvers = new ArrayList<>(annotations.length);
             Arrays.stream(annotations).forEach(ann -> {
                 String annName = ann.annotationType().getSimpleName().toLowerCase();
-                if( "valid".equals(annName) ){
-                    resolvers.add(new AnnotationResolver(ann));
-                } else if( CatInterfaceEnhancer.hasVaild && "validated".equals(annName)){
+                if( "validated".equals(annName) && CatInterfaceEnhancer.hasVaild ){
                     resolvers.add(new AnnotationTransformResolver(ann, "Ljavax/validation/Valid;", new String[0]));
                 } else if("apiparam".equals(annName)){
                     resolvers.add(new AnnotationTransformResolver(ann, "Lio/swagger/annotations/ApiModelProperty;",
                             "value", "name", "allowableValues", "access", "required" , "hidden", "example"));
+                } else {
+                    Target target = AnnotationUtils.getAnnotation(ann, Target.class);
+                    ElementType[] types = target.value();
+                    for(ElementType type : types){
+                        if( type == ElementType.FIELD ){
+                            resolvers.add(new AnnotationResolver(ann));
+                            break;
+                        }
+                    }
                 }
             });
         }

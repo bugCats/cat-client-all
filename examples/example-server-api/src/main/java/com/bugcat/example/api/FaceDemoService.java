@@ -10,9 +10,11 @@ import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
@@ -29,7 +31,7 @@ public interface FaceDemoService{
 
     UserInfo param0();
 
-    UserInfo param1(String userId);
+    UserInfo param1(@NotBlank(message = "userId不能为空") String userId);
     
     @ApiOperation("api - param2")
     UserInfo param2(String userId, Integer status);
@@ -47,7 +49,7 @@ public interface FaceDemoService{
     UserInfo param8(@ApiParam("参数map") Map<String, Object> map,
                     @ApiParam("参数vi1") @Valid UserPageVi vi1,
                     @ApiParam("参数vi2") UserPageVi vi2,
-                    @ApiParam("参数status") Integer status,
+                    @ApiParam("参数status") @NotNull(message = "status 不能为空") Integer status,
                     @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
 
     UserInfo param9(@ApiParam("参数map") Map<String, Object> map, 
