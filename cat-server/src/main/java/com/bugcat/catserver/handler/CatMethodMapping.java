@@ -14,13 +14,13 @@ public class CatMethodMapping {
     
     
     // interface方法到实现类方法映射
-    public void interfaceToImplements(String methodName, String interfaceDesc, String implementsDesc){
+    public void putInterfaceToImplements(String methodName, String interfaceDesc, String implementsDesc){
         this.map.put("sd_" + methodName + "@" + interfaceDesc, methodName + "@" + implementsDesc);
     }
     
     
     // 实现类方法到interface方法映射
-    public void implementsToInterface(String methodName, String implementsDesc, String interfaceDesc){
+    public void putImplementsToInterface(String methodName, String implementsDesc, String interfaceDesc){
         this.map.put("ds_" + methodName + "@" + implementsDesc, methodName + "@" + interfaceDesc);
     }
     
@@ -30,15 +30,15 @@ public class CatMethodMapping {
     /**
      * 获取实现类方法签名
      * */
-    public String getImplementsSign(Method method){
-        return this.map.get("sd_" + signature(method));
+    public String getImplementsUuid(Method method){
+        return this.map.get("sd_" + uuid(method));
     }
     
     /**
      * 获取interface方法签名
      * */
-    public String getInterfaceSign(Method method){
-        return this.map.get("ds_" + signature(method));
+    public String getInterfaceUuid(Method method){
+        return this.map.get("ds_" + uuid(method));
     }
     
  
@@ -49,10 +49,10 @@ public class CatMethodMapping {
     
     
     
-    public static String signature(Method method){
+    public static String uuid(Method method){
         return method.getName() + "@" + Type.getMethodDescriptor(method);
     }
-    public static String signature(String methodName, String descriptor){
+    public static String uuid(String methodName, String descriptor){
         return methodName + "@" + descriptor;
     }
 

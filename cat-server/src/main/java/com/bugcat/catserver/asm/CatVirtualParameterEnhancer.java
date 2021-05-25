@@ -12,7 +12,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -81,7 +80,7 @@ public class CatVirtualParameterEnhancer{
             if(field.resolvers != null && field.resolvers.size() > 0){
                 for( AnnotationResolver resolver : field.resolvers){
                     AnnotationVisitor anv = fieldVisitor.visitAnnotation(resolver.typeDesc, true);
-                    visitAnnotation(anv, resolver);
+                    CatServerUtil.visitAnnotation(anv, resolver.attrMap);
                     anv.visitEnd();
                 }
             }
@@ -126,39 +125,7 @@ public class CatVirtualParameterEnhancer{
 
 
 
-    private static void visitAnnotation(AnnotationVisitor anv, AnnotationResolver resolver){
-        resolver.attrMap.forEach((key, value) -> {
-            if( value == null ){
-                return;
-            }
-            annotationValue(anv, key, value);
-        });
-    }
-    
-    private static void annotationValue(AnnotationVisitor anv, String key, Object value){
-        if( value == null ){
-            return;
-        }
-        Class<?> clazz = value.getClass();
-        if( Proxy.isProxyClass(clazz)){// 如果是jdk动态代理
-            return;
-        }
-        String descriptor = Type.getDescriptor(clazz);
-        if( clazz.isEnum() ){
-            anv.visitEnum(key, descriptor, (String) value);
-        } else if( clazz.isArray() ){
-            AnnotationVisitor array = anv.visitArray(key);
-            for(Object arrayValue : (Object[]) value){
-                annotationValue(anv, key, arrayValue);
-            }
-            array.visitEnd();
-        } else {
-            anv.visit(key, value);
-        }
-    }
-    
-
-    private static class MethodBuilder implements Opcodes {
+    private static class MethodBuilder implements Opcodes{
 
         private final String classType;   // com/bugcat/example/asm/DemoUser
         private final String classDesc;   // Lcom/bugcat/example/asm/DemoUser;

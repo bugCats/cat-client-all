@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 /**
  * 精简模式下，把方法上所有的入参，处理成一个虚拟对象的属性
  * */
-public class CatFaceResolverBuilder {
+public class CatFaceResolverBuilder{
 
     private final static Pattern trimClassName = Pattern.compile("\\.class$");
     private final static Pattern trimParameter = Pattern.compile("\\(([^\\)]*)\\)");
@@ -34,48 +34,38 @@ public class CatFaceResolverBuilder {
     public CatFaceResolverBuilder method(Method method){
         return this;
     }
-
     public String descriptor(String desc) {
         return desc;
     }
-
     public String signature(String sign){
         return sign;
     }
-    
-    public CatFaceResolverBuilder createClass() {
-        return this;
-    }
-    
     public CatFaceResolver build(){
         return null;
     }
-
     public boolean hasParameter(){
         return false;
     }
-    
+    public CatFaceResolverBuilder createClass() {
+        return this;
+    }
     public String[] getDescriptor(){
         return new String[0];
-    } 
-    
+    }
     public String[] getSignature(String[] descs) {
         return new String[0];
     }
-    
     public String getClassName() {
         return null;
     }
-  
     public Method getMethod() {
         return null;
     }
 
 
+    
 
-
-
-    private static class ResolverBuilder extends CatFaceResolverBuilder {
+    private static class ResolverBuilder extends CatFaceResolverBuilder{
 
         private Method method;
 
@@ -88,6 +78,11 @@ public class CatFaceResolverBuilder {
         @Override
         public CatFaceResolverBuilder method(Method method) {
             this.method = method;
+            Class[] parameterTypes = method.getParameterTypes();
+            Class[] params = new Class[parameterTypes.length];
+            for(int idx = 0; idx < parameterTypes.length; idx ++ ){
+                params[idx] = parameterTypes[idx];
+            }
             Class srcClass = method.getDeclaringClass();
             this.className = trimClassName.matcher(srcClass.getName()).replaceAll("") + "Virtual$" + CatToosUtil.capitalize(method.getName());
             this.classDesc = ("L" + className.replace(".", "/") + ";").replace("$", "\\$");

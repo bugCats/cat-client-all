@@ -191,9 +191,9 @@ public class CatServerInitBean implements InitializingBean{
                 if( CatToosUtil.isObjectMethod(CatToosUtil.signature(method)) ){
                     continue;
                 }
-                String signature = CatMethodMapping.signature(method);
+                String uuid = CatMethodMapping.uuid(method);
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                metadataMap.put(signature, metadata);
+                metadataMap.put(uuid, metadata);
             }
         }
         // 此时thisInters中，全部为增强后的扩展interface
@@ -205,10 +205,10 @@ public class CatServerInitBean implements InitializingBean{
         CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
             @Override
             protected Object getCallback (Method method) {
-                String interSign = mapping.getInterfaceSign(method);
-                StandardMethodMetadata metadata = metadataMap.get(interSign); 
+                String uuid = mapping.getInterfaceUuid(method);
+                StandardMethodMetadata metadata = metadataMap.get(uuid); 
                 if ( metadata != null ) {//原interface方法
-                    CatFaceResolverBuilder resolver = resolverMap.get(interSign);
+                    CatFaceResolverBuilder resolver = resolverMap.get(uuid);
                     builder.interMethodMetadata(metadata).argumentResolver(resolver.build());
                     return builder.build();
                 } else {

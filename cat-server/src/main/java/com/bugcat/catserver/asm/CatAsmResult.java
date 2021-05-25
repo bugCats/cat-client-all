@@ -37,10 +37,6 @@ public class CatAsmResult {
     public Map<String, CatFaceResolverBuilder> getResolverMap() {
         return resolverMap;
     }
-    public void foreach(Consumer<CatFaceResolverBuilder> consumer){
-        resolverMap.forEach((key, value) -> consumer.accept(value));
-    }
-    
     
     
     public Class getEnhancerClass() {
