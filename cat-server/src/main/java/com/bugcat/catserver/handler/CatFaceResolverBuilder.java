@@ -88,11 +88,6 @@ public class CatFaceResolverBuilder {
         @Override
         public CatFaceResolverBuilder method(Method method) {
             this.method = method;
-            Class[] parameterTypes = method.getParameterTypes();
-            Class[] params = new Class[parameterTypes.length];
-            for(int idx = 0; idx < parameterTypes.length; idx ++ ){
-                params[idx] = parameterTypes[idx];
-            }
             Class srcClass = method.getDeclaringClass();
             this.className = trimClassName.matcher(srcClass.getName()).replaceAll("") + "Virtual$" + CatToosUtil.capitalize(method.getName());
             this.classDesc = ("L" + className.replace(".", "/") + ";").replace("$", "\\$");
@@ -135,7 +130,9 @@ public class CatFaceResolverBuilder {
 
         @Override
         public CatFaceResolverBuilder createClass() {
-            try { CatVirtualParameterEnhancer.generator(this); } catch ( Exception e ) {}
+            if( method.getParameterCount() > 0 ){
+                try { CatVirtualParameterEnhancer.generator(this); } catch ( Exception e ) {}
+            }
             return this;
         }
 
