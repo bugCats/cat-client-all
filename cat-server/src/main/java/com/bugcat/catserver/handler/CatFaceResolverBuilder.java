@@ -155,9 +155,8 @@ public class CatFaceResolverBuilder{
             List<String> list = new ArrayList<>(descs.length);
             int lastIndex = 0;
             Stack<Boolean> stack = new Stack();
-            char[] chars = signature.toCharArray();
-            for(int i = 0; i < chars.length; i ++ ){
-                char cr = chars[i];
+            for(int i = 0; i < signature.length(); i ++ ){
+                char cr = signature.charAt(i);
                 if( cr == ';' ){
                     if( stack.empty() ){
                         int end = i + 1;

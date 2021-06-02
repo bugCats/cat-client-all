@@ -156,6 +156,7 @@ public class CatMethodInfo {
             for ( Map.Entry<String, CatMethodParamInfo> entry : pathParamIndexMap.entrySet() ){
                 path = path.replace("{" + entry.getKey() + "}", CatToosUtil.toStringIfBlank(args[entry.getValue().getIndex()], "").toString());
             }
+            path = path.replaceAll("/+", "/");
         }
         param.setPath(path);
 
