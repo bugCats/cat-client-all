@@ -11,6 +11,7 @@ import com.bugcat.example.api.vo.UserInfo;
 import com.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +48,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 //@FeignClient
-    
+@Component    
 @Api(tags = "用户操作api")
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface UserService {
@@ -71,7 +72,7 @@ public interface UserService {
 
     @ApiOperation("设置用户状态")
     @CatMethod(value = "/user/status", method = RequestMethod.GET)
-    Void status(@RequestParam("uid") String userId, @RequestParam("status") String status);
+    void status(@RequestParam("uid") String userId, @RequestParam("status") String status);
 
 
     @ApiOperation("删除用户状态")

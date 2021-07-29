@@ -71,9 +71,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Void status(String userId, String status) {
+    public void status(String userId, String status) {
         System.out.println("userSave >>> userId=" + userId + ", status=" + status);
-        return null;
+//        return null;
     }
 
     @Override

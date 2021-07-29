@@ -61,8 +61,7 @@ public class UserServiceTest{
 
     @Test
     public void status(){
-        Void status = userService.status("6666", "1");
-        System.out.println(JSONObject.toJSONString(status));
+        userService.status("6666", "1");
     }
 
 

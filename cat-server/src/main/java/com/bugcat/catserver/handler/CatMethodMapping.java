@@ -1,5 +1,6 @@
 package com.bugcat.catserver.handler;
 
+import com.bugcat.catserver.asm.CatInterfaceEnhancer;
 import org.springframework.asm.Type;
 
 import java.lang.reflect.Method;
@@ -50,7 +51,7 @@ public class CatMethodMapping {
     
     
     public static String uuid(Method method){
-        return method.getName() + "@" + Type.getMethodDescriptor(method);
+        return method.getName() + "@" + CatInterfaceEnhancer.transformReturn(Type.getMethodDescriptor(method));
     }
     public static String uuid(String methodName, String descriptor){
         return methodName + "@" + descriptor;

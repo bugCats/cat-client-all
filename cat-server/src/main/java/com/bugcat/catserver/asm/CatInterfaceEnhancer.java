@@ -116,6 +116,9 @@ public final class CatInterfaceEnhancer implements Opcodes{
         }
         Annotation[] annotations = inter.getAnnotations();
         CatServerUtil.visitAnnotation(annotations, desc -> catServer.visitAnnotation(desc, true));
+
+        // warp描述
+        String warpDesc = serverInfo.getWarpClass() != null ? Type.getDescriptor(serverInfo.getWarpClass()) : null;
         
         for ( Method method : inter.getMethods() ) {
             String methodMap = method.getName();
@@ -124,9 +127,9 @@ public final class CatInterfaceEnhancer implements Opcodes{
             CatFaceResolverBuilder resolver = CatFaceResolverBuilder.builder(serverInfo.isCatface()).method(method);
 
             Class returnType = method.getReturnType();
-            Signature sign = new Signature(methodMap, returnType);
+            Signature sign = new Signature(methodMap, returnType, warpDesc);
             
-            AsmClassMethodDescriptor methodDescriptor = methodDescriptorMap.get(methodMap + "@" + Type.getMethodDescriptor(method));
+            AsmClassMethodDescriptor methodDescriptor = methodDescriptorMap.get(methodMap + "@" + transformReturn(Type.getMethodDescriptor(method)));
             sign.transform(serverInfo.getWarpClass(), methodDescriptor.descriptor, methodDescriptor.signature);   //处理响应结果包装器类
             sign.resolver(resolver); //处理方法入参的虚拟入参class
 
@@ -183,12 +186,14 @@ public final class CatInterfaceEnhancer implements Opcodes{
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             this.version = version;
-            this.classDescriptor = new AsmClassMethodDescriptor(access, name, superName, signature, interfaces);
+            this.classDescriptor = new AsmClassMethodDescriptor(access, superName, signature, interfaces);
         }
 
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-            AsmClassMethodDescriptor methodDesc = new AsmClassMethodDescriptor(access, name, descriptor, signature, exceptions);
-            this.methodDescriptorMap.put(name+"@" + descriptor, methodDesc);
+            descriptor = transformReturn(descriptor);
+            signature = transformReturn(signature);
+            AsmClassMethodDescriptor methodDesc = new AsmClassMethodDescriptor(access, descriptor, signature, exceptions);
+            this.methodDescriptorMap.put(name + "@" + descriptor, methodDesc);
             return null;
         }
     }
@@ -196,13 +201,11 @@ public final class CatInterfaceEnhancer implements Opcodes{
     
     private static class AsmClassMethodDescriptor {
         private final int access;
-        private final String name;
         private final String descriptor;
         private final String signature;
         private final String[] exceptions;
-        public AsmClassMethodDescriptor(int access, String name, String descriptor, String signature, String[] exceptions) {
+        public AsmClassMethodDescriptor(int access, String descriptor, String signature, String[] exceptions) {
             this.access = access;
-            this.name = name;
             this.descriptor = descriptor;
             this.signature = signature;
             this.exceptions = exceptions;
@@ -224,25 +227,24 @@ public final class CatInterfaceEnhancer implements Opcodes{
     private static class Signature {
         
         private String name;
-        
+        private Class returnType;
+        private String warpDesc;    // warp描述
+
         private String desc;
         private String sign;
         
-        private Class returnType;
         
-        public Signature(String name, Class returnType) {
+        public Signature(String name, Class returnType, String warpDesc) {
             this.name = name;
             this.returnType = returnType;
+            this.warpDesc = warpDesc;
         }
         
         public void transform(Class warp, String descriptor, String signature){
             
             // 包装器类存在，并且方法返回类型，不是包装器类
-            if( warp != null && !warp.isAssignableFrom(returnType) ) {
-
-                // warp描述
-                String warpDesc = Type.getDescriptor(warp);
-
+            if( warpDesc != null && !warp.isAssignableFrom(returnType) ) {
+                
                 String[] desc = descriptor.split("\\)");
                 String[] sign = (signature == null ? descriptor : signature).split("\\)");
                 String returnSign = warpDesc.replace(";", "<" + sign[1] + ">;");
@@ -279,6 +281,13 @@ public final class CatInterfaceEnhancer implements Opcodes{
     
     private static String className(Class inter){
         return inter.getName() + CatToosUtil.bridgeName;
+    }
+    public static String transformReturn(String desc){
+        if( desc != null && desc.endsWith(")V") ){
+            return desc.replace(")V", ")Ljava/lang/Void;");
+        } else {
+            return desc;
+        }
     }
     public static boolean isBridgeClass(Class clazz){
         return clazz != null && clazz.getSimpleName().contains(CatToosUtil.bridgeName);

@@ -67,8 +67,7 @@ public class ServerApiController {
 
     @GetMapping("/test/status")
     public void status(){
-        Void status = userService.status("6666", "1");
-        System.out.println(JSONObject.toJSONString(status));
+        userService.status("6666", "1");
     }
 
     @GetMapping("/test/method")
