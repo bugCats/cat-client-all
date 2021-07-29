@@ -4,13 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.bugcat</groupId>
+		<groupId>cc.bugcat</groupId>
 		<artifactId>cat-client-all</artifactId>
 		<version>1.0.0</version>
-		<relativePath/>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	
-	<groupId>com.bugcat</groupId>
+	<groupId>cc.bugcat</groupId>
 	<artifactId>cat-client-jackson</artifactId>
 	<packaging>jar</packaging>
 	<description>cat-client的jackson插件，在对象转字符串、字符串转对象时使用。默认是fastjson</description>
@@ -36,8 +36,9 @@
 
 		
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-client</artifactId>
+			<version>${cat-version}</version>
 		</dependency>
 		
 		
@@ -55,6 +56,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

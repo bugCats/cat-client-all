@@ -8,7 +8,7 @@
         <version>1.5.18.RELEASE</version>
         <relativePath/>
     </parent>
-	<groupId>com.bugcat</groupId>
+	<groupId>cc.bugcat</groupId>
 	<artifactId>example-client</artifactId>
 	<version>1.0.0</version>
 	<name>example-client</name>
@@ -34,24 +34,24 @@
 
 
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-client</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-client-http</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-client-jackson</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		
 		
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>example-server-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
@@ -106,8 +106,12 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	
-    <groupId>com.bugcat</groupId>
+    <groupId>cc.bugcat</groupId>
 	<artifactId>cat-client-all</artifactId>
 	<version>1.0.0</version>
 	<packaging>pom</packaging>
@@ -14,7 +14,7 @@
 
 	<developers>
 		<developer>
-			<id>bugCats</id>
+			<id>cc.bugcat</id>
 			<name>bugcat</name>
 			<email>972245132@qq.com</email>
 			<url>https://github.com/bugCats/cat-client-all</url>
@@ -37,39 +37,6 @@
 	<dependencyManagement>
 		<dependencies>
 			
-			<dependency>
-				<groupId>com.bugcat</groupId>
-				<artifactId>cat-common</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.bugcat</groupId>
-				<artifactId>cat-client</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.bugcat</groupId>
-				<artifactId>cat-client-http</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-
-			
-			<dependency>
-				<groupId>com.bugcat</groupId>
-				<artifactId>cat-server</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-
-
-			<dependency>
-				<groupId>com.bugcat</groupId>
-				<artifactId>cat-server-swagger</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			
-
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-parent</artifactId>
@@ -127,6 +94,35 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+		
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+						<optimize>true</optimize>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.22.2</version>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+			</plugins>
+			
+		</pluginManagement>
+	</build>
+
 	
 	<modules>
 		<module>cat-common</module>
@@ -136,24 +132,9 @@
 		<module>cat-client-cloud</module>
 		<module>cat-server</module>
 		<module>cat-server-swagger</module>
-		
+
 		<module>examples</module>
 	</modules>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<optimize>true</optimize>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-	
+
 </project>

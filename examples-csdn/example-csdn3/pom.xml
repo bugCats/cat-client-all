@@ -8,7 +8,7 @@
         <version>1.5.18.RELEASE</version>
         <relativePath/>
     </parent>
-	<groupId>com.bugcat</groupId>
+	<groupId>cc.bugcat</groupId>
 	<artifactId>example-csdn3</artifactId>
 	<version>1.0.0</version>
 	<description>csdn1</description>
@@ -78,8 +78,12 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

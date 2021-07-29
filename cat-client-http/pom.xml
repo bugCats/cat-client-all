@@ -4,16 +4,16 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.bugcat</groupId>
+		<groupId>cc.bugcat</groupId>
 		<artifactId>cat-client-all</artifactId>
 		<version>1.0.0</version>
-		<relativePath/>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	
-	<groupId>com.bugcat</groupId>
+	<groupId>cc.bugcat</groupId>
 	<artifactId>cat-client-http</artifactId>
 	<packaging>jar</packaging>
-	<description>cat-client的http插件，可以配合cat-client使用，可以自行实现com.bugcat.catclient.spi.CatHttp接口</description>
+	<description>cat-client的http插件，可以配合cat-client使用，可以自行实现cc.bugcat.catclient.spi.CatHttp接口</description>
 
 	<developers>
 		<developer>
@@ -36,8 +36,9 @@
 
 		
 		<dependency>
-			<groupId>com.bugcat</groupId>
+			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-client</artifactId>
+			<version>${cat-version}</version>
 		</dependency>
         
 		
@@ -61,6 +62,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

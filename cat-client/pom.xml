@@ -3,13 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.bugcat</groupId>
+        <groupId>cc.bugcat</groupId>
         <artifactId>cat-client-all</artifactId>
         <version>1.0.0</version>
-        <relativePath/>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.bugcat</groupId>
+    <groupId>cc.bugcat</groupId>
     <artifactId>cat-client</artifactId>
     <packaging>jar</packaging>
     <description>http客户端</description>
@@ -34,8 +34,9 @@
 
         
         <dependency>
-            <groupId>com.bugcat</groupId>
+            <groupId>cc.bugcat</groupId>
             <artifactId>cat-common</artifactId>
+            <version>${cat-version}</version>
         </dependency>
 
 
@@ -81,6 +82,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>            
         </plugins>
     </build>
 
