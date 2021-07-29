@@ -191,9 +191,9 @@ public class CatToosUtil{
     }
 
 
-    public static String getDefaultRequestUrl(Catface catface, Method method) {
+    public static String getDefaultRequestUrl(Catface catface, String serviceName, Method method) {
         String namespace = "";
-        String aliasValue = CatToosUtil.uncapitalize(method.getDeclaringClass().getSimpleName()).replace(bridgeName, "");
+        String aliasValue = CatToosUtil.uncapitalize(serviceName).replace(bridgeName, "");
         if ( catface != null ) {
             namespace = CatToosUtil.isBlank(catface.namespace()) ? "" : "/" + catface.namespace();
             aliasValue = CatToosUtil.isBlank(catface.value()) ? aliasValue : catface.value();

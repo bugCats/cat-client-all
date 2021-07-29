@@ -22,6 +22,8 @@ import java.util.Properties;
  * */
 public final class CatClientInfo {
     
+    private final String serviceName;
+    
     private final String host;  //远程服务器主机
     
     private final int connect;  //连接超时
@@ -56,6 +58,8 @@ public final class CatClientInfo {
         
         //全局默认配置
         DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
+        
+        this.serviceName = (String) paramMap.get("serviceName");
         
         String host = client.host();
         this.host = prop.getProperty(host);
@@ -112,12 +116,15 @@ public final class CatClientInfo {
             client = (CatClient) inter.getAnnotation(CatClient.class);
         }
         Map<String, Object> paramMap = CatToosUtil.getAttributes(inter);
+        paramMap.put("serviceName", inter.getSimpleName());
         CatClientInfo clientInfo = new CatClientInfo(client, paramMap, prop);
         return clientInfo;
     }
 
 
-
+    public String getServiceName() {
+        return serviceName;
+    }
     public String getHost () {
         return host;
     }

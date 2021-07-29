@@ -12,6 +12,7 @@ import org.springframework.asm.ClassWriter;
 import org.springframework.asm.MethodVisitor;
 import org.springframework.asm.Opcodes;
 import org.springframework.asm.Type;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -25,6 +26,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 
 /**
@@ -36,7 +38,6 @@ import java.util.Map;
  * 在动态代理类中，再使用反射调用被标记类的方法
  * 
  * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类
- *
  * 
  * */
 public final class CatInterfaceEnhancer implements Opcodes{
@@ -77,27 +78,37 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
         CatAsmResult result = new CatAsmResult();
 
+        Stack<Class> interParents = new Stack<>();
+        Class parent = inter;
+        while ( parent != null ) {
+            interParents.push(parent);
+            Class[] interfaces = parent.getInterfaces();
+            if( interfaces == null || interfaces.length == 0 ){
+                parent = null;
+            } else if ( interfaces.length > 1 ){
+                throw new BeanCreationException(inter.getName(), "cat-client interface只支持单继承");
+            } else {
+                parent = interfaces[0];
+            }
+        }
 
-        /**
-         * 初版使用ClassReader + ClassVisitor，在 inter 基础上修改字节码，然后动态生成class
-         * 但是动态生成的class中，仍然残留了一些inter的代码（仅查看class的反编译文件是没有问题，需要查看源字节码）
-         * 使用反射时，就会出现一些奇特问题。
-         * 
-         * 现修改成inter 与 动态生成class完全没有任何联系。
-         * 将inter的注解、方法、签名等信息，通过手动赋值
-         * */
-        String className = className(inter);
-        InputStream stream = classLoader.getResourceAsStream(inter.getName().replace('.', '/') + ".class");
-        ClassReader cr = new ClassReader(stream);
-        OnlyReaderClassVisitor onlyReader = new OnlyReaderClassVisitor(new ClassWriter(ClassWriter.COMPUTE_MAXS));
-        cr.accept(onlyReader, ClassReader.EXPAND_FRAMES);
-        
-        final Map<String, AsmClassMethodDescriptor> methodDescriptorMap = onlyReader.methodDescriptorMap;
+        Map<String, AsmClassMethodDescriptor> methodDescriptorMap = new HashMap<>();
+        OnlyReaderClassVisitor onlyReader = null;
+        while ( !interParents.empty() ) {
+            Class parentInter = interParents.pop();
+            InputStream stream = classLoader.getResourceAsStream(parentInter.getName().replace('.', '/') + ".class");
+            ClassReader cr = new ClassReader(stream);
+            onlyReader = new OnlyReaderClassVisitor(new ClassWriter(ClassWriter.COMPUTE_MAXS));
+            cr.accept(onlyReader, ClassReader.EXPAND_FRAMES);
+            methodDescriptorMap.putAll(onlyReader.methodDescriptorMap);
+        }
+        onlyReader.methodDescriptorMap = methodDescriptorMap;
         AsmClassMethodDescriptor classDescriptor = onlyReader.classDescriptor;
-        
+
+        String className = className(inter);
         ClassWriter enhancerWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         CatServerClassVisitor catServer = new CatServerClassVisitor(enhancerWriter);
-        catServer.visit(onlyReader.version, classDescriptor.access, className(inter).replace(".", "/"), null, classDescriptor.descriptor, classDescriptor.exceptions);
+        catServer.visit(onlyReader.version, classDescriptor.access, className.replace(".", "/"), null, classDescriptor.descriptor, new String[0]);
         
         //如果interface上没有@ResponseBody，自动添加一个
         if ( AnnotationUtils.findAnnotation(inter, ResponseBody.class) == null ) {
@@ -106,7 +117,6 @@ public final class CatInterfaceEnhancer implements Opcodes{
         Annotation[] annotations = inter.getAnnotations();
         CatServerUtil.visitAnnotation(annotations, desc -> catServer.visitAnnotation(desc, true));
         
-
         for ( Method method : inter.getMethods() ) {
             String methodMap = method.getName();
             
@@ -200,7 +210,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
     }
     
     
-
+    
     private static class CatServerClassVisitor extends ClassVisitor implements Opcodes{
         public CatServerClassVisitor(ClassVisitor cv) {
             super(ASM6, cv);

@@ -86,7 +86,7 @@ public class CatServerInitBean implements InitializingBean{
                 Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.annName);
                 if( serverInfo.isCatface() ){
                     attrs = new HashMap<>();
-                    attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method)});
+                    attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method.getDeclaringClass().getSimpleName(), method)});
                     attrs.put("method", new RequestMethod[]{RequestMethod.POST});
                 } else {
                     if( attrs == null ){

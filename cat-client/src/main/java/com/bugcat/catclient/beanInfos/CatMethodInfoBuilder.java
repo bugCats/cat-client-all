@@ -26,6 +26,7 @@ import java.util.Properties;
 
 public class CatMethodInfoBuilder {
 
+    private final String serviceName;
     private final Method method;
     private final CatClientInfo clientInfo;
     private final Properties prop;
@@ -38,6 +39,7 @@ public class CatMethodInfoBuilder {
 
 
     private CatMethodInfoBuilder(Method method, CatClientInfo clientInfo, Properties prop){
+        this.serviceName = clientInfo.getServiceName();
         this.method = method;
         this.clientInfo = clientInfo;
         this.prop = prop;
@@ -146,7 +148,7 @@ public class CatMethodInfoBuilder {
                 map.put("connect", clientInfo.getConnect());
                 map.put("logs", clientInfo.getLogs());
             }
-            String path = CatToosUtil.getDefaultRequestUrl(catface, method);
+            String path = CatToosUtil.getDefaultRequestUrl(catface, serviceName, method);
             map.put("value", path);
             map.put("method", RequestMethod.POST);
             isCatface = true;
