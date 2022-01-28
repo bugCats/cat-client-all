@@ -2,7 +2,7 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.example.dto.DemoEntity;
 import com.alibaba.fastjson.JSONObject;
-import cc.bugcat.catclient.handler.SendProcessor;
+import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 客户端
- * 
+ *
  * 也可以使用 ApiRemote1Test、ApiRemote2Test、ApiRemote3Test 等单元测试类
- * 
+ *
  * */
 @Api(tags = "客户端 - 一般场景")
 @RestController
@@ -24,8 +24,8 @@ public class NomalController {
 
     @Autowired
     private ApiRemote1 catRemoteApi;   //呆毛1
-    
-    
+
+
     @GetMapping("/cat1")
     public String cat1(){
         Demo demo = creart();
@@ -34,37 +34,37 @@ public class NomalController {
         return JSONObject.toJSONString(resp);
     }
 
-    
+
     @GetMapping("/cat2")
     public String cat2(){
         Demo demo = creart();
-        SendProcessor sendHandler = new SendProcessor();
+        CatSendProcessor sendHandler = new CatSendProcessor();
         String resp = catRemoteApi.demo2(sendHandler, new DemoEntity(demo));
         StringBuilder sbr = new StringBuilder();
         sbr.append("resp=").append(JSONObject.toJSONString(resp)).append("<br/>");
-        sbr.append("req=").append(sendHandler.getReqStr()).append("<br/>"); //此次http调用的入参、响应都砸sendHandler中
+        sbr.append("req=").append(sendHandler.getHttpPoint().getResponseBody()).append("<br/>"); //此次http调用的入参、响应都砸sendHandler中
         return sbr.toString();
     }
-    
-    
+
+
     @GetMapping("/cat3")
     public String cat3(){
 
         Demo demo = creart();
         StringBuilder sbr = new StringBuilder();
-        
-        SendProcessor sendHandler = new SendProcessor();
+
+        CatSendProcessor sendHandler = new CatSendProcessor();
 
         ResponseEntity<PageInfo<Demo>> resp = catRemoteApi.demo3(demo, sendHandler);
         sbr.append("第一次=").append(JSONObject.toJSONString(resp)).append("<br/>");
-        
+
         demo.setId(3L);
         resp = catRemoteApi.demo3(demo, sendHandler);
         sbr.append("第二次=").append(JSONObject.toJSONString(resp)).append("<br/>");
-        
+
         return sbr.toString();
     }
-    
+
     @GetMapping("/cat4")
     public ResponseEntity<Demo> cat4(){
         ResponseEntity<Demo> resp = catRemoteApi.demo4("bug猫", "bug猫");
@@ -77,10 +77,10 @@ public class NomalController {
         return resp;
     }
 
-    
+
     @GetMapping("/cat6")
     public ResponseEntity<Void> cat6(){
-        SendProcessor sendHandler = new SendProcessor();
+        CatSendProcessor sendHandler = new CatSendProcessor();
         catRemoteApi.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
         return ResponseEntity.ok(null);
     }

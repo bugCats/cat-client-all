@@ -12,6 +12,6 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
-      
-      
-demo.remoteApi: http://127.0.0.1:8010      
+
+
+demo.remoteApi: http://127.0.0.1:8010

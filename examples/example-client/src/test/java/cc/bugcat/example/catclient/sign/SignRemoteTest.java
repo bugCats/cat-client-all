@@ -1,5 +1,6 @@
 package cc.bugcat.example.catclient.sign;
 
+import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import cc.bugcat.catclient.utils.CatClientUtil;
@@ -23,14 +24,16 @@ public class SignRemoteTest {
 
         SignFactory factory = new SignFactory();
         CatClientUtil.registerBean(SignFactory.class, factory);
-        
+
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         prop.put("demo.apikey", "bugcat");
-        remote = CatClientUtil.proxy(SignRemote.class, prop);
+        remote = CatClientBuilders.builder(SignRemote.class)
+                    .environment(prop)
+                    .build();
     }
-    
-    
+
+
     @Test
     public void demo11() throws Exception {
         Map<String, Object> map = new HashMap<>();
@@ -40,7 +43,7 @@ public class SignRemoteTest {
         remote.demo11(map);// 对比控制台打印的签名sign字段
     }
 
-    
+
     @Test
     public void demo12() throws Exception {
         DemoDTO demo = new DemoDTO();

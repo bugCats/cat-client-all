@@ -1,16 +1,19 @@
 package cc.bugcat.catclient.cloud;
 
-import cc.bugcat.catclient.beanInfos.CatParameter;
-import cc.bugcat.catclient.handler.SendProcessor;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
+import cc.bugcat.catclient.beanInfos.CatParameter;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
+import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.spi.CatHttpPoint;
 import cc.bugcat.catclient.spi.ServerChoose;
 
 
 /**
  * 多例
  * */
-public class CloudSendHandler extends SendProcessor{
-    
+public class CloudSendHandler extends CatSendProcessor {
+
     private ServerChoose chooser;
 
     private CatInstanceEntry instanceEntry;
@@ -20,34 +23,34 @@ public class CloudSendHandler extends SendProcessor{
     public CloudSendHandler() {
         this.chooser = getServerChoose();
     }
-    
+
     public CloudSendHandler(ServerChoose chooser) {
         this.chooser = chooser;
     }
-    
-    
-    @Override
-    public void setConfigInfo(CatMethodInfo methodInfo, CatParameter param) {
-        super.setConfigInfo(methodInfo, param);
 
-        instanceEntry = new CatInstanceEntry(methodInfo.getHost());
-        path = param.getPath();
-        
+    @Override
+    protected void afterVariableResolver(CatSendContextHolder context, CatHttpPoint httpPoint) {
+
+        CatMethodInfo methodInfo = context.getMethodInfo();
+
+        this.path = httpPoint.getPath();
+
+        this.instanceEntry = new CatInstanceEntry(methodInfo.getHost());
         String ipAddr = chooser.hostAddr(instanceEntry);
-        instanceEntry.setIpAddr(ipAddr);
-        super.path = instanceEntry.getHostAddr() + path;
+        this.instanceEntry.ipAddrResolver(ipAddr);
+        super.getHttpPoint().setPath(instanceEntry.getHostAddr() + path);
     }
 
-    
+
     public void chooseOtherHost(){
         String ipAddr = chooser.retryHostAddr(instanceEntry);
-        instanceEntry.setIpAddr(ipAddr);
-        super.path = instanceEntry.getHostAddr() + path;
+        this.instanceEntry.ipAddrResolver(ipAddr);
+        super.getHttpPoint().setPath(instanceEntry.getHostAddr() + path);
     }
 
 
     protected ServerChoose getServerChoose(){
         return CatClientCloudFactory.getServerChoose();
     }
-    
+
 }

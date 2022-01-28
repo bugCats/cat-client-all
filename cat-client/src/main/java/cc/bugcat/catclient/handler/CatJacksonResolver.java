@@ -1,18 +1,22 @@
-package cc.bugcat.catclient.config;
+package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.spi.CatJsonResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Type;
 
-
+/**
+ * jackson 序列化与反序列化
+ * 默认序列化工具，可在cc.bugcat.catclient.spi.CatClientConfiguration#jsonResolver()指定
+ * */
 public class CatJacksonResolver implements CatJsonResolver{
 
-    
+
     private ObjectMapper mapper;
 
 
@@ -21,17 +25,18 @@ public class CatJacksonResolver implements CatJsonResolver{
     }
 
     public CatJacksonResolver(ObjectMapper objectMapper){
-        this.mapper = objectMapper;
+        mapper = objectMapper;
         if( mapper == null ){
             mapper = CatClientUtil.getBean(ObjectMapper.class);
         }
         if( mapper == null ){
             mapper = new ObjectMapper();
-        }        
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
     }
-    
-    
-    
+
+
+
     @Override
     public <T> T toJavaBean(String jsonString, Type type) {
         try {
@@ -42,7 +47,7 @@ public class CatJacksonResolver implements CatJsonResolver{
         }
     }
 
-    
+
     @Override
     public <T> T toJavaBean(String jsonString, AbstractResponesWrapper<T> wrapper, Type type) {
         CatTypeReference typeRef = wrapper.getWrapperType(type);
@@ -54,7 +59,7 @@ public class CatJacksonResolver implements CatJsonResolver{
         }
     }
 
-    
+
     @Override
     public String toJsonString(Object object) {
         try {
@@ -68,4 +73,5 @@ public class CatJacksonResolver implements CatJsonResolver{
     public String toXmlString(Object object) {
         return null;
     }
+
 }

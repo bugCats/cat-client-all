@@ -23,7 +23,7 @@
 		</developer>
 	</developers>
 
-	
+
 	<properties>
 		<java.version>1.8</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,25 +38,14 @@
 			<artifactId>cat-client</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		<dependency>
-			<groupId>cc.bugcat</groupId>
-			<artifactId>cat-client-http</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>cc.bugcat</groupId>
-			<artifactId>cat-client-jackson</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		
-		
+
 		<dependency>
 			<groupId>cc.bugcat</groupId>
 			<artifactId>example-server-api</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
-		
+
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -74,21 +63,7 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.31</version>
         </dependency>
-        
-        <!-- http 相关 -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>4.3.5</version>
-        </dependency>
 
-		
-		
 		<!-- swagger 文档类 -->
 		<dependency>
 			<groupId>io.springfox</groupId>
@@ -100,7 +75,7 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.5.0</version>
 		</dependency>
-        
+
 	</dependencies>
 
 	<build>

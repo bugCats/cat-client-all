@@ -12,9 +12,9 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
-      
 
-core-server.remoteApi: http://127.0.0.1:8012 
+
+core-server.remoteApi: http://127.0.0.1:8012
 
 
 retry:

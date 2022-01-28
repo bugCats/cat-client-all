@@ -1,28 +1,34 @@
 package cc.bugcat.catclient.handler;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * http异常
  * */
 public class CatHttpException extends Exception {
 
-    private Integer status;
-    private Exception exception;
-    
-    
-    public CatHttpException(Integer status, Exception exception) {
-        this.status = status;
+    private final Integer statusCode;         //异常代码
+    private final String statusText;
+    private final Exception exception;    //原始异常
+
+
+    public CatHttpException(int statusCode, String statusText, Exception exception) {
+        this.statusCode = statusCode;
+        this.statusText = statusText;
         this.exception = exception;
     }
 
-    public Integer getStatus() {
-        return status;
+    public Integer getStatusCode() {
+        return statusCode;
+    }
+    public String getStatusText() {
+        return statusText;
     }
 
-    
     public Exception getIntrospectedException(){
         return exception;
     }
-    
+
     public Class<? extends Exception> getIntrospectedClass() {
         return exception.getClass();
     }

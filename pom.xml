@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	
+
     <groupId>cc.bugcat</groupId>
 	<artifactId>cat-client-all</artifactId>
 	<version>1.0.0</version>
@@ -21,22 +21,27 @@
 		</developer>
 	</developers>
 
-	
+
 	<properties>
 
 		<java.version>1.8</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		
+
 		<cat-version>${project.version}</cat-version>
-		
+
 		<spring-boot>1.5.18.RELEASE</spring-boot>
-		
+		<slf4j>1.7.25</slf4j>
+		<fastjson>1.2.31</fastjson>
+		<jackson>2.9.9</jackson>
+
+		<springfox>2.5.0</springfox>
+
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
-			
+
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-parent</artifactId>
@@ -45,58 +50,44 @@
 				<scope>import</scope>
 			</dependency>
 
-			
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
-				<version>1.7.25</version>
+				<version>${slf4j}</version>
 			</dependency>
 
 			<!-- fastjson -->
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.31</version>
+				<version>${fastjson}</version>
 			</dependency>
 
 			<!-- jackson -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>2.9.9</version>
+				<version>${jackson}</version>
 			</dependency>
 
-			<!-- http 相关 -->
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpclient</artifactId>
-				<version>4.5</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpmime</artifactId>
-				<version>4.3.5</version>
-			</dependency>	
-			
-			
 			<dependency>
 				<groupId>io.springfox</groupId>
 				<artifactId>springfox-swagger2</artifactId>
-				<version>2.5.0</version>
+				<version>${springfox}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.springfox</groupId>
 				<artifactId>springfox-swagger-ui</artifactId>
-				<version>2.5.0</version>
+				<version>${springfox}</version>
 			</dependency>
-			
-			
+
+
 		</dependencies>
 	</dependencyManagement>
 
 	<build>
 		<finalName>${project.artifactId}-${project.version}</finalName>
-		
+
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -119,16 +110,14 @@
 					</configuration>
 				</plugin>
 			</plugins>
-			
+
 		</pluginManagement>
 	</build>
 
-	
+
 	<modules>
 		<module>cat-common</module>
 		<module>cat-client</module>
-		<module>cat-client-jackson</module>
-		<module>cat-client-http</module>
 		<module>cat-client-cloud</module>
 		<module>cat-server</module>
 		<module>cat-server-swagger</module>

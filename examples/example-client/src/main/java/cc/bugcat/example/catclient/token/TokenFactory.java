@@ -1,19 +1,21 @@
 package cc.bugcat.example.catclient.token;
 
-import cc.bugcat.catclient.handler.SendProcessor;
-import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.handler.DefaultCatClientFactory;
 import cc.bugcat.catclient.spi.CatHttp;
-import cc.bugcat.catclient.utils.CatHttpUtil;
+import cc.bugcat.catclient.utils.CatRestHttp;
 
-public class TokenFactory extends CatClientFactory {
+public class TokenFactory extends DefaultCatClientFactory {
 
     @Override
-    protected SendProcessor sendHandler() {
+    public CatSendProcessor newSendHandler() {
         return new TokenSendProcessor();
     }
 
     @Override
-    protected CatHttp catHttp() {
-        return new CatHttpUtil();
+    public CatHttp getCatHttp() {
+        return new CatRestHttp();
     }
+
+
 }

@@ -1,9 +1,11 @@
 package cc.bugcat.example.catclient.remote;
 
+import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import cc.bugcat.catclient.handler.SendProcessor;
+import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.dto.DemoEntity;
@@ -16,21 +18,23 @@ import java.util.Properties;
 
 
 /**
- * 
+ *
  * */
 public class ApiRemote1Test {
-    
+
     private static ApiRemote1 remote;
-    
+
     static {
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-        
+
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
-        remote = CatClientUtil.proxy(ApiRemote1.class, prop);
+        remote = CatClientBuilders.builder(ApiRemote1.class)
+                .environment(prop)
+                .build();
     }
-    
-    
+
+
     @Test
     public void demo1() throws Exception {
         Demo demo = creart();
@@ -42,19 +46,20 @@ public class ApiRemote1Test {
     @Test
     public void demo2() throws Exception {
         Demo demo = creart();
-        SendProcessor sendHandler = new SendProcessor();
+        CatSendProcessor sendHandler = new CatSendProcessor();
         String resp = remote.demo2(sendHandler, new DemoEntity(demo));
-        
-        System.out.println("resp=" + JSONObject.toJSONString(resp));
-        
-        System.out.println("req=" + sendHandler.getReqStr());
-        System.out.println("resp=" + sendHandler.getRespStr());
+
+        System.out.println("resp=" + resp);
+
+        CatHttpPoint httpPoint = sendHandler.getHttpPoint();
+        System.out.println("req=" + httpPoint.getRequestBody());
+        System.out.println("resp=" + httpPoint.getResponseBody());
     }
 
     @Test
     public void demo3() throws Exception {
         Demo demo = creart();
-        SendProcessor sendHandler = new SendProcessor();
+        CatSendProcessor sendHandler = new CatSendProcessor();
 
         ResponseEntity<PageInfo<Demo>> resp = remote.demo3(demo, sendHandler);
         System.out.println("第一次=" + JSONObject.toJSONString(resp));
@@ -64,7 +69,7 @@ public class ApiRemote1Test {
         System.out.println("第二次=" + JSONObject.toJSONString(resp));
     }
 
-    
+
     @Test
     public void demo4() throws Exception {
         ResponseEntity<Demo> resp = remote.demo4("bug猫", "bug猫");
@@ -77,18 +82,22 @@ public class ApiRemote1Test {
     public void demo5() throws Exception {
         Demo resp1 = remote.demo5(System.currentTimeMillis());
         System.out.println(JSONObject.toJSONString(resp1));
-        
+
         Demo resp2 = remote.demo5(System.currentTimeMillis());
         System.out.println(JSONObject.toJSONString(resp2));
-        
+
     }
 
     @Test
     public void demo6() throws Exception {
-        SendProcessor sendHandler = new SendProcessor();
+        CatSendProcessor sendHandler = new CatSendProcessor();
         Void nul = remote.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
     }
 
+
+    /**
+     * 模拟404异常
+     * */
     @Test
     public void demo9() throws Exception {
         ResponseEntity<String> resp = remote.demo9();
@@ -103,5 +112,5 @@ public class ApiRemote1Test {
         demo.setMark("调用");
         return demo;
     }
-    
+
 }

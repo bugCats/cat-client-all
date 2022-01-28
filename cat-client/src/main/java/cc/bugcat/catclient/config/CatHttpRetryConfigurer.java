@@ -1,11 +1,11 @@
 package cc.bugcat.catclient.config;
 
-import com.alibaba.fastjson.JSONObject;
 import cc.bugcat.catface.utils.CatToosUtil;
+import com.alibaba.fastjson.JSONObject;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 
@@ -17,10 +17,7 @@ import java.util.*;
  *
  * */
 @Component
-public class CatHttpRetryConfigurer {
-
-
-    public static final String RETRY_COUNT = "bugcat$HttpRetryCount";
+public class CatHttpRetryConfigurer implements InitializingBean {
 
 
     /**
@@ -97,15 +94,14 @@ public class CatHttpRetryConfigurer {
     private Map<String, Object> noteMatchCode = new HashMap<>();
 
 
-    @PostConstruct
-    public void init() throws ClassNotFoundException {
+    @Override
+    public void afterPropertiesSet() throws Exception {
 
         if ( retries <= 0 ) {
             enable = false;
         }
 
         if ( enable ) {
-
             if ( CatToosUtil.isNotBlank(status) ) {
                 String[] codes = status.split(",");
                 for ( String code : codes ) {

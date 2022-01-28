@@ -1,16 +1,15 @@
 package cc.bugcat.catclient.cloud;
 
-import cc.bugcat.catclient.handler.AbstractResultProcessor;
-import cc.bugcat.catclient.handler.SendProcessor;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.handler.AbstractCatResultProcessor;
+import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.handler.DefaultCatClientFactory;
 import cc.bugcat.catclient.spi.ServerChoose;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CatClientCloudFactory extends CatClientFactory{
-    
+public class CatClientCloudFactory extends DefaultCatClientFactory {
+
     protected static class Inner {
         private static final ServerChoose chooser;
         private static final CloudResultHandler resultHandler;
@@ -22,27 +21,20 @@ public class CatClientCloudFactory extends CatClientFactory{
             resultHandler = new CloudResultHandler();
         }
     }
-    
-    
-    
-    @Override
-    protected CatHttp catHttp() {
-        return super.catHttp();
-    }
 
-    
+
     @Override
-    protected SendProcessor sendHandler() {
+    public CatSendProcessor newSendHandler() {
         return new CloudSendHandler(Inner.chooser);
     }
 
-    
+
     @Override
-    protected AbstractResultProcessor resultHandler() {
+    public AbstractCatResultProcessor getResultHandler() {
         return Inner.resultHandler;
     }
 
-    
+
     public final static ServerChoose getServerChoose(){
         return Inner.chooser;
     }

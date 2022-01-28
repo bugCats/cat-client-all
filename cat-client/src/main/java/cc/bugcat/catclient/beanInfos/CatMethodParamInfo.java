@@ -9,11 +9,11 @@ import cc.bugcat.catface.utils.CatToosUtil;
  * */
 public class CatMethodParamInfo {
 
-    
-    private final int index;      //参数索引值
-    private final boolean simple; //是否为String、基本数据类型、包装类
-    private boolean primary;    //是否为主要参数？只能容许有一个被@RequestBody、@ModelAttribute 标记的入参
-    
+
+    private final int index;        //参数索引值
+    private final boolean simple;   //是否为String、基本数据类型、包装类
+    private boolean primary;        //是否为主要参数？只能容许有一个被@RequestBody、@ModelAttribute 标记的入参
+
     /**
      * 入参参数
      * @param index 参数索引位置
@@ -23,7 +23,7 @@ public class CatMethodParamInfo {
         this.index = index;
         this.simple = CatToosUtil.isSimpleClass(pclazz);
     }
-    
+
     public int getIndex () {
         return index;
     }

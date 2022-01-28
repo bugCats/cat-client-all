@@ -32,7 +32,7 @@
 
     <dependencies>
 
-        
+
         <dependency>
             <groupId>cc.bugcat</groupId>
             <artifactId>cat-common</artifactId>
@@ -40,20 +40,26 @@
         </dependency>
 
 
-        
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- fastjson -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <scope>compile</scope>
         </dependency>
-        
-        
-        
+
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -65,7 +71,7 @@
             <scope>compile</scope>
         </dependency>
 
-        
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -85,7 +91,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>            
+            </plugin>
         </plugins>
     </build>
 

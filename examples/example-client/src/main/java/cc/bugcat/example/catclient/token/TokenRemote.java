@@ -3,7 +3,7 @@ package cc.bugcat.example.catclient.token;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catclient.annotation.CatNote;
-import cc.bugcat.catclient.handler.SendProcessor;
+import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * 
+ *
  * 需要token验证版
  * 单元测试类 @cc.bugcat.example.catclient.token.TokenRemoteTest
  *
@@ -21,14 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
  * */
 @CatClient(host = "${core-server.remoteApi}", factory = TokenFactory.class, connect = 3000, socket = 3000)
 public interface TokenRemote {
-    
 
-    
 
-    @CatMethod(value = "/cat/getToken", method = RequestMethod.POST, 
+
+
+    @CatMethod(value = "/cat/getToken", method = RequestMethod.POST,
             notes = {@CatNote(key = "username", value = "${demo.username}"),
                     @CatNote(key = "pwd", value = "${demo.pwd}")})
-    ResponseEntity<String> getToken(SendProcessor sender, @RequestParam("username") String username, @RequestParam("pwd") String pwd);
+    ResponseEntity<String> getToken(CatSendProcessor sender, @RequestParam("username") String username, @RequestParam("pwd") String pwd);
 
 
 

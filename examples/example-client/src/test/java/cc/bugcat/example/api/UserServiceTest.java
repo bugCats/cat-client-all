@@ -1,5 +1,6 @@
 package cc.bugcat.example.api;
 
+import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.example.api.vi.UserPageVi;
 import cc.bugcat.example.api.vi.UserSaveVi;
 import cc.bugcat.example.api.vo.UserInfo;
@@ -24,9 +25,11 @@ public class UserServiceTest{
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
-        userService = CatClientUtil.proxy(Config.class, UserService.class, prop);
+        userService =  CatClientBuilders.builder(Config.class, UserService.class)
+                .environment(prop)
+                .build();
     }
-    
+
 
     @Test
     public void userPage(){

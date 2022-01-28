@@ -1,7 +1,9 @@
 package cc.bugcat.example.api;
 
+import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.example.api.vi.UserPageVi;
+import cc.bugcat.example.catclient.remote.ApiRemote1;
 import cc.bugcat.example.catclient.serverApi.Config;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
@@ -18,15 +20,21 @@ public class FaceDemoServiceTest{
     private static FaceDemoService faceDemoService;
 
     static {
-//        
+//
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
-        faceDemoService = CatClientUtil.proxy(Config.class, FaceDemoService.class, prop);
+
+        Map<Class, Object> configMap = CatClientBuilders.builder(Config.class, FaceDemoService.class)
+                .environment(prop)
+                .build();
+
+        faceDemoService = (FaceDemoService) configMap.get(FaceDemoService.class);
+
     }
-    
-    
-    
+
+
+
     @Test
     public void param0() throws Exception {
         faceDemoService.param0();

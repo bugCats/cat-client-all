@@ -8,14 +8,14 @@ public final class CatInstanceEntry {
     /**
      * 截取服务名
      */
-    private static Pattern lbNamePattern = Pattern.compile("^(https?://)([^/]+)(/?)");
+    private static final Pattern lbNamePattern = Pattern.compile("^(https?://)([^/]+)(/?)");
 
     private String serviceName;     //服务名
     private String ipAddr;          //ip:port
     private String hostAddr;        //全部替换好后可以直接使用的实例地址：http://ip:port/ctx
 
     private Matcher matcher;
-    
+
     public CatInstanceEntry(String lbName){
         this.matcher = lbNamePattern.matcher(lbName);
         if ( matcher.find() ) {
@@ -34,11 +34,11 @@ public final class CatInstanceEntry {
     public String getHostAddr() {
         return hostAddr;
     }
-    
-    
-    void setIpAddr(String ipAddr){
+
+
+    protected void ipAddrResolver(String ipAddr){
         this.ipAddr = ipAddr;
         this.hostAddr = ipAddr.startsWith("http") ? matcher.replaceAll(ipAddr + "$3") : matcher.replaceAll("$1" + ipAddr + "$3");
     }
-    
+
 }

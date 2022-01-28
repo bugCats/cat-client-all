@@ -18,6 +18,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,22 +31,22 @@ import java.util.Set;
  * @author: bugcat
  * */
 public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware{
-    
+
     private static Logger log = LoggerFactory.getLogger(CatServerScannerRegistrar.class);
 
-    
+
     //资源加载器
     private ResourceLoader resourceLoader;
-    
+
     //所有被@CatServer标记的类
     private Set<Object> servers = new HashSet<>();
-    
-    
+
+
     @Override
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
-    
+
     /**
      * 注册扫描事件
      * */
@@ -65,7 +66,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         //扫描所有的 CatInterceptor 子类
         ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
         interceptorScanner.setResourceLoader(resourceLoader);
-        interceptorScanner.addIncludeFilter(CatToosUtil.typeChildrenFilter(CatInterceptor.class));
+        interceptorScanner.addIncludeFilter(new AssignableTypeFilter(CatInterceptor.class));
         interceptorScanner.scan(pkgs);
 
 
@@ -100,7 +101,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         }
     }
-    
+
 
     /**
      * 自定义扫描
@@ -108,12 +109,12 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
     private static class CatServerScanner extends ClassPathBeanDefinitionScanner{
 
         private Set<Object> servers;
-        
+
         public CatServerScanner(Set<Object> servers, BeanDefinitionRegistry registry) {
             super(registry);
             this.servers = servers;
         }
-        
+
         @Override
         protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
             boolean isCandidate = false;
@@ -125,7 +126,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
             }
             return isCandidate;
         }
-        
+
         @Override
         protected void postProcessBeanDefinition(AbstractBeanDefinition beanDefinition, String beanName) {
             super.postProcessBeanDefinition(beanDefinition, beanName);

@@ -3,13 +3,10 @@ package cc.bugcat.catclient.scanner;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.beanInfos.CatMethodInfoBuilder;
-import cc.bugcat.catclient.handler.CatMethodInterceptor;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.DefaultConfiguration;
+import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
+import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
@@ -27,53 +24,55 @@ import java.util.Properties;
  * @author: bugcat
  * */
 public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
-    
-    
-    private Class<T> clazz;     // interface的class
-    private CatClient client;   // 可以null，不一定是interface上的注解！
-    private Properties prop;    // 环境变量
-    
-    
+
+
+    private Class<T> interfaceClass;    // interface的class
+    private CatClient catClient;        // 可以null，不一定是interface上的注解！
+    private Properties envProp;         // 环境变量
+    private CatClientConfiguration clientConfig;
+
     @Override
     public Class<?> getObjectType() {
-        return clazz;
+        return interfaceClass;
     }
 
 
     @Override
     protected T createInstance() throws Exception {
-        CatClientInfo clientInfo = CatClientInfo.build(clazz, client, prop);
-        return createCatClient(clazz, clientInfo, prop);
+        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientConfig, envProp);
+        return createCatClient(interfaceClass, clientInfo, envProp);
     }
 
     /**
      * 解析interface方法，生成动态代理类
      */
-    public final static <T> T createCatClient(Class<T> clazz, CatClientInfo clientInfo, Properties prop) {
-        
-        Class[] interfaces = new Class[]{clazz};
+    public final static <T> T createCatClient(Class<T> interfaceClass, CatClientInfo clientInfo, Properties envprop) {
+
+        Class[] interfaces = new Class[]{interfaceClass};
 
         Map<String, Method> methodMap = new HashMap<>();
         if( clientInfo.isFallbackMod() ){
-            for( Method method : clazz.getMethods() ){
+            for( Method method : interfaceClass.getMethods() ){
                 methodMap.put(CatToosUtil.signature(method), method);
             }
         }
-   
-        
+
+        final MethodInterceptor defaultInterceptor = new MethodInterceptor() {
+            @Override
+            public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+                return methodProxy.invokeSuper(target, args);
+            }
+        };
+
+
         CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
             @Override
             protected Object getCallback (Method method) {
                 if( CatToosUtil.isObjectMethod(method) ){//默认方法
-                    return new MethodInterceptor() {   
-                        @Override
-                        public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                            return methodProxy.invokeSuper(target, args);
-                        }
-                    };
+                    return defaultInterceptor;
                 } else {
-                    
+
                     /**
                      * 是否使用了 fallback
                      * 如果使用了，CallbackHelper.getCallback的入参Method，为fallback类中方法
@@ -84,12 +83,10 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                         method = info;
                     }
 
-                    CatMethodInfoBuilder builder = CatMethodInfoBuilder.builder(method, clientInfo, prop);
-                    CatMethodInfo methodInfo = builder.build();
-                    
-                    CatClientMethodInterceptor interceptor = new CatClientMethodInterceptor(clientInfo, methodInfo);//代理方法=aop
-                    CatClientUtil.addInitBean(interceptor);
-                    
+                    CatMethodInfo methodInfo = CatMethodInfo.builder(method, clientInfo, envprop).build();
+
+                    CatMethodAopInterceptor interceptor = new CatMethodAopInterceptor(clientInfo, methodInfo);//代理方法=aop
+
                     return interceptor; //代理方法=aop
                 }
             }
@@ -104,61 +101,37 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         return (T) obj;
     }
 
-    
-    /**
-     * 动态代理 方法拦截器
-     * */
-    private static final class CatClientMethodInterceptor implements MethodInterceptor, InitializingBean {
-
-        private CatClientInfo clientInfo;
-        private CatMethodInfo methodInfo;
-        private CatMethodInterceptor interceptor;
-
-        public CatClientMethodInterceptor(CatClientInfo clientInfo, CatMethodInfo methodInfo){
-            this.clientInfo = clientInfo;
-            this.methodInfo = methodInfo;
-        }
-
-        @Override
-        public void afterPropertiesSet() throws Exception {
-            interceptor = CatClientUtil.getBean(clientInfo.getInterceptor());
-            
-            DefaultConfiguration config = CatClientUtil.getBean(DefaultConfiguration.class);
-            CatClientFactory factory = CatClientUtil.getBean(clientInfo.getFactoryClass());
-            factory.configuration(config);
-            methodInfo.setClientFactory(factory);
-        }
-
-        @Override
-        public Object intercept(Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-            return interceptor.intercept(clientInfo, methodInfo, target, method, args, methodProxy);
-        }
-    }
 
 
-    
 
     /***************************这些属性通过IOC注入进来，因此get set方法不能少*********************************/
 
 
-    public Class<T> getClazz() {
-        return clazz;
+    public CatClientConfiguration getClientConfig() {
+        return clientConfig;
     }
-    public void setClazz(Class<T> clazz) {
-        this.clazz = clazz;
-    }
-
-    public CatClient getClient() {
-        return client;
-    }
-    public void setClient(CatClient client) {
-        this.client = client;
+    public void setClientConfig(CatClientConfiguration clientConfig) {
+        this.clientConfig = clientConfig;
     }
 
-    public Properties getProp() {
-        return prop;
+    public Class<T> getInterfaceClass() {
+        return interfaceClass;
     }
-    public void setProp(Properties prop) {
-        this.prop = prop;
+    public void setInterfaceClass(Class<T> interfaceClass) {
+        this.interfaceClass = interfaceClass;
+    }
+
+    public CatClient getCatClient() {
+        return catClient;
+    }
+    public void setCatClient(CatClient catClient) {
+        this.catClient = catClient;
+    }
+
+    public Properties getEnvProp() {
+        return envProp;
+    }
+    public void setEnvProp(Properties envProp) {
+        this.envProp = envProp;
     }
 }

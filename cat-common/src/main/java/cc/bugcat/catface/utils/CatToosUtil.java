@@ -77,7 +77,16 @@ public class CatToosUtil{
 
 
     public static boolean isBlank(String str) {
-        return str == null || "".equals(str.trim());
+        int strLen = 0;
+        if (str == null || (strLen = str.length()) == 0) {
+            return true;
+        }
+        for (int i = 0; i < strLen; i++) {
+            if (!Character.isWhitespace(str.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isNotBlank(String str) {
@@ -114,7 +123,7 @@ public class CatToosUtil{
     public static String capitalize(final String str) {
         return capitalize(str, String::toUpperCase);
     }
-    
+
     private static String capitalize(final String str, Function<String, String> func) {
         int strLen;
         if ( str == null || (strLen = str.length()) == 0 ) {
@@ -127,8 +136,8 @@ public class CatToosUtil{
             return func.apply(String.valueOf(chars[0]));
         }
     }
-    
-    
+
+
     /**
      * 是否为基础数据类型
      */
@@ -136,10 +145,9 @@ public class CatToosUtil{
         try {
             if ( clz.isPrimitive() ) {
                 return true;
-            } else
-                if ( clz == String.class ) {
-                    return true;
-                }
+            } else if ( clz == String.class ) {
+                return true;
+            }
             return ((Class) clz.getField("TYPE").get(null)).isPrimitive();
         } catch ( Exception e ) {
             return false;
@@ -165,6 +173,9 @@ public class CatToosUtil{
     }
 
 
+    /**
+     * 从interface上获取注解
+     * */
     public static Map<String, Object> getAttributes(Class inter) {
         Map<String, Object> paramMap = new HashMap<>();
         CatResponesWrapper wrapper = responesWrap(inter, CatResponesWrapper.class);
@@ -175,7 +186,7 @@ public class CatToosUtil{
     }
 
     /**
-     * 递归遍历父类、以及interface，获取annotationType注解
+     * 递归遍历interface、以及父类，获取第一次出现的xx注解
      */
     public static <A extends Annotation> A responesWrap(Class inter, Class<A> annotationType) {
         A annotation = AnnotationUtils.findAnnotation(inter, annotationType);
@@ -203,39 +214,4 @@ public class CatToosUtil{
     }
 
 
-    /**
-     * 扫描子类过滤器
-     */
-    public static AssignableTypeFilter typeChildrenFilter(Class<?> targetType) {
-        return new TypeFilter(targetType);
-    }
-
-    
-    /**
-     * 扫描子类过滤器
-     */
-    private static class TypeFilter extends AssignableTypeFilter{
-
-        private Class<?> targetType;
-
-        public TypeFilter(Class<?> targetType) {
-            super(targetType);
-            this.targetType = targetType;
-        }
-
-        @Override
-        protected Boolean matchTargetType(String typeName) {
-            Boolean bool = super.matchTargetType(typeName);
-            if ( bool == null ) {
-                try {
-                    Class<?> clazz = ClassUtils.forName(typeName, getClass().getClassLoader());
-                    return targetType.isAssignableFrom(clazz);
-                } catch ( Throwable e ) {
-
-                }
-            }
-            return bool;
-        }
-    }
-    
 }
