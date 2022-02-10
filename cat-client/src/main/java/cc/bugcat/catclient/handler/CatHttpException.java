@@ -1,9 +1,9 @@
 package cc.bugcat.catclient.handler;
 
-import org.springframework.http.HttpStatus;
-
 /**
  * http异常
+ *
+ * @author bugcat
  * */
 public class CatHttpException extends Exception {
 

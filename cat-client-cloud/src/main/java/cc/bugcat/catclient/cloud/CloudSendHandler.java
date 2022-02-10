@@ -1,11 +1,9 @@
 package cc.bugcat.catclient.cloud;
 
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.spi.CatHttp;
-import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.spi.ServerChoose;
 
 

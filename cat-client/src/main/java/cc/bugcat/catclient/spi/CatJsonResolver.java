@@ -6,6 +6,8 @@ import java.lang.reflect.Type;
 
 /**
  * 对象序列化、反序列化
+ *
+ * @author bugcat
  * */
 public interface CatJsonResolver {
 
@@ -16,6 +18,5 @@ public interface CatJsonResolver {
     String toJsonString(Object object);
 
     String toXmlString(Object object);
-    
-    
+
 }

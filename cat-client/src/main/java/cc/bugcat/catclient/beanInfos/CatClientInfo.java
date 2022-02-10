@@ -1,6 +1,7 @@
 package cc.bugcat.catclient.beanInfos;
 
 import cc.bugcat.catclient.annotation.CatClient;
+import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
@@ -14,53 +15,89 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * 注解信息，单例
- * {@link CatClient}
+ * interface上的{@link CatClient}注解描述信息
  *
  * @author bugcat
  * */
 public final class CatClientInfo {
 
+    /**
+     * 全局默认配置类
+     * 可以在{@link EnableCatClient}注解的{@code defaults}属性指定
+     * */
     private final CatClientConfiguration clientConfig;
 
-    private final String serviceName; //interface类名
-
-    private final String host;  //远程服务器主机
-
-    private final int connect;  //连接超时
-    private final int socket;   //读取超时
-
-    private final CatLogsMod logsMod; //日志记录方案
-
-    private final String[] tags;    //api标签归类
-
-    private final Class<? extends CatClientFactory> factoryClass;   //http发送工厂类
-
-    private final Class<? extends CatMethodInterceptor> interceptorClass;   // 拦截器
-
-    private final boolean fallbackMod;    //是否启用了fallback模式
-    private final Class fallback;       //回调类
+    /**
+     * interface类名
+     * */
+    private final String serviceName;
 
     /**
-     * 响应包装器类处理
-     * {@link AbstractResponesWrapper}
+     * 远程服务器主机：http://${host}/ctx，此时${host}已经被变量填充
+     * */
+    private final String host;
+
+    /**
+     * 连接超时
+     * */
+    private final int connect;
+
+    /**
+     * 读取超时
+     * */
+    private final int socket;
+
+    /**
+     * 日志记录方案
+     * */
+    private final CatLogsMod logsMod;
+
+    /**
+     * api标签归类
+     * */
+    private final String[] tags;
+
+    /**
+     * http发送工厂类
+     * */
+    private final Class<? extends CatClientFactory> factoryClass;
+
+    /**
+     * http拦截器
+     * */
+    private final Class<? extends CatMethodInterceptor> interceptorClass;
+
+    /**
+     * 是否启用了fallback模式
+     * */
+    private final boolean fallbackMod;
+
+    /**
+     * 回调类
+     * */
+    private final Class fallback;
+
+
+    /**
+     * 响应包装器类处理{@link AbstractResponesWrapper}
      * */
     private final Class<? extends AbstractResponesWrapper> wrapper;
 
+
     /**
      * 是否使用精简模式
+     * 如果interface上包含此注解，默认interface中所有方法均为api
+     * {@link Catface}
      * */
     private final Catface catface;
 
 
 
 
-    private CatClientInfo(CatClient client, Map<String, Object> paramMap, Properties envProp){
+    private CatClientInfo(CatClient client, Map<String, Object> interfaceAttributes, Properties envProp){
 
-        //全局默认配置
-        this.clientConfig = (CatClientConfiguration) paramMap.get("catClientConfiguration");
-
-        this.serviceName = (String) paramMap.get("serviceName");
+        this.clientConfig = (CatClientConfiguration) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CLIENT_CONFIGURATION);
+        this.serviceName = (String) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME);
 
         String host = client.host();
         this.host = envProp.getProperty(host);
@@ -89,28 +126,34 @@ public final class CatClientInfo {
         this.fallbackMod = fallback != Object.class;
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        CatResponesWrapper responesWrapper = (CatResponesWrapper) paramMap.get("wrapper");
+        CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
         Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? clientConfig.wrapper() : responesWrapper.value();
-        this.wrapper = wrapper == CatClientConfiguration.wrapper ? null : wrapper;
+        this.wrapper = CatClientConfiguration.wrapper.equals(wrapper) ? null : wrapper;
 
-        this.catface = (Catface) paramMap.get("catface");
+        this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
     }
 
 
     /**
      * 构建CatClientInfo对象
-     * @param interfaceClass     interface
-     * @param catClient     不一定是interface上的注解
-     * @param clientConfig        全局默认配置
-     * @param envProp       环境变量
+     *
+     * @param interfaceClass    interface
+     * @param catClient         可以为null，不一定是interface上的注解
+     * @param clientConfig      全局默认配置
+     * @param envProp           环境变量
      * */
     public final static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientConfiguration clientConfig, Properties envProp) {
-        Map<String, Object> paramMap = CatToosUtil.getAttributes(interfaceClass);
-        paramMap.put("serviceName", interfaceClass.getSimpleName());
-        paramMap.put("catClientConfiguration", clientConfig);
-        CatClientInfo clientInfo = new CatClientInfo(catClient, paramMap, envProp);
+        if( catClient == null ){
+            catClient = (CatClient) interfaceClass.getAnnotation(CatClient.class);
+        }
+        Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(interfaceClass);
+        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME, interfaceClass.getSimpleName());
+        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_CLIENT_CONFIGURATION, clientConfig);
+        CatClientInfo clientInfo = new CatClientInfo(catClient, interfaceAttributes, envProp);
         return clientInfo;
     }
+
+
 
 
     public CatClientConfiguration getClientConfig() {

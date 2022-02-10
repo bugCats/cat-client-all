@@ -2,32 +2,37 @@ package cc.bugcat.catclient.utils;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
+import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
+import cc.bugcat.catclient.handler.CatClientFactorys;
 import cc.bugcat.catclient.handler.DefineCatClients;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
-import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatHttp;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
-import org.springframework.beans.factory.InitializingBean;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+/**
+ * 通过静态方法创建CatClient客户端对象
+ * @author bugcat
+ * */
 public abstract class CatClientBuilders {
 
 
+    /**
+     * 通过interface创建
+     * */
     public static <T> CatClientBuilder<T> builder(Class<T> interfaceClass){
         return CatClientBuilder.builder(interfaceClass);
     }
 
     public static <T> CatClientBuilder<T> builder(Class<? extends DefineCatClients> defineClients, Class<T> interfaceClass){
-        return CatClientBuilder.builder(interfaceClass);
+        return CatClientBuilder.builder(defineClients, interfaceClass);
     }
 
     public static DefineCatClientBuilder define(Class<? extends DefineCatClients> defineClients){
@@ -47,7 +52,7 @@ public abstract class CatClientBuilders {
         static {
             Inner.noop();
         }
-        private CatClientBuilder() { Inner.noop(); }
+        private CatClientBuilder() { }
 
         public static <T> CatClientBuilder<T> builder(Class<T> interfaceClass){
             CatClientBuilder<T> builder = new CatClientBuilder();
@@ -175,7 +180,7 @@ public abstract class CatClientBuilders {
                 CatHttp http = config.catHttp();
                 CatClientUtil.registerBean(CatHttp.class, http);
 
-                CatClientFactory factory = CatClientFactory.defaultFactory();
+                CatClientFactory factory = CatClientFactorys.defaultClientFactory();
                 factory.setClientConfiguration(config);
                 CatClientUtil.registerBean(CatClientFactory.class, factory);
 

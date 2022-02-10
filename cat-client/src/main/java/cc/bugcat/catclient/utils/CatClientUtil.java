@@ -1,19 +1,17 @@
 package cc.bugcat.catclient.utils;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,9 +19,10 @@ import java.util.regex.Pattern;
  *
  * @author bugcat
  * */
-@ComponentScan("cc.bugcat.catclient")
+@Component(CatClientUtil.beanName)
 public class CatClientUtil implements ApplicationContextAware {
 
+    public static final String beanName = "catClientUtil";
 
     public static final Pattern keyPat1 = Pattern.compile("^\\$\\{(.+)\\}$");
     public static final Pattern keyPat2 = Pattern.compile("^\\#\\{(.+)\\}$");
@@ -102,16 +101,9 @@ public class CatClientUtil implements ApplicationContextAware {
     }
 
 
-
-    public static Properties envProperty(){
-        return context != null ? new EnvironmentProperty(context.getEnvironment()) : new Properties();
-    }
-
-
     public static Properties envProperty(Environment environment){
         return new EnvironmentProperty(environment);
     }
-
     public static Properties envProperty(Properties properties){
         return properties instanceof ToosProperty ? properties : new ToosProperty(properties);
     }
@@ -177,11 +169,6 @@ public class CatClientUtil implements ApplicationContextAware {
             return defaultValue != null && key.equals(value) ? defaultValue : value;
         }
     }
-
-
-
-
-
 
 
 }

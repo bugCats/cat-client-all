@@ -3,7 +3,7 @@ package cc.bugcat.catclient.utils;
 import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatClientLogger;
 import cc.bugcat.catclient.spi.CatHttp;
-import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
@@ -13,6 +13,13 @@ import org.springframework.web.client.*;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ *
+ * 基于RestTemplate http请求
+ *
+ * @author bugcat
+ * */
 public class CatRestHttp implements CatHttp {
 
     /**

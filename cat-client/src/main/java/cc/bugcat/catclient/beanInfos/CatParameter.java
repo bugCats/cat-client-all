@@ -6,16 +6,30 @@ import java.util.Map;
 
 /**
  * 每次http请求解析后的参数对象
- * 多例
+ *
  * @author bugcat
  * */
 public class CatParameter {
 
+    /**
+     * 真实url，PathVariable已经处理
+     * */
+    private String path;    //
 
-    private String path;    //真实url，PathVariable已经处理
-    private Object value;   //经过处理之后的有效参数
-    private Map<String, Object> argMap; //原始的参数列表
-    private Map<String, String> headerMap;  //请求头信息
+    /**
+     * 经过处理之后的有效参数
+     * */
+    private Object value;   //
+
+    /**
+     * 原始的参数列表
+     * */
+    private Map<String, Object> argMap;
+
+    /**
+     * 请求头信息
+     * */
+    private Map<String, String> headerMap;
 
 
     public String getPath() {

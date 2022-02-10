@@ -30,7 +30,7 @@ public @interface EnableCatClient {
     /**
      * 指定客户端类。
      * 1. classes是普通的interface类，则指定interface类创建客户端；
-     * 2、classes是{@link DefineCatClients}的子类，并且方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；
+     * 2、classes是{@link DefineCatClients}的子类，并且子类方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；
      * @see DefineCatClients
      * */
     Class[] classes() default {};
@@ -38,7 +38,7 @@ public @interface EnableCatClient {
 
     /**
      * 默认值、以及配置项。
-     * 可以用来统一修改{@link CatClient}{@link CatMethod}的默认值
+     * 可以用来统一修改{@link CatClient}、{@link CatMethod}的默认值
      * 作用于全局
      * */
     Class<? extends CatClientConfiguration> defaults() default CatClientConfiguration.class;

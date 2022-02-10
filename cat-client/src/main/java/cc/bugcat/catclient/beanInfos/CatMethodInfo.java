@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * 方法描述信息，单例
+ * http请求方法描述信息
  * {@link CatMethod}
  *
  * @author bugcat
@@ -33,12 +33,14 @@ public class CatMethodInfo {
     private final String methodName;
 
     /**
-     * 域名  eq：http://${host}，此时${host}已经被变量填充
+     * 域名：http://${host}/ctx
+     * 此时${host}已经被变量填充
      */
     private final String host;
 
     /**
-     * 调用的url，从@CatMethod注解中获取的原始数据，可以包含${PathVariable}
+     * 调用的url
+     * 从@CatMethod注解中获取的原始数据，可以包含{PathVariable}参数
      */
     private final String path;
 
@@ -127,7 +129,7 @@ public class CatMethodInfo {
 
     /**
      * 处理入参
-     *      1、将所有的有效入参转成成map => 方法上参数名称：参数值
+     *      1、将所有的有效入参转成map => 方法上参数名称：参数值
      *      2、判断map大小：
      *
      *      为1：再判断该参数是否为基础数据：
@@ -229,12 +231,12 @@ public class CatMethodInfo {
 
 
 
-    /****************************************************************************************************/
+    /**********************************************************************************************************************/
 
 
 
-    public static CatMethodInfoBuilder builder(Method method, CatClientInfo clientInfo, Properties prop) {
-        CatMethodInfoBuilder builder = new CatMethodInfoBuilder(method, clientInfo, prop);
+    public static CatMethodInfoBuilder builder(Method method, CatClientInfo clientInfo, Properties envProp) {
+        CatMethodInfoBuilder builder = new CatMethodInfoBuilder(method, clientInfo, envProp);
         return builder;
     }
 
@@ -264,7 +266,7 @@ public class CatMethodInfo {
         private String host;
 
         /**
-         * 调用的url，从@CatMethod注解中获取的原始数据，可以包含${}
+         * 调用的url，从@CatMethod注解中获取的原始数据，可以包含{PathVariable}
          */
         private String path;
 
@@ -337,22 +339,22 @@ public class CatMethodInfo {
 
         private AnnotationAttributes getAttributes(Method method) {
             StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-            Map<String, Object> map = metadata.getAnnotationAttributes(CatMethod.class.getName());
+            Map<String, Object> methodAttributes = metadata.getAnnotationAttributes(CatMethod.class.getName());
             Catface catface = clientInfo.getCatface();
             if ( catface != null ) {//精简模式
-                if ( map == null ) {
-                    map = new HashMap<>();
-                    map.put("notes", new CatNote[0]);
-                    map.put("socket", clientInfo.getSocket());
-                    map.put("connect", clientInfo.getConnect());
-                    map.put("logsMod", clientInfo.getLogsMod());
+                if ( methodAttributes == null ) {
+                    methodAttributes = new HashMap<>();
+                    methodAttributes.put("notes", new CatNote[0]);
+                    methodAttributes.put("socket", clientInfo.getSocket());
+                    methodAttributes.put("connect", clientInfo.getConnect());
+                    methodAttributes.put("logsMod", clientInfo.getLogsMod());
                 }
                 String path = CatToosUtil.getDefaultRequestUrl(catface, serviceName, method);
-                map.put("value", path);
-                map.put("method", RequestMethod.POST);
+                methodAttributes.put("value", path);
+                methodAttributes.put("method", RequestMethod.POST);
                 isCatface = true;
             }
-            AnnotationAttributes attrs = AnnotationAttributes.fromMap(map);
+            AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttributes);
             return attrs;
         }
 
@@ -411,31 +413,19 @@ public class CatMethodInfo {
             for ( int idx = 0; idx < parameters.length; idx++ ) {
 
                 Parameter parameter = parameters[idx];
-
-                //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
-                String pname = null;
-                if ( isCatface ) {
-                    pname = "arg" + idx;
-                } else {
-                    pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
-                    if ( CatToosUtil.isBlank(pname) ) {
-                        pname = parameter.getName();
-                    }
-                }
-
                 Class<?> pclazz = parameter.getType();
 
                 //在url上追加的参数，不绑定到参数列表中
                 PathVariable pathVariable = parameter.getAnnotation(PathVariable.class);
                 if ( pathVariable != null ) {
                     String pathParam = pathVariable.value();
-                    pathParamIndexMap.put(pathParam, new CatMethodParamInfo(idx, pclazz));
+                    pathParamIndexMap.put(pathParam, CatMethodParamInfo.builder().index(idx).parameterType(pclazz).build());
                     continue;
                 }
                 RequestHeader header = parameter.getAnnotation(RequestHeader.class);
                 if ( header != null ) {
                     String pathParam = header.value();
-                    headerParamIndexMap.put(pathParam, new CatMethodParamInfo(idx, pclazz));
+                    headerParamIndexMap.put(pathParam, CatMethodParamInfo.builder().index(idx).parameterType(pclazz).build());
                     continue;
                 }
 
@@ -448,17 +438,26 @@ public class CatMethodInfo {
 
                 } else {
 
-                    CatMethodParamInfo paramInfo = new CatMethodParamInfo(idx, pclazz);
+                    //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
+                    String pname = null;
+                    if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2..命名
+                        pname = "arg" + idx;
+                    } else {
+                        pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
+                        if ( CatToosUtil.isBlank(pname) ) {
+                            pname = parameter.getName();
+                        }
+                    }
+
+                    CatMethodParamInfo.Builder builder = CatMethodParamInfo.builder().index(idx).parameterType(pclazz);
 
                     if ( parameter.isAnnotationPresent(ModelAttribute.class) || parameter.isAnnotationPresent(RequestBody.class) ) {
-
                         if ( hasPrimary ) {
                             throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody、@ModelAttribute注解的入参！" + method.toString());
                         } else {
                             hasPrimary = true;
-                            paramInfo.setPrimary(true);
+                            builder.primary(true);
                         }
-
                         //如果post方式，并且有@RequestBody注解
                         if ( this.requestType == RequestMethod.POST && parameter.isAnnotationPresent(RequestBody.class) ) {
                             postString = true;
@@ -466,6 +465,7 @@ public class CatMethodInfo {
                     }
 
                     // 有效参数
+                    CatMethodParamInfo paramInfo = builder.build();
                     params.put(pname, paramInfo);
                 }
             }

@@ -7,6 +7,7 @@ import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.catclient.handler.DefineCatClients;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.handler.CatClientFactorys;
 import cc.bugcat.catclient.spi.CatHttp;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
@@ -16,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.beans.factory.support.*;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -56,12 +54,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     //获取properties文件中的参数
     private Properties envProp;
 
-    // CatClientInfoFactoryBean 的依赖项
-    private String[] dependsOn;
-
-    // 全局默认配置
-    private String configBeanName;
-
 
     @Override
     public void setResourceLoader(ResourceLoader resourceLoader) {
@@ -88,16 +80,12 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * */
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
 
-
         //全局默认配置
         Class<? extends CatClientConfiguration> configClass = annoAttrs.getClass("defaults");
         Component component = AnnotationUtils.findAnnotation(configClass, Component.class);
-        this.configBeanName = component != null && CatToosUtil.isNotBlank(component.value()) ? component.value() : CatToosUtil.uncapitalize(configClass.getSimpleName());
+        String configBeanName = component != null && CatToosUtil.isNotBlank(component.value()) ? component.value() : CatToosUtil.uncapitalize(configClass.getSimpleName());
         BeanDefinitionBuilder config = BeanDefinitionBuilder.genericBeanDefinition(configClass);
         registry.registerBeanDefinition(configBeanName, config.getBeanDefinition());
-
-        // CatClientInfoFactoryBean 依赖
-        this.dependsOn = new String[]{configBeanName};
 
         //客户端数量
         int count = 0;
@@ -128,11 +116,10 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         log.info("catclient 客户端数量：" + count );
 
-
         //扫描所有 CatClientFactory 子类
         ClassPathBeanDefinitionScanner factoryScanner = new ClassPathBeanDefinitionScanner(registry);
         factoryScanner.setResourceLoader(resourceLoader);
-        factoryScanner.addExcludeFilter(new AssignableTypeFilter(DefaultCatClientFactory.CatClientFactoryHandler.class));
+        factoryScanner.addExcludeFilter(new AssignableTypeFilter(CatClientFactorys.CatClientFactoryDecorator.class));
         factoryScanner.addExcludeFilter(new AssignableTypeFilter(DefaultCatClientFactory.class));
         factoryScanner.addIncludeFilter(new AssignableTypeFilter(CatClientFactory.class));
         factoryScanner.scan(scanPackages);
@@ -141,8 +128,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
         interceptorScanner.setResourceLoader(resourceLoader);
         interceptorScanner.addIncludeFilter(new AssignableTypeFilter(CatMethodInterceptor.class));
-        factoryScanner.scan(scanPackages);
-
+        interceptorScanner.scan(scanPackages);
 
         //扫描所有的 CatHttp 子类
         ClassPathBeanDefinitionScanner catHttpScanner = new ClassPathBeanDefinitionScanner(registry);
@@ -150,7 +136,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         catHttpScanner.addExcludeFilter(new AssignableTypeFilter(CatRestHttp.class));
         catHttpScanner.addIncludeFilter(new AssignableTypeFilter(CatHttp.class));
         catHttpScanner.scan(scanPackages);
-
 
     }
 
@@ -211,8 +196,8 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * definition.getBeanClass() 看似返回类的class，但是由于此时类未加载，实际上class不存在
          * 执行这个方法时，会报错[has not been resolved into an actual Class]
          * 但是如果在其他类又必须需要class
-         * 可以通过 definition.getPropertyValues().addPropertyValue("clazz", interfaceName) 形式赋值
-         * 注意，此时className为String字符串，在其他类中却可以用Class属性接收！
+         * 可以通过 definition.getPropertyValues().addPropertyValue("interfaceClass", interfaceName) 形式赋值
+         * 注意，此时interfaceName为String字符串，在其他类中却可以用Class属性接收！
          * 只能说[org.springframework.beans.PropertyValue]很强大吧
          * */
 
@@ -227,10 +212,9 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         definition.getPropertyValues().addPropertyValue("envProp", envProp);
         definition.getPropertyValues().addPropertyValue("interfaceClass", interfaceName);
         definition.getPropertyValues().addPropertyValue("catClient", catClient);
-        definition.getPropertyValues().addPropertyValue("clientConfig", configBeanName);
+        definition.setDependsOn(CatClientUtil.beanName);
         definition.setPrimary(true);
         definition.setLazyInit(true);
-        definition.setDependsOn(dependsOn); //设置依赖项
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
 
         return interfaceName;

@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  *
  * 呆毛3，去包装器类版
- * 单元测试类 @link cc.bugcat.example.catclient.remote.ApiRemote3Test
+ *
+ * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote3Test}
  *
  * ApiRemote1、ApiRemote2可以发现，API响应对象统一为 ResponseEntity，使用ResponseEntity将业务响应进行封装，
  *
@@ -29,6 +30,9 @@ import org.springframework.web.bind.annotation.*;
  *
  * 此时可以通过配置，实现统一去掉ResponseEntity外层
  *
+ * @see CatResponesWrapper
+ * @see ResponseEntityWrapper
+ *
  * @author: bugcat
  * */
 @CatResponesWrapper(ResponseEntityWrapper.class)
@@ -40,61 +44,32 @@ public interface ApiRemote3 {
      * */
 
 
-    /**
-     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
-     * @param req 入参
-     * */
+
     @CatMethod(value = "/cat/demo1", method = RequestMethod.POST)
     Demo demo1(@RequestBody Demo req);
 
-
     /**
-     * 仅将req转换成键值对，再使用post发送键值对。
-     *
-     * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意
-     * @param req   对象的属性，不能有Map
+     * @throws Exception  这个会提示异常，interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，
+     *          但是实际上服务端返回的数据类型是 ResponseEntity<Demo>
      * */
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
     String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
 
 
-    /**
-     * 仅将req转换成键值对，再使用get发送键值对。为此方法单独设置了链接超时为60s
-     *
-     * @param req   对象的属性，不能有Map
-     * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意（对比demo2）
-     * */
     @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
     PageInfo<Demo> demo3(Demo req, CatSendProcessor send);
 
-
-    /**
-     * get发送键值对：name=aaa&mark=bbb
-     * @param name 参数。必须需要使用@RequestParam指定参数的名称
-     * @param mark 参数
-     * */
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark);
 
-
     /**
-     * 将参数拼接在url上
-     *
-     * @param userId url上的参数，同样必须使用@PathVariable指定参数的名称，参数位置随意
-     * @throws Exception 这个会提示异常，class上包含了@CatResponesWrapper，意思是希望通过 ResponseEntityWrapper 拆包装器类
-     *                  但是实际上，服务端仅返回了 Demo 对象
+     * @throws Exception  这个会提示异常，interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，
+     *          但是实际上服务端返回的数据类型是 Demo
      * */
     @CatMethod(value = "/cat/demo5/{userId}", method = RequestMethod.GET)
     Demo demo5(@PathVariable("userId") Long userId);
 
 
-    /**
-     * 将参数拼接在url上，并且有请求协助类，并且使用get键值对发送请求
-     *
-     * @param userId url上的参数
-     * @param send 请求协助类
-     * @param name 键值对参数
-     * */
     @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
     Void demo6(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name);
 

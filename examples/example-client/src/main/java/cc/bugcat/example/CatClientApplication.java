@@ -1,6 +1,7 @@
 package cc.bugcat.example;
 
 import cc.bugcat.catclient.annotation.EnableCatClient;
+import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.example.catclient.serverApi.Config;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,18 +15,14 @@ import org.springframework.web.servlet.ModelAndView;
 @SpringBootApplication
 public class CatClientApplication {
 
-	public static void main(String[] args) {	
-	    
-	    //动态生成的class存放目录，debug使用
-//        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "f:\\tmp");
-        
+	public static void main(String[] args) {
         SpringApplication app = new SpringApplication(CatClientApplication.class);
         app.run(args);
         System.out.println("http://localhost:8010/swagger-ui.html");
         System.out.println("测试时，请同时启动 example-server");
 	}
 
-	
+
 	@Controller
 	public static class IndexController{
 	    @RequestMapping("/")

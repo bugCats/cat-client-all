@@ -2,6 +2,7 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
+import cc.bugcat.catclient.annotation.CatNote;
 import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.PageInfo;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  *
  * 呆毛2，异常plus版
- * 单元测试类 @link cc.bugcat.example.catclient.remote.ApiRemote2Test
+ * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote2Test}
  *
  * @author: bugcat
  * */
@@ -33,27 +34,14 @@ public interface ApiRemote2 {
      * */
 
 
-    /**
-     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
-     *
-     * @param req 入参
-     * */
     @CatMethod(value = "/cat/demo21", method = RequestMethod.POST)
-    ResponseEntity<Demo> demo1(@RequestBody Demo req);
+    ResponseEntity<Demo> demo1(@CatNote("req") @RequestBody Demo req);
 
 
-    /**
-     * 仅将req转换成键值对，再使用post发送键值对。
-     *
-     * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意
-     * @param req   对象的属性，不能有Map
-     * */
     @CatMethod(value = "/cat/demo22", method = RequestMethod.POST)
     String demo2(CatSendProcessor send, Demo req);
 
-    /**
-     * 模拟发生http异常
-     * */
+
     @CatMethod(value = "/cat/demo29", method = RequestMethod.GET)
     ResponseEntity<String> demo9(PageInfo<Demo> pageInfo);
 

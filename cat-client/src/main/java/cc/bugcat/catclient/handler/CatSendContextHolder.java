@@ -9,7 +9,7 @@ import cc.bugcat.catclient.spi.CatMethodInterceptor;
 /**
  * http调用环境对象
  *
- * 在同一个线程中，可以通过{@code cc.bugcat.catclient.handler.CatSendContextHolder#getContextHolder()}获取到当前环境参数
+ * 在同一个线程中，可以通过{@link CatSendContextHolder#getContextHolder()}获取到当前环境参数
  *
  * 一般用于异常回调模式中，获取原始http异常信息
  *
@@ -108,10 +108,14 @@ public class CatSendContextHolder {
         return retryConfigurer;
     }
 
+
+
+
+    /****************************************************************************************************************/
+
     protected static CatSendContextHolderBuilder builder(){
         return new CatSendContextHolderBuilder();
     }
-
 
     protected static class CatSendContextHolderBuilder {
         private CatClientInfo clientInfo;
@@ -150,7 +154,6 @@ public class CatSendContextHolder {
             this.retryConfigurer = retryConfigurer;
             return this;
         }
-
 
         public CatSendContextHolder build(){
             CatSendContextHolder holder = new CatSendContextHolder(this);

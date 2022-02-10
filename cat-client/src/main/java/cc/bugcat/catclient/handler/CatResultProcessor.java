@@ -5,16 +5,17 @@ import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 /**
  * http响应处理类
+ *
  * @author bugcat
  * */
-public abstract class AbstractCatResultProcessor {
+public interface CatResultProcessor {
 
 
 
     /**
      * 发生http异常，是否重连
      * */
-    public abstract boolean canRetry(CatHttpException exception, CatSendContextHolder context);
+    boolean canRetry(CatHttpException exception, CatSendContextHolder context);
 
 
 
@@ -25,14 +26,14 @@ public abstract class AbstractCatResultProcessor {
      * @return true => 执行 resultToBean、doFinally 方法；
      *         false => 直接执行 doFinally 方法；
      * */
-    public abstract boolean onHttpError(CatSendContextHolder context) throws Exception;
+    boolean onHttpError(CatSendContextHolder context) throws Exception;
 
 
 
     /**
      * 将http返回的字符串，转换成对象
      * */
-    public abstract Object resultToBean(String result, CatSendContextHolder context);
+    Object resultToBean(String result, CatSendContextHolder context);
 
 
 
@@ -42,9 +43,7 @@ public abstract class AbstractCatResultProcessor {
      *
      * @param resp 经过resultToBean方法转换后的参数
      * */
-    public Object doFinally(Object resp, CatSendContextHolder context) throws Exception {
-        return resp;
-    }
+    Object doFinally(Object resp, CatSendContextHolder context) throws Exception;
 
 
 

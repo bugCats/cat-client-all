@@ -4,11 +4,11 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.annotation.CatClient;
 
 /**
+ *
  * 使用方法标记{@link CatClient}，实现批量声明。
  *
  * 方法上的{@link CatClient}，优先度高于interface上的注解。
  *
- * 避免直接修改interface类，减少耦合。
  *
  *
  * <pre>
@@ -23,7 +23,9 @@ import cc.bugcat.catclient.annotation.CatClient;
  *  }
  *  </pre>
  *
+ *  定义CatClient客户端的{@code @CatClient}注解放在方法上面，避免直接修改interface类，减少耦合。
  *
+ * @author bugcat
  * */
 public interface DefineCatClients {
 

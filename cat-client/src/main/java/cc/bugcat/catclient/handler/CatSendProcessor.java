@@ -5,7 +5,6 @@ import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatHttpPoint;
 import cc.bugcat.catclient.spi.CatJsonResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.handler.Stringable;
@@ -26,12 +25,15 @@ import java.util.regex.Matcher;
  *
  * 被{@code @CatMethod}标记的方法，执行http时的核心处理类，必须为多例。
  *
- * 可通过{@code cc.bugcat.catclient.spi.CatClientFactory#newSendHandler()}自动创建，也支持手动创建
+ * 可通过{@link CatClientFactory#newSendHandler()}自动创建，也支持手动创建
  *
  * @author bugcat
  * */
 public class CatSendProcessor {
 
+    /**
+     * http异常重试次数
+     * */
     private int retryCount = 0;
 
     private CatSendContextHolder context;
@@ -112,7 +114,7 @@ public class CatSendProcessor {
             if ( value instanceof String ){
                 reqStr = CatToosUtil.toStringIfBlank(value, "");
             } else if ( value instanceof Stringable ){
-                reqStr = ((Stringable) value).serialize();
+                reqStr = ((Stringable) value).serialization();
             } else {
                 reqStr = resolver.toJsonString(value);
             }

@@ -1,9 +1,8 @@
 package cc.bugcat.example.catclient.token;
 
-import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.tools.ResponseEntity;

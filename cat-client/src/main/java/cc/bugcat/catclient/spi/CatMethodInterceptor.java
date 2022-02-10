@@ -7,6 +7,9 @@ import cc.bugcat.catclient.handler.CatSendProcessor;
 
 /**
  * 发送http请求时拦截器
+ *
+ *
+ * @author bugcat
  * */
 public interface CatMethodInterceptor {
 

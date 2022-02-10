@@ -15,15 +15,17 @@ import java.lang.reflect.Method;
 
 /**
  * 通过cglib动态代理
+ *
+ * @author bugcat
  * */
 public class CatMethodAopInterceptor implements MethodInterceptor {
 
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
 
-    private CatMethodInterceptor methodInterceptor;
-    private CatHttpRetryConfigurer retryConfigurer;
-    private CatClientFactory factory;
+    private final CatMethodInterceptor methodInterceptor;
+    private final CatHttpRetryConfigurer retryConfigurer;
+    private final CatClientFactory factory;
 
     public CatMethodAopInterceptor(CatClientInfo clientInfo, CatMethodInfo methodInfo){
         this.clientInfo = clientInfo;
@@ -33,10 +35,10 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
         this.methodInterceptor = CatClientUtil.getBean(clientInfo.getInterceptorClass());
         CatClientFactory factory = CatClientUtil.getBean(clientInfo.getFactoryClass());
         if( factory == null ){
-            factory = CatClientFactory.defaultFactory();
+            factory = CatClientFactorys.defaultClientFactory();
         }
         factory.setClientConfiguration(clientInfo.getClientConfig());
-        this.factory = CatClientFactory.factoryHandler(factory);
+        this.factory = CatClientFactorys.factoryDecorator(factory);
     }
 
 
@@ -109,7 +111,7 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
         }
 
         // 响应处理类
-        AbstractCatResultProcessor resultHandler = factory.getResultHandler();
+        CatResultProcessor resultHandler = factory.getResultHandler();
 
         //处理参数列表，如果存在PathVariable参数，将参数映射到url上
         CatParameter parameter = methodInfo.parseArgs(args);
@@ -173,12 +175,14 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
             }
 
         } finally {
+
+            // 如果开启了包装器模式，拆包装
+            respObj = resultHandler.doFinally(respObj, context);
+
             context.remove();
         }
 
-        // 如果开启了包装器模式，拆包装
-        return resultHandler.doFinally(respObj, context);
-
+        return respObj;
     }
 
 
@@ -186,7 +190,7 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
      * 执行http请求，如果开启了重连、并且满足重连设置，此处会循环调用，直至成功、或者重试次数耗尽
      * 重连次数，不包含第一次调用！
      */
-    private String doRequest(CatSendContextHolder context, AbstractCatResultProcessor resultHandler) throws Exception {
+    private String doRequest(CatSendContextHolder context, CatResultProcessor resultHandler) throws Exception {
         try {
             String respStr = context.doRequest();
             return respStr;

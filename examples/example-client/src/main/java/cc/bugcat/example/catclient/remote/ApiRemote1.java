@@ -2,6 +2,7 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
+import cc.bugcat.catclient.annotation.CatNote;
 import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.dto.Demo;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  *
  * 呆毛1，基础版
- * 单元测试类 @link cc.bugcat.example.catclient.remote.ApiRemote1Test
+ * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote1Test}
  *
  * @author: bugcat
  * */
@@ -21,7 +22,8 @@ public interface ApiRemote1 {
 
 
     /**
-     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
+     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少。
+     * 如果要给入参req取别名，使用{@link CatNote}：@CatNote("req")
      *
      * @param req 入参
      * */
@@ -33,7 +35,7 @@ public interface ApiRemote1 {
      * 仅将req转换成键值对，再使用post发送键值对。
      *
      * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意
-     * @param req   对象的属性，不能有Map
+     * @param req
      * */
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
     String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
@@ -41,8 +43,9 @@ public interface ApiRemote1 {
 
     /**
      * 仅将req转换成键值对，再使用get发送键值对。为此方法单独设置了链接超时为60s
+     * 对象不加@ModelAttribute、@RequestParam、@PathVariable、@RequestBody等注解时，默认是按{@code @ModelAttribute}键值对发送
      *
-     * @param req   对象的属性，不能有Map
+     * @param req
      * @param send  请求协助类，必须是SendProcessor的子类；可无、位置可任意（对比demo2）
      * */
     @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
@@ -51,6 +54,7 @@ public interface ApiRemote1 {
 
     /**
      * get发送键值对：name=aaa&mark=bbb
+     *
      * @param name 参数。必须需要使用@RequestParam指定参数的名称
      * @param mark 参数
      * */

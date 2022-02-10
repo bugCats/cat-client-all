@@ -3,10 +3,12 @@ package cc.bugcat.catclient.scanner;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.config.CatClientConfiguration;
+import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
+import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
@@ -21,15 +23,27 @@ import java.util.Properties;
 
 /**
  * 生成被@CatClient标记的interface的代理对象
+ *
  * @author: bugcat
  * */
 public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
+    /**
+     * 被{@code @CatClient}标记的interface
+     * */
+    private Class<T> interfaceClass;
 
-    private Class<T> interfaceClass;    // interface的class
-    private CatClient catClient;        // 可以null，不一定是interface上的注解！
-    private Properties envProp;         // 环境变量
-    private CatClientConfiguration clientConfig;
+    /**
+     * 可以null，不一定是interface上的注解！
+     * */
+    private CatClient catClient;
+
+    /**
+     * 环境变量
+     * */
+    private Properties envProp;
+
+
 
     @Override
     public Class<?> getObjectType() {
@@ -37,11 +51,14 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     }
 
 
+
     @Override
     protected T createInstance() throws Exception {
+        CatClientConfiguration clientConfig = CatClientUtil.getBean(CatClientConfiguration.class);
         CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientConfig, envProp);
         return createCatClient(interfaceClass, clientInfo, envProp);
     }
+
 
     /**
      * 解析interface方法，生成动态代理类
@@ -106,13 +123,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     /***************************这些属性通过IOC注入进来，因此get set方法不能少*********************************/
 
-
-    public CatClientConfiguration getClientConfig() {
-        return clientConfig;
-    }
-    public void setClientConfig(CatClientConfiguration clientConfig) {
-        this.clientConfig = clientConfig;
-    }
 
     public Class<T> getInterfaceClass() {
         return interfaceClass;

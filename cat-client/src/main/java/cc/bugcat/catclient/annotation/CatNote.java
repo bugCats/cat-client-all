@@ -26,8 +26,8 @@ public @interface CatNote {
 
     /**
      * 键值对：值
-     * 支持 ${xxx.xxx} 读取配置文件值
-     * 支持 #{xxx.xxx} 读取方法上入参的属性值
+     * 1、读取配置文件值：${xxx.xxx}
+     * 2、读取方法上入参的属性值：#{xxx.xxx}
      * */
     String value();
 

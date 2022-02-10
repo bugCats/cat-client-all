@@ -3,7 +3,7 @@ package cc.bugcat.catclient.spi;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodReturnInfo;
-import cc.bugcat.catclient.handler.AbstractCatResultProcessor;
+import cc.bugcat.catclient.handler.CatResultProcessor;
 import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
@@ -16,9 +16,10 @@ import java.util.Date;
 
 /**
  * 默认的结果处理类
+ *
  * @author bugcat
  * */
-public class DefaultResultHandler extends AbstractCatResultProcessor {
+public class DefaultResultHandler implements CatResultProcessor {
 
 
     /**
@@ -117,7 +118,7 @@ public class DefaultResultHandler extends AbstractCatResultProcessor {
     /**
      * 将 String 强制转换 clazz对应的简单对象
      */
-    protected static Object toSimpleBean(String text, CatMethodReturnInfo returnInfo) {
+    public static Object toSimpleBean(String text, CatMethodReturnInfo returnInfo) {
         String returnName = returnInfo.getName();
         if( "STRING".equals(returnName) ) {
             return text;
@@ -136,12 +137,10 @@ public class DefaultResultHandler extends AbstractCatResultProcessor {
         }
     }
 
-
-
     /**
      * 得到Number类型的具体子类
      */
-    protected static Object getNumberType(String text, String className, Class clazz) {
+    public static Object getNumberType(String text, String className, Class clazz) {
         if( "".equals(text) ){
             return null;
         }

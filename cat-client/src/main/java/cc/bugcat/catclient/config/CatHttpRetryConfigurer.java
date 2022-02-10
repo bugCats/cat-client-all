@@ -15,6 +15,7 @@ import java.util.*;
  *
  * 最终每个配置项的匹配逻辑： note || (tags && method && ( status || exception ))
  *
+ * @author bugcat
  * */
 @Component
 public class CatHttpRetryConfigurer implements InitializingBean {

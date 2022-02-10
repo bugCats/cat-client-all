@@ -6,7 +6,7 @@ package cc.bugcat.catface.handler;
  * */
 public interface Stringable {
 
-    
-    String serialize();
-    
+
+    String serialization();
+
 }

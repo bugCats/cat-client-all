@@ -9,6 +9,8 @@ import java.lang.reflect.Type;
 
 /**
  * fastjson 序列化与反序列化
+ *
+ * @author bugcat
  * */
 public class CatFastjsonResolver implements CatJsonResolver{
 

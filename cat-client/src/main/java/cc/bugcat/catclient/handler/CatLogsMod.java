@@ -3,6 +3,7 @@ package cc.bugcat.catclient.handler;
 
 /**
  * api记录日志方案
+ *
  * @author bugcat
  * */
 public enum CatLogsMod {

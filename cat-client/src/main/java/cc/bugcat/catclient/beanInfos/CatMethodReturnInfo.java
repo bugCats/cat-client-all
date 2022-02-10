@@ -6,24 +6,40 @@ import java.lang.reflect.Type;
 
 /**
  * 方法返回参数类型
+ *
  * @author bugcat
  * */
 public class CatMethodReturnInfo {
-    
-    private final String name;    //参数的类名称
-    private final boolean simple; //是否为简单对象：String、基本数据类型+包装类
-    private final Class clazz;    //参数class
-    private final Type type;      //参数的Type
 
- 
+    /**
+     * 参数的类名称
+     * */
+    private final String name;
+
+    /**
+     * 是否为简单对象：String、基本数据类型+包装类
+     * */
+    private final boolean simple;
+
+    /**
+     * 参数class
+     * */
+    private final Class clazz;
+
+    /**
+     * 参数的Type
+     * */
+    private final Type type;
+
+
     public CatMethodReturnInfo(Class clazz, Type type) {
-        this.clazz = clazz;
         this.name = clazz.getSimpleName().toUpperCase();
-        this.type = type;
         this.simple = CatToosUtil.isSimpleClass(clazz);
+        this.clazz = clazz;
+        this.type = type;
     }
 
-    
+
     public String getName () {
         return name;
     }

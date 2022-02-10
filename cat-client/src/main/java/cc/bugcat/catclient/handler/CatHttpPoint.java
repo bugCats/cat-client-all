@@ -1,4 +1,4 @@
-package cc.bugcat.catclient.spi;
+package cc.bugcat.catclient.handler;
 
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -7,6 +7,8 @@ import java.util.Map;
 
 /**
  * 当前http请求的相关入参
+ *
+ * @author bugcat
  * */
 public class CatHttpPoint {
 

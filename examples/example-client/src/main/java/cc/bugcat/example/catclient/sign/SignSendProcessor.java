@@ -3,7 +3,7 @@ package cc.bugcat.example.catclient.sign;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catface.utils.CatToosUtil;
 
 import java.util.Map;

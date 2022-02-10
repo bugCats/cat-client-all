@@ -3,7 +3,7 @@ package cc.bugcat.example.catclient.remote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.spi.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.spi.CatJsonResolver;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.example.dto.Demo;

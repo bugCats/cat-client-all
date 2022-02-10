@@ -30,15 +30,15 @@ import java.util.Stack;
 
 
 /**
- * 
+ *
  * {@link AbstractResponesWrapper} 自动添加包装器类实现
- * 
+ *
  * 被@CatServer标记类的interface，使用cglib代理，动态生成类充当Controller角色
- * 
+ *
  * 在动态代理类中，再使用反射调用被标记类的方法
- * 
+ *
  * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类
- * 
+ *
  * */
 public final class CatInterfaceEnhancer implements Opcodes{
 
@@ -53,12 +53,12 @@ public final class CatInterfaceEnhancer implements Opcodes{
         }
         hasVaild = exist;
     }
-    
+
 
     // 设置动态生成扩展interface的目录
     private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
 
-    
+
     // 为interface添加@ResponseBody注解
     public final static String RESPONSE_BODY = Type.getDescriptor(ResponseBody.class);
 
@@ -66,8 +66,8 @@ public final class CatInterfaceEnhancer implements Opcodes{
     public final static String REQUEST_BODY = Type.getDescriptor(RequestBody.class);
     // 为方法虚拟入参添加@Valid
     public final static String VALID = "Ljavax/validation/Valid;";
-    
-    
+
+
     /**
      * @param inter 被@CatServer标记类的interface
      * @param serverInfo  CatServer注解类
@@ -109,7 +109,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
         ClassWriter enhancerWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         CatServerClassVisitor catServer = new CatServerClassVisitor(enhancerWriter);
         catServer.visit(onlyReader.version, classDescriptor.access, className.replace(".", "/"), null, classDescriptor.descriptor, new String[0]);
-        
+
         //如果interface上没有@ResponseBody，自动添加一个
         if ( AnnotationUtils.findAnnotation(inter, ResponseBody.class) == null ) {
             catServer.visitAnnotation(RESPONSE_BODY, true);
@@ -119,25 +119,25 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
         // warp描述
         String warpDesc = serverInfo.getWarpClass() != null ? Type.getDescriptor(serverInfo.getWarpClass()) : null;
-        
+
         for ( Method method : inter.getMethods() ) {
             String methodMap = method.getName();
-            
+
             CatMethodMapping mapping = result.getMapping();
             CatFaceResolverBuilder resolver = CatFaceResolverBuilder.builder(serverInfo.isCatface()).method(method);
 
             Class returnType = method.getReturnType();
             Signature sign = new Signature(methodMap, returnType, warpDesc);
-            
+
             AsmClassMethodDescriptor methodDescriptor = methodDescriptorMap.get(methodMap + "@" + transformReturn(Type.getMethodDescriptor(method)));
             sign.transform(serverInfo.getWarpClass(), methodDescriptor.descriptor, methodDescriptor.signature);   //处理响应结果包装器类
             sign.resolver(resolver); //处理方法入参的虚拟入参class
 
             MethodVisitor visitor = catServer.visitMethod(methodDescriptor.access, sign.getName(), sign.getDesc(), sign.getSign(), methodDescriptor.exceptions);
-            
+
             Annotation[] anns = method.getAnnotations();
             CatServerUtil.visitAnnotation(anns, desc -> visitor.visitAnnotation(desc, true));
-        
+
             if( serverInfo.isCatface() ){
                 if ( resolver.hasParameter() ) {
                     visitor.visitParameterAnnotation(0, REQUEST_BODY, true);
@@ -162,7 +162,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
             resolver.createClass(); //创建虚拟入参
             result.putResolver(CatMethodMapping.uuid(method), resolver);
         }
-        
+
         catServer.visitEnd();
 
         byte[] newbs = enhancerWriter.toByteArray();
@@ -173,13 +173,13 @@ public final class CatInterfaceEnhancer implements Opcodes{
         return result;
     }
 
-    
-    
+
+
     private static class OnlyReaderClassVisitor extends ClassVisitor implements Opcodes{
         private int version;
         private AsmClassMethodDescriptor classDescriptor;
         private Map<String, AsmClassMethodDescriptor> methodDescriptorMap = new HashMap<>();
-        
+
         public OnlyReaderClassVisitor(ClassVisitor classVisitor) {
             super(ASM6, classVisitor);
         }
@@ -197,8 +197,8 @@ public final class CatInterfaceEnhancer implements Opcodes{
             return null;
         }
     }
-    
-    
+
+
     private static class AsmClassMethodDescriptor {
         private final int access;
         private final String descriptor;
@@ -211,60 +211,60 @@ public final class CatInterfaceEnhancer implements Opcodes{
             this.exceptions = exceptions;
         }
     }
-    
-    
-    
+
+
+
     private static class CatServerClassVisitor extends ClassVisitor implements Opcodes{
         public CatServerClassVisitor(ClassVisitor cv) {
             super(ASM6, cv);
         }
     }
-    
-    
 
-    
-    
+
+
+
+
     private static class Signature {
-        
+
         private String name;
         private Class returnType;
         private String warpDesc;    // warp描述
 
         private String desc;
         private String sign;
-        
-        
+
+
         public Signature(String name, Class returnType, String warpDesc) {
             this.name = name;
             this.returnType = returnType;
             this.warpDesc = warpDesc;
         }
-        
+
         public void transform(Class warp, String descriptor, String signature){
-            
+
             // 包装器类存在，并且方法返回类型，不是包装器类
             if( warpDesc != null && !warp.isAssignableFrom(returnType) ) {
-                
+
                 String[] desc = descriptor.split("\\)");
                 String[] sign = (signature == null ? descriptor : signature).split("\\)");
                 String returnSign = warpDesc.replace(";", "<" + sign[1] + ">;");
-                
+
                 this.desc = desc[0] + ")" + warpDesc;
                 this.sign = sign[0] + ")" + returnSign;
-                
+
             } else {
                 this.desc = descriptor;
                 this.sign = signature;
             }
         }
-        
+
         // 如果是精简模式，收集原始参数的签名信息
         public void resolver(CatFaceResolverBuilder resolver) {
             this.desc = resolver.descriptor(desc);
             this.sign = resolver.signature(sign);
         }
 
-        
+
         public String getName() {
             return name;
         }
@@ -277,10 +277,10 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
     }
 
-    
-    
+
+
     private static String className(Class inter){
-        return inter.getName() + CatToosUtil.bridgeName;
+        return inter.getName() + CatToosUtil.BRIDGE_NAME;
     }
     public static String transformReturn(String desc){
         if( desc != null && desc.endsWith(")V") ){
@@ -290,11 +290,11 @@ public final class CatInterfaceEnhancer implements Opcodes{
         }
     }
     public static boolean isBridgeClass(Class clazz){
-        return clazz != null && clazz.getSimpleName().contains(CatToosUtil.bridgeName);
+        return clazz != null && clazz.getSimpleName().contains(CatToosUtil.BRIDGE_NAME);
     }
-    
-    
-    
+
+
+
     public static void printClass(Class ext, byte[] newbs){
         if( debugDir != null ){
             File dir = new File(debugDir + "/" + ext.getName().replace(".", "/") + ".class");
@@ -309,5 +309,5 @@ public final class CatInterfaceEnhancer implements Opcodes{
             }
         }
     }
-    
+
 }

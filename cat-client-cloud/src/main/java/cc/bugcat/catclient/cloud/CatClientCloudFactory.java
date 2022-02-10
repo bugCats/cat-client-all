@@ -1,6 +1,6 @@
 package cc.bugcat.catclient.cloud;
 
-import cc.bugcat.catclient.handler.AbstractCatResultProcessor;
+import cc.bugcat.catclient.handler.CatResultProcessor;
 import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.catclient.handler.DefaultCatClientFactory;
 import cc.bugcat.catclient.spi.ServerChoose;
@@ -30,7 +30,7 @@ public class CatClientCloudFactory extends DefaultCatClientFactory {
 
 
     @Override
-    public AbstractCatResultProcessor getResultHandler() {
+    public CatResultProcessor getResultHandler() {
         return Inner.resultHandler;
     }
 

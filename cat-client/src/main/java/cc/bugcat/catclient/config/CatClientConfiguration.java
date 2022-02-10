@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.config;
 
+import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.*;
@@ -10,6 +11,9 @@ import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 /**
  * 全局默认值
+ *
+ * {@link EnableCatClient#defaults()}
+ *
  * @author bugcat
  * */
 public class CatClientConfiguration {

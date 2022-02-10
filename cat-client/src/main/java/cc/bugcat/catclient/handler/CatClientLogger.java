@@ -51,7 +51,10 @@ public class CatClientLogger {
         boolean printIn = CatLogsMod.All == logsMod || CatLogsMod.In == logsMod;
         boolean printOut = CatLogsMod.All == logsMod || CatLogsMod.Out == logsMod;
 
-        if( isFail() ){
+        if( isSucc() ){
+            logInfo.put("@succ", "1");
+        } else {
+            logInfo.put("@succ", "0");
             logInfo.put("@error", errorMessge != null ? errorMessge : String.valueOf(exception.getStatusCode()) + " - " + exception.getStatusText());
 
             printIn = !printIn && (CatLogsMod.All2 == logsMod || CatLogsMod.In2 == logsMod);

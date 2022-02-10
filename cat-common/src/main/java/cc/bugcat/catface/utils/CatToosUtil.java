@@ -25,8 +25,15 @@ import java.util.function.Function;
 
 public class CatToosUtil{
 
-    public static final String bridgeName = "$bugcat$";
-    public static final String annName = RequestMapping.class.getName();
+    public static final String BRIDGE_NAME = "$bugcat$";
+    public static final String REQUEST_MAPPING = RequestMapping.class.getName();
+
+    public final static String INTERFACE_ATTRIBUTES_CATFACE = "catface";
+    public final static String INTERFACE_ATTRIBUTES_WRAPPER = "wrapper";
+
+    public final static String INTERFACE_ATTRIBUTES_SERVICE_NAME = "serviceName";
+    public final static String INTERFACE_ATTRIBUTES_CLIENT_CONFIGURATION = "clientConfiguration";
+
 
     /**
      * spring EL解析式
@@ -179,9 +186,9 @@ public class CatToosUtil{
     public static Map<String, Object> getAttributes(Class inter) {
         Map<String, Object> paramMap = new HashMap<>();
         CatResponesWrapper wrapper = responesWrap(inter, CatResponesWrapper.class);
-        paramMap.put("wrapper", wrapper);
+        paramMap.put(INTERFACE_ATTRIBUTES_WRAPPER, wrapper);
         Catface catface = responesWrap(inter, Catface.class);
-        paramMap.put("catface", catface);
+        paramMap.put(INTERFACE_ATTRIBUTES_CATFACE, catface);
         return paramMap;
     }
 
@@ -204,7 +211,7 @@ public class CatToosUtil{
 
     public static String getDefaultRequestUrl(Catface catface, String serviceName, Method method) {
         String namespace = "";
-        String aliasValue = CatToosUtil.uncapitalize(serviceName).replace(bridgeName, "");
+        String aliasValue = CatToosUtil.uncapitalize(serviceName).replace(BRIDGE_NAME, "");
         if ( catface != null ) {
             namespace = CatToosUtil.isBlank(catface.namespace()) ? "" : "/" + catface.namespace();
             aliasValue = CatToosUtil.isBlank(catface.value()) ? aliasValue : catface.value();

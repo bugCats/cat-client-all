@@ -31,19 +31,19 @@ import static springfox.documentation.spring.web.paths.Paths.splitCamelCase;
  * 如果启用swagger，需要修改扫描地方
  * */
 public class CatSwaggerScanner extends ApiListingReferenceScanner {
-    
-       
+
+
     @Override
     public ApiListingReferenceScanResult scan(DocumentationContext context) {
-        
+
         ArrayListMultimap<ResourceGroup, RequestMappingContext> resourceGroupRequestMappings = ArrayListMultimap.create();
-        
+
         ApiSelector selector = context.getApiSelector();
-        
+
         Iterable<RequestHandler> matchingHandlers = FluentIterable.from(context.getRequestHandlers()).filter(selector.getRequestHandlerSelector());
 
         for (RequestHandler handler : matchingHandlers) {
-            
+
             RequestMappingInfo requestMappingInfo = handler.getRequestMapping();
             HandlerMethod handlerMethod = handler.getHandlerMethod();
 
@@ -54,36 +54,36 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                 Object ctrl = handlerMethod.getBean();
 
                 Method ctrlInterMethod = getCtrlMethodFrom(ctrl.getClass(), handlerMethod.getMethod());
-                
+
                 // api文档分组
                 Class interClass = ctrlInterMethod.getDeclaringClass();
                 Class realInterClass = getRealInterfaceClass(interClass);
-                
+
                 ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(realInterClass), realInterClass, 0);
                 CatHandlerMethod catHandler = new CatHandlerMethod(ctrlInterMethod.getDeclaringClass(), handlerMethod);
-                
+
                 RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, catHandler);
-                resourceGroupRequestMappings.put(resourceGroup, requestMappingContext); 
-                        
+                resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+
             } else {
                 ResourceGroup resourceGroup = new ResourceGroup(ControllerNamingUtils.controllerNameAsGroup(handlerMethod), handlerMethod.getBeanType(), 0);
                 RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, handlerMethod);
                 resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
             }
         }
-        
+
         return new ApiListingReferenceScanResult(Multimaps.asMap(resourceGroupRequestMappings));
     }
 
-    
-    
-    
+
+
+
     private Map<Class, Map<String, Method>> weakMap = new WeakHashMap();
 
-    
+
     /**
      * 查找method属于哪个增强interface
-     * @param ctrlClass cglib生成的ctrl对象 
+     * @param ctrlClass cglib生成的ctrl对象
      * @param method    需要查找的method
      * */
     private Method getCtrlMethodFrom(Class ctrlClass, Method method) {
@@ -111,28 +111,28 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
         return infoMap.get(CatToosUtil.signature(method));
     }
 
-    
+
     public static String controllerNameAsGroup(Class controllerClass) {
         return splitCamelCase(controllerClass.getSimpleName(), "-")
                 .replace("/", "")
                 .toLowerCase();
     }
-    
+
     public static Class getRealInterfaceClass(Class interClass){
         try {
-            return CatServerUtil.getClassLoader().loadClass(interClass.getName().replace(CatToosUtil.bridgeName, ""));
+            return CatServerUtil.getClassLoader().loadClass(interClass.getName().replace(CatToosUtil.BRIDGE_NAME, ""));
         } catch ( Exception e ) {
             return interClass;
         }
     }
 
-   
-    
-    
+
+
+
     private static class CatHandlerMethod extends HandlerMethod {
-        
+
         private final Class beanType;
-        
+
         protected CatHandlerMethod(Class beanType, HandlerMethod handlerMethod) {
             super(handlerMethod);
             this.beanType = beanType;
@@ -144,6 +144,6 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
         }
 
     }
-    
+
 
 }

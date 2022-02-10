@@ -34,56 +34,56 @@ import java.util.function.IntFunction;
  * */
 public class CatServerInitBean implements InitializingBean{
 
-    
+
     private final static MethodInterceptor defaults = new MethodInterceptor() {
         @Override
         public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
             return methodProxy.invokeSuper(target, args);
         }
     };
-    
-    
-    
+
+
+
     private final Set<Class> servers;
     private Map<Class, CatAsmResult> ctrlCacheMap;
-    
+
 
     public CatServerInitBean(Set<Class> servers){
         this.servers = servers;
         this.ctrlCacheMap = new HashMap<>(servers.size() * 2);
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception {
 
         if( servers == null ){
             return;
         }
-        
+
         List<CtrlFactory> factories = new ArrayList<>(servers.size());
         for(Class serverClass : servers){
             CtrlFactory info = new CtrlFactory(serverClass);
             info.parse();
             factories.add(info);
         }
-        
+
         /**
          * level越大，说明继承次数越多，
          * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
          * */
         factories.sort(CtrlFactory::compareTo);
-        
+
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
-        
+
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
         for( CtrlFactory factory : factories ){
             CatServerInfo serverInfo = factory.serverInfo;
-            Catface catface = serverInfo.getCatface(); 
-            
+            Catface catface = serverInfo.getCatface();
+
             for(Method method : factory.bridgeMethods ){
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.annName);
+                Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.REQUEST_MAPPING);
                 if( serverInfo.isCatface() ){
                     attrs = new HashMap<>();
                     attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method.getDeclaringClass().getSimpleName(), method)});
@@ -109,9 +109,9 @@ public class CatServerInitBean implements InitializingBean{
         ctrlCacheMap = null;
     }
 
-    
+
     private final class CtrlFactory implements Comparable<CtrlFactory> {
-        
+
         private final Class serverClass;
 
         private CatServerInfo serverInfo;
@@ -122,21 +122,21 @@ public class CatServerInitBean implements InitializingBean{
         private CtrlFactory(Class serverClass) {
             this.serverClass = serverClass;
         }
-        
+
         @Override
         public int compareTo(CtrlFactory info) {
             return level - info.level;
         }
-        
+
         private void parse() throws Exception {
-            
+
             serverInfo = CatServerInfo.buildServerInfo(serverClass);
             ctrl = createCatCtrl(serverClass, serverInfo);
-            
+
             for (Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass() ) {
                 level = level + 1;
             }
-            
+
             Class thisClazz = ctrl.getClass(); //cglib动态生成的class => interface的实现类
             Class[] inters = thisClazz.getInterfaces();
 
@@ -171,7 +171,7 @@ public class CatServerInitBean implements InitializingBean{
 
         CatMethodMapping mapping = new CatMethodMapping();
         Map<String, CatFaceResolverBuilder> resolverMap = new HashMap<>();
-        
+
         Class[] thisInters = new Class[inters.size()];
 
         for(int i = 0; i < inters.size(); i ++ ){ // 遍历每个interface
@@ -186,7 +186,7 @@ public class CatServerInitBean implements InitializingBean{
             mapping.putAll(ctrlCache.getMapping());
             resolverMap.putAll(ctrlCache.getResolverMap());
             thisInters[i] = ctrlCache.getEnhancerClass();
-            
+
             for(Method method : inter.getMethods()){
                 if( CatToosUtil.isObjectMethod(CatToosUtil.signature(method)) ){
                     continue;
@@ -197,16 +197,16 @@ public class CatServerInitBean implements InitializingBean{
             }
         }
         // 此时thisInters中，全部为增强后的扩展interface
-        
-        
+
+
         CatMethodInterceptorBuilder builder = CatMethodInterceptorBuilder.builder();
         builder.serverInfo(serverInfo).serverClass(serverClass);
-        
+
         CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
             @Override
             protected Object getCallback (Method method) {
                 String uuid = mapping.getInterfaceUuid(method);
-                StandardMethodMetadata metadata = metadataMap.get(uuid); 
+                StandardMethodMetadata metadata = metadataMap.get(uuid);
                 if ( metadata != null ) {//原interface方法
                     CatFaceResolverBuilder resolver = resolverMap.get(uuid);
                     builder.interMethodMetadata(metadata).argumentResolver(resolver.build());
@@ -225,11 +225,11 @@ public class CatServerInitBean implements InitializingBean{
         enhancer.setCallbacks(helper.getCallbacks());
 
         Object ctrl = enhancer.create();
-        
+
         return ctrl;
     }
-    
-    
+
+
 
     private final <T> T[] getValue(Map<String, Object> map, String key, IntFunction<T[]> func){
         Object value = map.get(key);

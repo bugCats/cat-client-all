@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 打印http日志
  * 在logback中控制日志级别，以及日志格式
+ *
+ * @author bugcat
  * */
 public interface CatLoggerProcessor {
 
