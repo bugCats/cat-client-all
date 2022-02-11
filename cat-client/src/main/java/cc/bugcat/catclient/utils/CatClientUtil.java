@@ -3,11 +3,7 @@ package cc.bugcat.catclient.utils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Properties;
@@ -16,10 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * spring容器工具类
  * @author bugcat
  * */
-@Component(CatClientUtil.beanName)
 public class CatClientUtil implements ApplicationContextAware {
 
     public static final String beanName = "catClientUtil";
@@ -32,8 +27,10 @@ public class CatClientUtil implements ApplicationContextAware {
 
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        context = applicationContext;
+    public synchronized void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        if ( context == null ) {
+            context = applicationContext;
+        }
     }
 
 
@@ -79,20 +76,23 @@ public class CatClientUtil implements ApplicationContextAware {
 
 
     /**
-     * 注册bean
+     * catClinetMap注册bean
      * */
     public static void registerBean(Class type, Object bean){
         catClinetMap.putIfAbsent(type, bean);
     }
 
     /**
-     * 刷新bean
+     * catClinetMap刷新bean
      * */
     public static void refreshBean(Class type, Object bean){
         catClinetMap.put(type, bean);
     }
 
 
+    /**
+     * catClinetMap是否包含
+     * */
     public static boolean contains(Class key) {
         return catClinetMap.containsKey(key);
     }
@@ -101,9 +101,16 @@ public class CatClientUtil implements ApplicationContextAware {
     }
 
 
+    /**
+     * 适配Spring环境变量为Properties
+     * */
     public static Properties envProperty(Environment environment){
         return new EnvironmentProperty(environment);
     }
+
+    /**
+     * 适配自定义环境变量为Properties
+     * */
     public static Properties envProperty(Properties properties){
         return properties instanceof ToosProperty ? properties : new ToosProperty(properties);
     }

@@ -42,7 +42,9 @@ public class CatSendProcessor {
 
     protected JSONObject notes;    //其他自定义参数、标记
 
-
+    /**
+     * 1、初始化http相关配置，每次调用interface的方法，仅执行一次
+     * */
     public final void sendConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
         this.context = context;
         this.retryCount = context.getRetryConfigurer() != null && context.getRetryConfigurer().isEnable() ? context.getRetryConfigurer().getRetries() : 0;
@@ -82,15 +84,14 @@ public class CatSendProcessor {
             notes.put(key, value);
         }
 
-        this.doVariableResolver(context, parameter, httpPoint);
-        this.afterVariableResolver(context, httpPoint);
+        this.postVariableResolver(context, parameter, httpPoint);
     }
 
 
     /**
-     * 1、如果在调用远程API，需要额外处理参数、添加签名等，可在此步骤添加
+     * 2、如果在调用远程API，需要额外处理参数、添加签名等，可在此步骤添加
      * */
-    protected void doVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
+    protected void postVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
 
         CatJsonResolver resolver = context.getClientFactory().getJsonResolver();
         CatMethodInfo methodInfo = context.getMethodInfo();
@@ -133,34 +134,30 @@ public class CatSendProcessor {
         }
         httpPoint.setRequestBody(reqStr);
         httpPoint.setKeyValueParam(keyValueParam);
+
+        this.afterVariableResolver(context, parameter, httpPoint);
     }
 
+
     /**
-     * 2、对参数额外处理
+     * 3、对参数额外处理
      * */
-    protected void afterVariableResolver(CatSendContextHolder context, CatHttpPoint httpPoint){
+    protected void afterVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
 
     }
 
 
-    /**
-     * 当前http请求的相关入参
-     * 子类可重写增强
-     * */
-    protected CatHttpPoint newCatHttpPoint(){
-        return new CatHttpPoint();
-    }
-
 
     /**
-     * 3、发送http
+     * 4、发送http
+     * 由于有重连机制，每次调用interface的方法，httpSend可能执行多次
      * */
     public final String httpSend() throws CatHttpException {
 
+        long start = System.currentTimeMillis();
+
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatClientFactory clientFactory = context.getClientFactory();
-
-        long start = System.currentTimeMillis();
 
         CatClientLogger catLog = new CatClientLogger();
         catLog.setLogsMod(methodInfo.getLogsMod());
@@ -178,16 +175,16 @@ public class CatSendProcessor {
             long end = System.currentTimeMillis();
             catLog.setResponse(respStr);
             catLog.setExecuteTime(end - start);
-
-            clientFactory.getLoggerProcessor().printLog(catLog);
+            httpPoint.addCatLog(catLog);
         }
         return respStr;
     }
 
 
-
-
-    public final boolean canRetry(CatSendContextHolder context, CatHttpException exception) {
+    /**
+     * 如果发生http异常，判断是否满足重连
+     * */
+    public boolean canRetry(CatSendContextHolder context, CatHttpException exception) {
         CatHttpRetryConfigurer retryConfigurer = context.getRetryConfigurer();
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
@@ -207,6 +204,16 @@ public class CatSendProcessor {
 
 
 
+
+    /**
+     * 当前http请求的相关入参
+     * 子类可重写增强
+     * */
+    protected CatHttpPoint newCatHttpPoint(){
+        return new CatHttpPoint();
+    }
+
+
     /**
      * 复杂对象，转form表单形式
      * */
@@ -222,14 +229,14 @@ public class CatSendProcessor {
     /**
      * 复杂对象，转form表单形式
      * */
-    private Map<String, Object> transform(Object value){
+    protected Map<String, Object> transform(Object value){
         Map<String, Object> result = new HashMap<>();
         for(Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()){
             transform(result, entry.getKey(), entry.getValue());
         }
         return result;
     }
-    private void transform(Map<String, Object> result, String parName, Object value){
+    protected void transform(Map<String, Object> result, String parName, Object value){
         if( value == null ) {
             return;
         }

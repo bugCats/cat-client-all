@@ -145,6 +145,7 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
 
         } catch ( Exception ex ) {
 
+            // http异常，或者反序列化异常了
             context.setException(ex);
 
             //开启了异常回调模式
@@ -175,13 +176,18 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
             }
 
         } finally {
-
-            // 如果开启了包装器模式，拆包装
-            respObj = resultHandler.doFinally(respObj, context);
-
-            context.remove();
+            try {
+                // 如果开启了包装器模式，拆包装
+                respObj = resultHandler.doFinally(respObj, context);
+            } catch ( Exception ex ) {
+                // 拆包中出现异常
+                throw ex;
+            } finally {
+                // 在最后的最后，打印日志，移除CatSendContextHolder对象
+                context.printLog();
+                context.remove();
+            }
         }
-
         return respObj;
     }
 

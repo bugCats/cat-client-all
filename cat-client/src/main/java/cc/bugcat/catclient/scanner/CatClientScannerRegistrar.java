@@ -9,6 +9,7 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.handler.CatClientFactorys;
 import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.spi.CatLoggerProcessor;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catclient.utils.CatRestHttp;
@@ -45,7 +46,6 @@ import java.util.Set;
  * */
 public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
 
-    private static Logger log = LoggerFactory.getLogger(CatSendProcessor.class);
 
 
     //资源加载器
@@ -72,13 +72,16 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 
-        log.info("catclient 客户端启用...");
+        CatLoggerProcessor.LOGGER.info("catclient 客户端启用...");
 
         /**
          * 这个类AnnotationScannerRegistrar，通过{@link EnableCatClient}注解上使用@Import加载
          * metadata就是被@EnableCatClient注解的对象，即：启动类
          * */
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
+
+        BeanDefinitionBuilder catClientUtilBuilder = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
+        registry.registerBeanDefinition(CatClientUtil.beanName, catClientUtilBuilder.getBeanDefinition());
 
         //全局默认配置
         Class<? extends CatClientConfiguration> configClass = annoAttrs.getClass("defaults");
@@ -114,7 +117,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             beanDefinition(null, definition);
         }
 
-        log.info("catclient 客户端数量：" + count );
+        CatLoggerProcessor.LOGGER.info("catclient 客户端数量：" + count );
 
         //扫描所有 CatClientFactory 子类
         ClassPathBeanDefinitionScanner factoryScanner = new ClassPathBeanDefinitionScanner(registry);
@@ -162,7 +165,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             } else {    //单个指定interface注册
                 CatClient client = inter.getAnnotation(CatClient.class);
                 if( client == null ){
-                    log.warn(inter.getName() + "上没有找到@CatClient注解");
+                    CatLoggerProcessor.LOGGER.warn(inter.getName() + "上没有找到@CatClient注解");
                     continue;
                 }
                 count ++ ;

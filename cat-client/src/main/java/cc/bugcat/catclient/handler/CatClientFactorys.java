@@ -26,7 +26,7 @@ public class CatClientFactorys {
 
 
     /**
-     * 装饰原始CatClientFactory对象
+     * 装饰原始的CatClientFactory对象
      * */
     public final static class CatClientFactoryDecorator implements CatClientFactory {
 

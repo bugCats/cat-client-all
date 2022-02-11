@@ -17,7 +17,7 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({CatClientUtil.class, CatClientScannerRegistrar.class})
+@Import(CatClientScannerRegistrar.class)
 public @interface EnableCatClient {
 
 

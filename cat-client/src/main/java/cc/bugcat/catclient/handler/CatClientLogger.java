@@ -37,8 +37,11 @@ public class CatClientLogger {
 
     private List<String> infos = new LinkedList<>();
 
-    @Override
-    public String toString(){
+
+    /**
+     *
+     * */
+    public String toJson(){
 
         Map<String, Object> logInfo = new LinkedHashMap<>();
         logInfo.put("@name", apiName);

@@ -25,9 +25,9 @@ public interface CatLoggerProcessor {
         @Override
         public void printLog(CatClientLogger logger) {
             if( logger.isFail() ){
-                LOGGER.error(logger.toString());
+                LOGGER.error(logger.toJson());
             } else {
-                LOGGER.info(logger.toString());
+                LOGGER.info(logger.toJson());
             }
         }
     }

@@ -2,7 +2,9 @@ package cc.bugcat.catclient.handler;
 
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,23 +14,65 @@ import java.util.Map;
  * */
 public class CatHttpPoint {
 
+
+    /**
+     * 因为有重连机制，所有可能有多组日志
+     * */
+    private List<CatClientLogger> catLogs = new ArrayList<>();
+
+    /**
+     * http请求方式
+     * */
     private RequestMethod requestType;
     private boolean postString = false;
 
+    /**
+     * 链接超时
+     * */
     private int connect;
     private int socket;
 
-    private String path;        //url地址     eg： https://blog.csdn.net/qq_41399429
+    /**
+     * url地址：https://blog.csdn.net/qq_41399429
+     * */
+    private String path;
 
-    private Map<String, String> headerMap = new HashMap<>();  //  请求头信息
-    private Map<String, Object> keyValueParam;  //键值对
-    private String requestBody;      //请求参数
+    /**
+     * 请求头信息
+     * */
+    private Map<String, String> headerMap = new HashMap<>();
 
+    /**
+     * 键值对
+     * 当使用post、get方式时，有值
+     * */
+    private Map<String, Object> keyValueParam;
+
+    /**
+     * 请求对象序列化
+     * 1、如果是使用post+json方式，则为最终入参。
+     * 2、如果是使用键值对，则将入参序列化后，用于记录日志
+     * */
+    private String requestBody;
+
+    /**
+     * http请求原始响应。
+     * */
     private String responseBody;
 
 
 
 
+    public void addCatLog(CatClientLogger catLog){
+        catLogs.add(catLog);
+    }
+    public CatClientLogger getLastCatLog(){
+        return catLogs.get(catLogs.size() - 1);
+    }
+
+    public List<CatClientLogger> getCatLogs() {
+        return catLogs;
+    }
 
     public RequestMethod getRequestType() {
         return requestType;

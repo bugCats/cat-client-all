@@ -6,6 +6,8 @@ import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
 
+import java.util.List;
+
 /**
  * http调用环境对象
  *
@@ -27,9 +29,6 @@ public class CatSendContextHolder {
         return threadLocal.get();
     }
 
-    public void remove() {
-        threadLocal.remove();
-    }
 
 
 
@@ -42,7 +41,8 @@ public class CatSendContextHolder {
      * */
     private Exception exception;
     /**
-     * 如果发生异常，在异常回调模式中，返回默认结果
+     * 如果发生异常，可以在异常回调模式中，返回默认结果
+     * 或者在{@link CatResultProcessor#onHttpError(CatSendContextHolder)}方法中赋默认值
      * */
     private Object result;
 
@@ -92,6 +92,21 @@ public class CatSendContextHolder {
     }
 
 
+    /**
+     * 打印http输入输出日志
+     * */
+    public void printLog() {
+        CatHttpPoint httpPoint = sendHandler.getHttpPoint();
+        List<CatClientLogger> catLogs = httpPoint.getCatLogs();
+        catLogs.forEach(catLog -> clientFactory.getLoggerProcessor().printLog(catLog));
+    }
+
+
+    public void remove() {
+        threadLocal.remove();
+    }
+
+
     public CatSendProcessor getSendHandler() {
         return sendHandler;
     }
@@ -116,6 +131,7 @@ public class CatSendContextHolder {
     protected static CatSendContextHolderBuilder builder(){
         return new CatSendContextHolderBuilder();
     }
+
 
     protected static class CatSendContextHolderBuilder {
         private CatClientInfo clientInfo;

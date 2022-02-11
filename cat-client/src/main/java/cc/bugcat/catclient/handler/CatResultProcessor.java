@@ -20,7 +20,8 @@ public interface CatResultProcessor {
 
 
     /**
-     * 如果发生了40x、50x等异常处理方式。默认继续抛出
+     * 如果发生了40x、50x等异常处理方式。默认继续抛出；
+     * 可以给 CatSendContextHolder.result 赋默认值
      * 如果结果返回true，会继续执行 resultToBean、doFinally 方法；
      * 返回false，则直接执行doFinally
      * @return true => 执行 resultToBean、doFinally 方法；
