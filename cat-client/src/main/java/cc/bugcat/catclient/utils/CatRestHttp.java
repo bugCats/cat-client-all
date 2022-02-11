@@ -1,15 +1,23 @@
 package cc.bugcat.catclient.utils;
 
-import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatClientLogger;
-import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatHttpPoint;
+import cc.bugcat.catclient.spi.CatHttp;
 import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriTemplateHandler;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +68,20 @@ public class CatRestHttp implements CatHttp {
     }
 
     private String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
-        return requestSend(url, HttpMethod.GET, headers, params, ints);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        if ( params != null && params.size() > 0 ) {
+            params.forEach((key, value) -> {
+                if( value != null && value instanceof List){
+                    for(Object val : ((List) value)){
+                        uriBuilder.queryParam(key, val==null ? "" : val.toString());
+                    }
+                } else {
+                    uriBuilder.queryParam(key, value==null ? "" : value.toString());
+                }
+            });
+        }
+        url = uriBuilder.build().toUriString();
+        return requestSend(url, HttpMethod.GET, headers, null, ints);
     }
 
     private String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
@@ -78,8 +99,10 @@ public class CatRestHttp implements CatHttp {
     private String requestSend(String url, HttpMethod method, Map<String, String> headers, Map<String, Object> params, int... ints) {
         HttpHeaders httpHeaders = getHeaders(headers);
         MultiValueMap<String, Object> paramMap = new LinkedMultiValueMap<>();
-        for ( Map.Entry<String, Object> entry : params.entrySet() ) {
-            paramMap.put(entry.getKey(), (List<Object>)entry.getValue());
+        if( params != null ){
+            for ( Map.Entry<String, Object> entry : params.entrySet() ) {
+                paramMap.put(entry.getKey(), (List<Object>)entry.getValue());
+            }
         }
         RestTemplate rest = getRestTemplate(ints);
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(paramMap, httpHeaders);
@@ -96,6 +119,7 @@ public class CatRestHttp implements CatHttp {
         factory.setConnectTimeout(ints[0]);
         factory.setReadTimeout(ints[1]);
         RestTemplate rest = new RestTemplate(factory);
+        rest.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         return rest;
     }
 
@@ -106,6 +130,28 @@ public class CatRestHttp implements CatHttp {
             httpHeaders.add(entry.getKey(), entry.getValue());
         }
         return httpHeaders;
+    }
+
+    /**
+     * 将请求入参，编码成url格式
+     * @param reqMap 键值对map
+     * @return
+     */
+    private final String urlEncoded(Map<String, ?> reqMap) {
+        StringBuilder query = new StringBuilder();
+        if ( reqMap != null && reqMap.size() > 0 ) {
+            reqMap.forEach((key, value) -> {
+                if( value != null && value instanceof List){
+                    for(Object val : ((List) value)){
+                        query.append("&" + key + "=" + (val==null?"":val.toString()) );
+                    }
+                } else {
+                    query.append("&" + key + "=" + (value==null?"":value.toString()));
+                }
+            });
+            query.delete(0, 1);
+        }
+        return query.toString();
     }
 
 }

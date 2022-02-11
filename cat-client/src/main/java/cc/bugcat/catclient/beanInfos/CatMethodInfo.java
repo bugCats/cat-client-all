@@ -119,7 +119,7 @@ public class CatMethodInfo {
         this.isCatface = builder.isCatface;
 
         this.notes = Collections.unmodifiableMap(builder.notes);
-        this.params = Collections.unmodifiableMap(builder.params);
+        this.params = Collections.unmodifiableMap(builder.paramNameMap);
         this.pathParamIndexMap = Collections.unmodifiableMap(builder.pathParamIndexMap);
         this.headerParamIndexMap = Collections.unmodifiableMap(builder.headerParamIndexMap);
     }
@@ -316,7 +316,7 @@ public class CatMethodInfo {
         /**
          * 除了SendProcessor、PathVariable、RequestHeader以外，其他的参数map => 参数名:参数对象信息
          */
-        private Map<String, CatMethodParamInfo> params = new HashMap<>();
+        private Map<String, CatMethodParamInfo> paramNameMap = new HashMap<>();
 
         /**
          * 出现在url上的参数{@link PathVariable} map => 参数名:参数对象信息
@@ -435,39 +435,39 @@ public class CatMethodInfo {
                         throw new IllegalArgumentException("方法上只容许出现一个SendProcessor入参！" + method.toString());
                     }
                     handlerIndex = Integer.valueOf(idx);
-
-                } else {
-
-                    //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
-                    String pname = null;
-                    if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2..命名
-                        pname = "arg" + idx;
-                    } else {
-                        pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
-                        if ( CatToosUtil.isBlank(pname) ) {
-                            pname = parameter.getName();
-                        }
-                    }
-
-                    CatMethodParamInfo.Builder builder = CatMethodParamInfo.builder().index(idx).parameterType(pclazz);
-
-                    if ( parameter.isAnnotationPresent(ModelAttribute.class) || parameter.isAnnotationPresent(RequestBody.class) ) {
-                        if ( hasPrimary ) {
-                            throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody、@ModelAttribute注解的入参！" + method.toString());
-                        } else {
-                            hasPrimary = true;
-                            builder.primary(true);
-                        }
-                        //如果post方式，并且有@RequestBody注解
-                        if ( this.requestType == RequestMethod.POST && parameter.isAnnotationPresent(RequestBody.class) ) {
-                            postString = true;
-                        }
-                    }
-
-                    // 有效参数
-                    CatMethodParamInfo paramInfo = builder.build();
-                    params.put(pname, paramInfo);
+                    continue;
                 }
+
+
+                //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
+                String pname = null;
+                if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2..命名
+                    pname = "arg" + idx;
+                } else {
+                    pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
+                    if ( CatToosUtil.isBlank(pname) ) {
+                        pname = parameter.getName();
+                    }
+                }
+
+                CatMethodParamInfo.Builder builder = CatMethodParamInfo.builder().index(idx).parameterType(pclazz);
+
+                if ( parameter.isAnnotationPresent(ModelAttribute.class) || parameter.isAnnotationPresent(RequestBody.class) ) {
+                    if ( hasPrimary ) {
+                        throw new IllegalArgumentException("方法上只容许出现一个被@RequestBody、@ModelAttribute注解的入参！" + method.toString());
+                    } else {
+                        hasPrimary = true;
+                        builder.primary(true);
+                    }
+                    //如果post方式，并且有@RequestBody注解
+                    if ( this.requestType == RequestMethod.POST && parameter.isAnnotationPresent(RequestBody.class) ) {
+                        postString = true;
+                    }
+                }
+
+                // 有效参数
+                CatMethodParamInfo paramInfo = builder.build();
+                paramNameMap.put(pname, paramInfo);
             }
         }
     }
