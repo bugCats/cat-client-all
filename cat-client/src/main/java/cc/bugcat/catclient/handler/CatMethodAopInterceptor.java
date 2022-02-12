@@ -18,7 +18,7 @@ import java.lang.reflect.Method;
  *
  * @author bugcat
  * */
-public class CatMethodAopInterceptor implements MethodInterceptor {
+public final class CatMethodAopInterceptor implements MethodInterceptor {
 
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
@@ -129,6 +129,9 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
         //设置参数
         sendHandler.sendConfigurationResolver(context, parameter);
 
+        //处理额外参数
+        context.executeVariable();
+
         //原始响应字符串
         String respStr = null;
 
@@ -198,7 +201,7 @@ public class CatMethodAopInterceptor implements MethodInterceptor {
      */
     private String doRequest(CatSendContextHolder context, CatResultProcessor resultHandler) throws Exception {
         try {
-            String respStr = context.doRequest();
+            String respStr = context.executeRequest();
             return respStr;
         } catch ( CatHttpException exception ) {
             if ( resultHandler.canRetry(exception, context) ) {

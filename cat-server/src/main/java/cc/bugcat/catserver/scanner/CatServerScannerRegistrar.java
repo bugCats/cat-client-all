@@ -70,7 +70,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         interceptorScanner.scan(pkgs);
 
 
-        Class<?>[] classes = annoAttrs.getClassArray("classes");
+        Class[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
             for ( Class<?> clazz : classes ){
                 CatServer server = clazz.getAnnotation(CatServer.class);

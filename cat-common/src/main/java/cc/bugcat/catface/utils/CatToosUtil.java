@@ -59,7 +59,7 @@ public class CatToosUtil{
         String[] pkgs = annoAttrs.getStringArray(annoName);
         if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ) {//如果没有设置扫描包路径，取启动类路径
             StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
-            Class<?> stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
+            Class stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
             String basePackage = stratClass.getPackage().getName();
             pkgs = new String[]{basePackage};  //获取启动类所在包路径
         }
@@ -149,15 +149,14 @@ public class CatToosUtil{
      * 是否为基础数据类型
      */
     public static boolean isSimpleClass(Class clz) {
-        try {
-            if ( clz.isPrimitive() ) {
-                return true;
-            } else if ( clz == String.class ) {
-                return true;
+        if ( clz.isPrimitive() || clz == String.class ) {
+            return true;
+        } else {
+            try {
+                return ((Class) clz.getField("TYPE").get(null)).isPrimitive();
+            } catch ( Exception e ) {
+                return false;
             }
-            return ((Class) clz.getField("TYPE").get(null)).isPrimitive();
-        } catch ( Exception e ) {
-            return false;
         }
     }
 

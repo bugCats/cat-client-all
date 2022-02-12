@@ -184,7 +184,7 @@ public abstract class CatClientBuilders {
                 factory.setClientConfiguration(config);
                 CatClientUtil.registerBean(CatClientFactory.class, factory);
 
-                CatMethodInterceptor interceptor = new CatMethodInterceptor.Default();
+                CatMethodInterceptor interceptor = new CatMethodInterceptor.DefaultInterceptor();
                 CatClientUtil.registerBean(CatMethodInterceptor.class, interceptor);
 
                 CatHttpRetryConfigurer retry = new CatHttpRetryConfigurer();

@@ -172,23 +172,20 @@ public class CatMethodInfo {
         });
         param.setArgMap(argMap);
 
-
-        Object arg = null;
+        Object value = null;
         if ( params.size() == 1 ) {//如果入参仅一个
             Map.Entry<String, Object> entry = argMap.entrySet().iterator().next();
             CatMethodParamInfo paramInfo = params.get(entry.getKey());
             //被@RequestBody、@ModelAttribute标记了、或者是复杂对象，直接取对象，再转换
             if ( paramInfo.isPrimary() || !paramInfo.isSimple() ) {
-                arg = argMap.values().iterator().next();
+                value = entry.getValue();
             } else {
-                arg = argMap;
+                value = argMap;
             }
         } else {//入参是多个，转成键值对
-            arg = argMap;
+            value = argMap;
         }
-
-        param.setValue(arg);
-
+        param.setValue(value);
         return param;
     }
 
@@ -413,7 +410,7 @@ public class CatMethodInfo {
             for ( int idx = 0; idx < parameters.length; idx++ ) {
 
                 Parameter parameter = parameters[idx];
-                Class<?> pclazz = parameter.getType();
+                Class pclazz = parameter.getType();
 
                 //在url上追加的参数，不绑定到参数列表中
                 PathVariable pathVariable = parameter.getAnnotation(PathVariable.class);

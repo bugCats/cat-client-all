@@ -28,11 +28,11 @@ public class CloudSendHandler extends CatSendProcessor {
     }
 
     @Override
-    protected void afterVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
+    public void afterVariableResolver(CatSendContextHolder context){
 
         CatMethodInfo methodInfo = context.getMethodInfo();
 
-        this.path = httpPoint.getPath();
+        this.path = super.getHttpPoint().getPath();
 
         this.instanceEntry = new CatInstanceEntry(methodInfo.getHost());
         String ipAddr = chooser.hostAddr(instanceEntry);

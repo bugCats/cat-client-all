@@ -2,11 +2,13 @@ package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
+import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodInterceptor;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * http调用环境对象
@@ -17,10 +19,9 @@ import java.util.List;
  *
  * @author bugcat
  * */
-public class CatSendContextHolder {
+public final class CatSendContextHolder {
 
     private static ThreadLocal<CatSendContextHolder> threadLocal = new ThreadLocal<>();
-
 
     /**
      * 在同一个线程中可以获取
@@ -31,11 +32,10 @@ public class CatSendContextHolder {
 
 
 
-
     /**
      * http原始响应内容，不一定有值
      * */
-    private String response;
+    private String responseBody;
     /**
      * http、或者对象反序列化异常时，一定不为null
      * */
@@ -47,8 +47,9 @@ public class CatSendContextHolder {
     private Object result;
 
 
-    public String getResponse() {
-        return response;
+
+    public String getResponseBody() {
+        return responseBody;
     }
 
     public Exception getException() {
@@ -67,6 +68,10 @@ public class CatSendContextHolder {
 
 
 
+    /**
+     * 唯一标识
+     * */
+    private final String uuid;
     private final CatSendProcessor sendHandler;
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
@@ -75,6 +80,7 @@ public class CatSendContextHolder {
     private final CatMethodInterceptor interceptor;
 
     private CatSendContextHolder(CatSendContextHolderBuilder builder) {
+        this.uuid = UUID.randomUUID().toString();
         this.sendHandler = builder.sendHandler;
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
@@ -83,30 +89,43 @@ public class CatSendContextHolder {
         this.retryConfigurer = builder.retryConfigurer;
     }
 
+
+
     /**
-     * 切入点
+     * http参数处理切入点
      * */
-    public String doRequest() throws CatHttpException {
-        this.response = interceptor.executeInternal(sendHandler);
-        return response;
+    protected void executeVariable(){
+        interceptor.executeVariable(this, sendHandler);
+    }
+
+    /**
+     * http请求切入点
+     * */
+    protected String executeRequest() throws CatHttpException {
+        this.responseBody = interceptor.executeHttpSend(sendHandler);
+        return responseBody;
     }
 
 
     /**
      * 打印http输入输出日志
      * */
-    public void printLog() {
+    protected void printLog() {
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
         List<CatClientLogger> catLogs = httpPoint.getCatLogs();
         catLogs.forEach(catLog -> clientFactory.getLoggerProcessor().printLog(catLog));
     }
 
 
-    public void remove() {
+    protected void remove() {
         threadLocal.remove();
     }
 
 
+
+    public String getUuid() {
+        return uuid;
+    }
     public CatSendProcessor getSendHandler() {
         return sendHandler;
     }
@@ -125,13 +144,11 @@ public class CatSendContextHolder {
 
 
 
-
     /****************************************************************************************************************/
 
     protected static CatSendContextHolderBuilder builder(){
         return new CatSendContextHolderBuilder();
     }
-
 
     protected static class CatSendContextHolderBuilder {
         private CatClientInfo clientInfo;

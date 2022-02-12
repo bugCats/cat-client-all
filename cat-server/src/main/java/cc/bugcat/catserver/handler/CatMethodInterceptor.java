@@ -25,24 +25,24 @@ import java.util.function.Function;
  * @author bugcat
  */
 public final class CatMethodInterceptor implements MethodInterceptor{
-   
+
     /**
      * 原始server-interface实现类对象
      * 如果使用了代理，那么为代理后对象
      * */
     private final Object server;
-    
+
     /**
      * 原始server-interface的方法
      * */
     private final StandardMethodMetadata interMethod;
-    
+
     /**
      *  server对象，对应的方法
      * */
     private final CatMethodInterceptorBuilder.ServiceProxy realMethodproxy;
 
-    
+
     private final List<CatInterceptor> handers;
 
     private final CatFaceResolver argumentResolver;    //参数预处理器
@@ -50,7 +50,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
     private final Function<Object, Object> successToEntry;
     private final Function<Throwable, Object> errorToEntry;
 
-    
+
     public CatMethodInterceptor(CatMethodInterceptorBuilder builder) {
 
         CatServerInfo serverInfo = builder.getServerInfo();
@@ -66,16 +66,16 @@ public final class CatMethodInterceptor implements MethodInterceptor{
             }
         }
         handers.sort(Comparator.comparingInt(CatInterceptor::getOrder));
-        
+
         this.server = builder.getServerBean();
         this.realMethodproxy = builder.getServiceProxy();
         this.handers = handers;
         this.interMethod = builder.getInterMethodMetadata();
         this.argumentResolver = builder.getArgumentResolver();
-        
+
         Class wrap = serverInfo.getWarpClass();
         if ( wrap != null ) {
-            Class<?> returnType = realMethod.getReturnType();
+            Class returnType = realMethod.getReturnType();
             if ( wrap.equals(returnType) || wrap.isAssignableFrom(returnType.getClass()) ) {
                 successToEntry = value -> value;
                 errorToEntry = value -> value;
@@ -90,7 +90,7 @@ public final class CatMethodInterceptor implements MethodInterceptor{
         }
     }
 
-    
+
     @Override
     public Object intercept(Object ctrl, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
 

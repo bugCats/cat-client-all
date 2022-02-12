@@ -14,11 +14,8 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriTemplateHandler;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 
 
@@ -67,16 +64,16 @@ public class CatRestHttp implements CatHttp {
         }
     }
 
-    private String doGet(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
+    private String doGet(String url, MultiValueMap<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         if ( params != null && params.size() > 0 ) {
             params.forEach((key, value) -> {
-                if( value != null && value instanceof List){
-                    for(Object val : ((List) value)){
-                        uriBuilder.queryParam(key, val==null ? "" : val.toString());
+                if( value != null){
+                    for(Object val : value){
+                        uriBuilder.queryParam(key, val==null ? null : val.toString());
                     }
                 } else {
-                    uriBuilder.queryParam(key, value==null ? "" : value.toString());
+                    uriBuilder.queryParam(key, null);
                 }
             });
         }
@@ -84,7 +81,7 @@ public class CatRestHttp implements CatHttp {
         return requestSend(url, HttpMethod.GET, headers, null, ints);
     }
 
-    private String doPost(String url, Map<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
+    private String doPost(String url, MultiValueMap<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
         return requestSend(url, HttpMethod.POST, headers, params, ints);
     }
 
@@ -96,16 +93,13 @@ public class CatRestHttp implements CatHttp {
         return rest.postForObject(url, request, String.class);
     }
 
-    private String requestSend(String url, HttpMethod method, Map<String, String> headers, Map<String, Object> params, int... ints) {
-        HttpHeaders httpHeaders = getHeaders(headers);
-        MultiValueMap<String, Object> paramMap = new LinkedMultiValueMap<>();
-        if( params != null ){
-            for ( Map.Entry<String, Object> entry : params.entrySet() ) {
-                paramMap.put(entry.getKey(), (List<Object>)entry.getValue());
-            }
+    private String requestSend(String url, HttpMethod method, Map<String, String> headers, MultiValueMap<String, Object> params, int... ints) {
+        if( params == null ){
+            params = new LinkedMultiValueMap<>();
         }
+        HttpHeaders httpHeaders = getHeaders(headers);
         RestTemplate rest = getRestTemplate(ints);
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(paramMap, httpHeaders);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(params, httpHeaders);
         ResponseEntity<String> result = rest.exchange(url, method, requestEntity, String.class);
         return result.getBody();
     }
@@ -132,26 +126,5 @@ public class CatRestHttp implements CatHttp {
         return httpHeaders;
     }
 
-    /**
-     * 将请求入参，编码成url格式
-     * @param reqMap 键值对map
-     * @return
-     */
-    private final String urlEncoded(Map<String, ?> reqMap) {
-        StringBuilder query = new StringBuilder();
-        if ( reqMap != null && reqMap.size() > 0 ) {
-            reqMap.forEach((key, value) -> {
-                if( value != null && value instanceof List){
-                    for(Object val : ((List) value)){
-                        query.append("&" + key + "=" + (val==null?"":val.toString()) );
-                    }
-                } else {
-                    query.append("&" + key + "=" + (value==null?"":value.toString()));
-                }
-            });
-            query.delete(0, 1);
-        }
-        return query.toString();
-    }
 
 }

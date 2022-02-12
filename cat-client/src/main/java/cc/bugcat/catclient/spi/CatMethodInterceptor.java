@@ -2,6 +2,7 @@ package cc.bugcat.catclient.spi;
 
 
 import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
 
 
@@ -15,16 +16,33 @@ public interface CatMethodInterceptor {
 
 
 
-    String executeInternal(CatSendProcessor sendProcessor) throws CatHttpException;
-
-
-
-    class Default implements CatMethodInterceptor {
-        @Override
-        public String executeInternal(CatSendProcessor sendProcessor) throws CatHttpException {
-            return sendProcessor.httpSend();
-        }
+    /**
+     * 拦截器中处理参数
+     * 每次调用interface的方法，仅执行一次
+     * */
+    default void executeVariable(CatSendContextHolder context, CatSendProcessor sendProcessor) {
+        sendProcessor.postVariableResolver(context);
+        sendProcessor.afterVariableResolver(context);
     }
 
+
+    /**
+     * 执行发送http请求
+     * 如果启用重连，会执行多次
+     * */
+    default String executeHttpSend(CatSendProcessor sendProcessor) throws CatHttpException {
+        return sendProcessor.postHttpSend();
+    }
+
+
+
+
+
+    /**
+     * 默认的拦截器
+     * */
+    public static class DefaultInterceptor implements CatMethodInterceptor {
+
+    }
 
 }

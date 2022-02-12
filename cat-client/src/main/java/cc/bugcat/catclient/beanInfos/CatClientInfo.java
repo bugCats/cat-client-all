@@ -119,8 +119,9 @@ public final class CatClientInfo {
         Class<? extends CatClientFactory> factoryClass = client.factory();
         this.factoryClass = CatClientConfiguration.factory.equals(factoryClass) ? clientConfig.clientFactory() : factoryClass;
 
-        Class<? extends CatMethodInterceptor> interceptorClass = client.interceptor();
-        this.interceptorClass = CatClientConfiguration.methodInterceptor.equals(interceptorClass) ? clientConfig.methodInterceptor() : interceptorClass;
+
+        Class<? extends CatMethodInterceptor> interceptorClass = CatClientConfiguration.methodInterceptor.equals(client.interceptor()) ? clientConfig.methodInterceptor() : client.interceptor();
+        this.interceptorClass = CatClientConfiguration.methodInterceptor.equals(interceptorClass) ? CatMethodInterceptor.DefaultInterceptor.class : interceptorClass;
 
         this.fallback = client.fallback();
         this.fallbackMod = fallback != Object.class;

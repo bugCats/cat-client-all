@@ -16,6 +16,12 @@ import java.util.Map;
  * */
 public class CatClientLogger {
 
+
+    /**
+     * @see cc.bugcat.catclient.handler.CatSendContextHolder#uuid
+     * */
+    private String uuid;
+
     /**
      * 日志记录方案
      */
@@ -44,6 +50,7 @@ public class CatClientLogger {
     public String toJson(){
 
         Map<String, Object> logInfo = new LinkedHashMap<>();
+        logInfo.put("@uuid", uuid);
         logInfo.put("@name", apiName);
         logInfo.put("@url", apiUrl);
         logInfo.put("@in", "#{in}");
@@ -92,6 +99,12 @@ public class CatClientLogger {
     }
 
 
+    public String getUuid() {
+        return uuid;
+    }
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
     public CatLogsMod getLogsMod() {
         return logsMod;

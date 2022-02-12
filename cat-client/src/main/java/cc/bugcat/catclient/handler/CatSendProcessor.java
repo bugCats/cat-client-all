@@ -6,16 +6,15 @@ import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatJsonResolver;
+import cc.bugcat.catclient.spi.CatObjectResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.handler.Stringable;
 import cc.bugcat.catface.utils.CatToosUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.expression.Expression;
-
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,7 +36,6 @@ public class CatSendProcessor {
     private int retryCount = 0;
 
     private CatSendContextHolder context;
-
     private CatHttpPoint httpPoint;
 
     protected JSONObject notes;    //其他自定义参数、标记
@@ -74,85 +72,95 @@ public class CatSendProcessor {
                         Object argObj = parameter.getArgMap().get(argName);
                         Expression exp = CatToosUtil.parser.parseExpression(argsTmpl.substring(start + 1));
                         notes.put(key, exp.getValue(argObj));
+                        continue;
                     } else {    //简单参数
                         Object argObj = parameter.getArgMap().get(argsTmpl);
                         notes.put(key, argObj);
+                        continue;
                     }
-                    return;
                 }
             }
             notes.put(key, value);
         }
 
-        this.postVariableResolver(context, parameter, httpPoint);
+        Object value = parameter.getValue();
+        MultiValueMap<String, Object> keyValueParam = null;
+        if( !methodInfo.isPostString() ){ //非post发送json
+            if( value instanceof String ){
+                keyValueParam = toMultiValueMap(parameter.getArgMap());
+            } else if ( value instanceof Map ) {// 传入了一个对象，转换成键值对
+                keyValueParam = toMultiValueMap((Map<String, Object>) value);
+            } else {// 传入了一个对象，转换成键值对
+                CatObjectResolver objectResolver = newCatObjectResolver();
+                keyValueParam = objectResolver.resolver(value);
+            }
+        }
+        httpPoint.setObjectParam(value);
+        httpPoint.setKeyValueParam(keyValueParam);
     }
 
 
     /**
      * 2、如果在调用远程API，需要额外处理参数、添加签名等，可在此步骤添加
      * */
-    protected void postVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
+    public void postVariableResolver(CatSendContextHolder context){
 
-        CatJsonResolver resolver = context.getClientFactory().getJsonResolver();
+    }
+
+    /**
+     * 3、对参数额外处理
+     * 将实际入参，转成字符串
+     * */
+    public void afterVariableResolver(CatSendContextHolder context){
+
+        CatJsonResolver jsonResolver = context.getClientFactory().getJsonResolver();
         CatMethodInfo methodInfo = context.getMethodInfo();
 
-        Object value = parameter.getValue();
+        Object value = httpPoint.getObjectParam();
+        MultiValueMap<String, Object> keyValueParam = httpPoint.getKeyValueParam();
+
         if( methodInfo.isCatface() ){
             if( value instanceof Map ){
-                value = resolver.toJsonString(value);
+                value = jsonResolver.toJsonString(value);
             } else {
                 Map<String, Object> map = new HashMap<>();
                 map.put("arg0", value);
-                value = resolver.toJsonString(map);
+                value = jsonResolver.toJsonString(map);
             }
         }
 
-        String reqStr = null;
-        Map<String, Object> keyValueParam = null;
+        String requestBody = null;
 
         // 使用post发送字符串
         if( methodInfo.isPostString() ){
             if ( value instanceof String ){
-                reqStr = CatToosUtil.toStringIfBlank(value, "");
+                requestBody = CatToosUtil.toStringIfBlank(value, "");
             } else if ( value instanceof Stringable ){
-                reqStr = ((Stringable) value).serialization();
+                requestBody = ((Stringable) value).serialization();
             } else {
-                reqStr = resolver.toJsonString(value);
+                requestBody = jsonResolver.toJsonString(value);
             }
-
-        } else {    //使用post、get发送键值对
-            if( value instanceof String ){
-                keyValueParam = new HashMap<>(parameter.getArgMap());
-            } else {// 传入了一个对象，转换成键值对
-                keyValueParam = beanToMap(value);
-            }
+        } else {
             // 请求入参转换成String，方便记录日志
             CatLogsMod logsMod = methodInfo.getLogsMod();
             if( CatLogsMod.All == logsMod || CatLogsMod.All2 == logsMod || CatLogsMod.In == logsMod || CatLogsMod.In2 == logsMod ){
-                reqStr = resolver.toJsonString(keyValueParam);
+                requestBody = jsonResolver.toJsonString(keyValueParam);
             }
         }
-        httpPoint.setRequestBody(reqStr);
+
+        httpPoint.setObjectParam(value);
+        httpPoint.setRequestBody(requestBody);
         httpPoint.setKeyValueParam(keyValueParam);
-
-        this.afterVariableResolver(context, parameter, httpPoint);
-    }
-
-
-    /**
-     * 3、对参数额外处理
-     * */
-    protected void afterVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
-
     }
 
 
 
+
     /**
-     * 4、发送http
+     * 5、发送http
      * 由于有重连机制，每次调用interface的方法，httpSend可能执行多次
      * */
-    public final String httpSend() throws CatHttpException {
+    public final String postHttpSend() throws CatHttpException {
 
         long start = System.currentTimeMillis();
 
@@ -160,6 +168,7 @@ public class CatSendProcessor {
         CatClientFactory clientFactory = context.getClientFactory();
 
         CatClientLogger catLog = new CatClientLogger();
+        catLog.setUuid(context.getUuid());
         catLog.setLogsMod(methodInfo.getLogsMod());
         catLog.setApiName(methodInfo.getMethodName());
         catLog.setApiUrl(httpPoint.getPath());
@@ -203,6 +212,26 @@ public class CatSendProcessor {
     }
 
 
+    private MultiValueMap<String, Object> toMultiValueMap(Map<String, Object> map){
+        if( map == null || map.size() == 0 ){
+            return new LinkedMultiValueMap<>();
+        }
+        MultiValueMap<String, Object> valueMap = new LinkedMultiValueMap<>(map.size() * 2);
+        map.forEach((key, value) -> {
+            if( value == null ){
+                valueMap.add(key, "");
+            } else {
+                if( value instanceof List ){
+                    for(Object val : (List<Object>) value){
+                        valueMap.add(key, val == null ? null : val.toString());
+                    }
+                } else {
+                    valueMap.add(key, value == null ? null : value.toString());
+                }
+            }
+        });
+        return valueMap;
+    }
 
 
     /**
@@ -213,59 +242,19 @@ public class CatSendProcessor {
         return new CatHttpPoint();
     }
 
-
     /**
-     * 复杂对象，转form表单形式
+     * 键值对模式下，复杂对象转换
      * */
-    public Map<String, Object> beanToMap(Object bean){
-        if( bean == null ){
-            return new HashMap<>();
-        }
-        Object value = JSON.toJSON(bean);
-        Map<String, Object> result = transform(value);
-        return result;
-    }
-
-    /**
-     * 复杂对象，转form表单形式
-     * */
-    protected Map<String, Object> transform(Object value){
-        Map<String, Object> result = new HashMap<>();
-        for(Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()){
-            transform(result, entry.getKey(), entry.getValue());
-        }
-        return result;
-    }
-    protected void transform(Map<String, Object> result, String parName, Object value){
-        if( value == null ) {
-            return;
-        }
-        if( value instanceof JSONObject ){
-            for(Map.Entry<String, Object> entry : ((Map<String, Object>) value).entrySet()){
-                transform(result, parName + "." + entry.getKey(), entry.getValue());
-            }
-        } else if ( value instanceof JSONArray ){
-            int count = 0;
-            for(Object entry : (List<Object>) value){
-                transform(result, parName + "[" + (count ++) + "]", entry);
-            }
-        } else {
-            Object tmp = result.get(parName);
-            if( tmp == null ){
-                tmp = new LinkedList<>();
-                result.put(parName, tmp);
-            }
-            ((List)tmp).add(value);
-        }
+    public CatObjectResolver newCatObjectResolver(){
+        return new CatObjectResolver.DefaultResolver();
     }
 
 
-
-    public JSONObject getNotes() {
-        return notes;
-    }
     public CatHttpPoint getHttpPoint() {
         return httpPoint;
+    }
+    public JSONObject getNotes() {
+        return notes;
     }
 
 

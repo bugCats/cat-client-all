@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.ArrayList;
@@ -43,10 +44,15 @@ public class CatHttpPoint {
     private Map<String, String> headerMap = new HashMap<>();
 
     /**
-     * 键值对
-     * 当使用post、get方式时，有值
+     * 方法上参数列表组成的原始对象
      * */
-    private Map<String, Object> keyValueParam;
+    private Object objectParam;
+
+    /**
+     * 键值对
+     * 当使用post、get方式发送键值对时，有值
+     * */
+    private MultiValueMap<String, Object> keyValueParam;
 
     /**
      * 请求对象序列化
@@ -116,10 +122,17 @@ public class CatHttpPoint {
         this.headerMap = headerMap;
     }
 
-    public Map<String, Object> getKeyValueParam() {
+    public Object getObjectParam() {
+        return objectParam;
+    }
+    public void setObjectParam(Object objectParam) {
+        this.objectParam = objectParam;
+    }
+
+    public MultiValueMap<String, Object> getKeyValueParam() {
         return keyValueParam;
     }
-    public void setKeyValueParam(Map<String, Object> keyValueParam) {
+    public void setKeyValueParam(MultiValueMap<String, Object> keyValueParam) {
         this.keyValueParam = keyValueParam;
     }
 

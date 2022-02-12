@@ -14,22 +14,25 @@ public class CatParameter {
     /**
      * 真实url，PathVariable已经处理
      * */
-    private String path;    //
+    private String path;
 
     /**
-     * 经过处理之后的有效参数
+     * 请求头信息
      * */
-    private Object value;   //
+    private Map<String, String> headerMap;
 
     /**
      * 原始的参数列表
      * */
     private Map<String, Object> argMap;
 
+
     /**
-     * 请求头信息
+     * 方法上经过处理之后的有效参数
+     * 当参数被@RequestBody、@ModelAttribute标记，或者仅当只有一个参数、并且为复杂对象时，value为对象；其他情况为Map
      * */
-    private Map<String, String> headerMap;
+    private Object value;
+
 
 
     public String getPath() {

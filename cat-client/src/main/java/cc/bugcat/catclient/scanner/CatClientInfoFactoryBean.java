@@ -44,7 +44,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
 
     @Override
-    public Class<?> getObjectType() {
+    public Class<T> getObjectType() {
         return interfaceClass;
     }
 

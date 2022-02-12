@@ -8,6 +8,8 @@ package cc.bugcat.catclient.handler;
  * */
 public enum CatLogsMod {
 
+    Off,    //关闭
+
     Def,    //默认，跟随全局配置
 
     In,     //仅输入

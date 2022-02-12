@@ -40,7 +40,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
 
     /**
      * 重连的状态码：多个用逗号隔开；
-     * "500,501,401" or "400-410,500-519"
+     * "500,501,401" or "400-410,500-519,419" or "*" or "any"
      */
     @Value("${retry.status:500-520}")
     private String status;
@@ -48,7 +48,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
 
     /**
      * 需要重连的请求方式：多个用逗号隔开；
-     * "post,get" or "any" or "*"
+     * "post,get" or "*" or "any"
      */
     @Value("${retry.method:any}")
     private String method;
@@ -56,23 +56,25 @@ public class CatHttpRetryConfigurer implements InitializingBean {
 
     /**
      * 需要重连的异常、或其子类；多个用逗号隔开；
-     * "java.io.IOException" or "any" or "*"
+     * "java.io.IOException" or "*" or "any"
      */
-    @Value("${retry.exception:java.io.IOException}")
+    @Value("${retry.exception:}")
     private String exception;
 
 
     /**
-     * 需要重连的分组；多个用逗号隔开；
+     * 需要重连的api分组，在@CatClient中配置；多个用逗号隔开；
+     * "some word" or "*" or "any"
      * */
-    @Value("${retry.tags:any}")
+    @Value("${retry.tags:}")
     private String tags;
 
     /**
      * 其他特殊标记；多个用逗号隔开；
+     * 在@CatMethod中配置
      * 会匹配方法上@CatNote注解，当retry.note设置的值，在@CatNote value中存在时，触发重连
      *
-     * "payOrder,userSave"
+     * "some word"
      */
     @Value("${retry.note:}")
     private String note;
@@ -87,10 +89,13 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     private String noteMatch;
 
 
-
+    //需要重连的状态码
     private List<StatusCode> statusCode = new ArrayList<>();
+    //需要重连的异常类
     private Set<Class> exceptionCode = new HashSet<>();
+    //需要重连的api分组
     private Set<String> tagsCode = new HashSet<>();
+    //需要重连的标签
     private Set<String> noteCode = new HashSet<>();
     private Map<String, Object> noteMatchCode = new HashMap<>();
 
@@ -98,57 +103,78 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
 
-        if ( retries <= 0 ) {
+        if ( retries <= 0 ) { //设置的重连次数小于0
             enable = false;
         }
 
         if ( enable ) {
+
             if ( CatToosUtil.isNotBlank(status) ) {
-                String[] codes = status.split(",");
-                for ( String code : codes ) {
-                    StatusCode sc = null;
-                    if ( code.contains("-") ) {
-                        String[] cs = code.split("-");
-                        sc = new StatusCode(Integer.parseInt(cs[0]), Integer.parseInt(cs[1]));
-                    } else {
-                        sc = new StatusCode(Integer.parseInt(code));
+                status = "," + status + ",";
+                if ( status.contains(",none,") ) {
+                    statusCode.clear();
+                } else  if( status.contains(",*,") || status.contains(",any,") ){
+                    statusCode.add(new StatusCode(0, 999999));
+                } else {
+                    String[] codes = status.split(",");
+                    for ( String code : codes ) {
+                        if( CatToosUtil.isNotBlank(code) ){
+                            StatusCode sc = null;
+                            String[] cs = code.split("-");
+                            if ( cs.length > 1 ) {
+                                sc = new StatusCode(Integer.parseInt(cs[0]), Integer.parseInt(cs[1]));
+                            } else {
+                                sc = new StatusCode(Integer.parseInt(code));
+                            }
+                            statusCode.add(sc);
+                        }
                     }
-                    statusCode.add(sc);
                 }
             }
 
             if ( CatToosUtil.isNotBlank(method) ) {
-                if( "any".equalsIgnoreCase(method) ){
+                method = "," + method.trim().toUpperCase() + ",";
+                if( method.contains(",ANY,") ){
                     method = "*";
-                } else {
-                    method = "," + method.trim().toUpperCase() + ",";
                 }
             }
 
             if ( CatToosUtil.isNotBlank(exception) ) {
-                if( "any".equalsIgnoreCase(exception) ){
+                exception = "," + exception + ",";
+                if( exception.contains(",none,") ){
+                    exception = "";
+                } else if( exception.contains(",any,") || exception.contains(",*,")){
                     exception = "*";
                 } else {
                     for(String ex : exception.split(",")){
-                        Class clazz = Class.forName(ex.trim());
-                        exceptionCode.add(clazz);
+                        if( CatToosUtil.isNotBlank(ex) ){
+                            Class clazz = Class.forName(ex.trim());
+                            exceptionCode.add(clazz);
+                        }
                     }
                 }
             }
 
             if ( CatToosUtil.isNotBlank(tags) ){
-                if( "any".equalsIgnoreCase(tags) ){
+                tags = "," + tags + ",";
+                if( exception.contains(",none,") ){
+                    tags = "";
+                } else if( exception.contains(",any,") || exception.contains(",*,")){
                     tags = "*";
                 } else {
                     for(String tag : tags.split(",")){
-                        tagsCode.add(tag.trim());
+                        if( CatToosUtil.isNotBlank(tag) ){
+                            tagsCode.add(tag.trim());
+                        }
                     }
                 }
             }
 
             if ( CatToosUtil.isNotBlank(note) ){
                 for(String nt : note.split(",")){
-                    noteCode.add(nt.trim());
+                    if( CatToosUtil.isNotBlank(nt) ){
+                        noteCode.add(nt.trim());
+                    }
                 }
             }
 
@@ -206,8 +232,9 @@ public class CatHttpRetryConfigurer implements InitializingBean {
             }
         }
         for ( Map.Entry<String, Object> entry : noteMatchCode.entrySet() ) {
-            Object value = noteMap.get(entry.getKey());
-            if ( value != null && value.toString().equals(entry.getValue())) {
+            Object value = entry.getValue();
+            Object noteValue = noteMap.get(entry.getKey());
+            if ( value != null && noteValue != null && value.equals(noteValue) ) {
                 return true;
             }
         }

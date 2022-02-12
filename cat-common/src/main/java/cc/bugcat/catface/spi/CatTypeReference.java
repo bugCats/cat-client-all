@@ -18,11 +18,11 @@ public abstract class CatTypeReference<T> {
     static ConcurrentMap<Type, Type> classTypeCache
             = new ConcurrentHashMap<Type, Type>(16, 0.75f, 1);
 
-    
+
     protected final Type type;
 
-    
-    
+
+
     /**
      * new JackTypeReference<ResponseEntity<T>>(){};
      */
@@ -31,12 +31,12 @@ public abstract class CatTypeReference<T> {
         type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
     }
 
-    
+
     /**
      * new JackTypeReference<ResponseEntity<T>>(type){};
      */
     protected CatTypeReference(Type... actualTypeArguments) {
-        Class<?> thisClass = this.getClass();
+        Class thisClass = this.getClass();
         Type superClass = thisClass.getGenericSuperclass();
         ParameterizedType argType = (ParameterizedType) ((ParameterizedType) superClass).getActualTypeArguments()[0];
         Type rawType = argType.getRawType();

@@ -27,13 +27,13 @@ public class CatServerUtil implements ApplicationContextAware{
 
     private static ApplicationContext context;
 
-    
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
     }
-    
-    
+
+
     public static <T> T getBean (Class<T> clazz){
         try {
             return context.getBean(clazz);
@@ -59,7 +59,7 @@ public class CatServerUtil implements ApplicationContextAware{
             throw new NoSuchBeanDefinitionException(clazz);
         }
     }
-    
+
     public static ClassLoader getClassLoader(){
         return context.getClassLoader();
     }
@@ -68,7 +68,7 @@ public class CatServerUtil implements ApplicationContextAware{
 
 
     /**
-     * 
+     *
      * */
     public static void visitAnnotation(Annotation[] anns, Function<String, AnnotationVisitor> function){
         if( anns.length > 0 ){
@@ -83,7 +83,7 @@ public class CatServerUtil implements ApplicationContextAware{
             }
         }
     }
-    
+
     public static void visitAnnotation(AnnotationVisitor anv, Map<String, Object> attrMap){
         attrMap.forEach((key, value) -> {
             if( value == null ){
@@ -97,9 +97,8 @@ public class CatServerUtil implements ApplicationContextAware{
         if( value == null ){
             return;
         }
-        Class<?> clazz = value.getClass();
+        Class clazz = value.getClass();
         if( Proxy.isProxyClass(clazz)){// 如果是jdk动态代理
-            
             return;
         }
         String descriptor = Type.getDescriptor(clazz);

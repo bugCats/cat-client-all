@@ -94,7 +94,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         int count = 0;
 
         // 通过class直接注册
-        Class<?>[] classes = annoAttrs.getClassArray("classes");
+        Class[] classes = annoAttrs.getClassArray("classes");
         if( classes.length > 0 ){
             count = count + registerCatClient(classes, registry);
         }
@@ -148,7 +148,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     /**
      * 通过class直接注册
      * */
-    private int registerCatClient(Class<?>[] inters, BeanDefinitionRegistry registry) {
+    private int registerCatClient(Class[] inters, BeanDefinitionRegistry registry) {
         int count = 0;
         for ( Class<?> inter : inters ){
             if( DefineCatClients.class.isAssignableFrom(inter) ){ // interface是CatClients子类，表示使用method批量注册

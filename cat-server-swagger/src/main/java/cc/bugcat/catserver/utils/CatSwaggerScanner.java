@@ -47,7 +47,7 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
             RequestMappingInfo requestMappingInfo = handler.getRequestMapping();
             HandlerMethod handlerMethod = handler.getHandlerMethod();
 
-            Class<?> beanType = handlerMethod.getBeanType();
+            Class beanType = handlerMethod.getBeanType();
             if( CatInterfaceEnhancer.isBridgeClass(beanType) ){
 
                 // gclib创建的ctrl对象

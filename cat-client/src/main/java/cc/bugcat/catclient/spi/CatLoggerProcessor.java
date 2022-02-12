@@ -1,6 +1,7 @@
 package cc.bugcat.catclient.spi;
 
 import cc.bugcat.catclient.handler.CatClientLogger;
+import cc.bugcat.catclient.handler.CatLogsMod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +25,14 @@ public interface CatLoggerProcessor {
     static class Default implements CatLoggerProcessor {
         @Override
         public void printLog(CatClientLogger logger) {
-            if( logger.isFail() ){
-                LOGGER.error(logger.toJson());
+            if ( CatLogsMod.Off.equals(logger.getLogsMod()) ) {
+
             } else {
-                LOGGER.info(logger.toJson());
+                if( logger.isFail() ){
+                    LOGGER.error(logger.toJson());
+                } else {
+                    LOGGER.info(logger.toJson());
+                }
             }
         }
     }
