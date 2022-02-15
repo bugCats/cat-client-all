@@ -1,19 +1,29 @@
 package cc.bugcat.example.catclient.token;
 
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.handler.CatHttpPoint;
+import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.tools.ResponseEntity;
+import com.alibaba.fastjson.JSONObject;
+import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 
-import java.util.Map;
+@Component
+public class TokenInterceptor implements CatMethodSendInterceptor {
 
-public class TokenSendProcessor extends CatSendProcessor {
 
-
+    /**
+     * 使用拦截器修改参数
+     * */
     @Override
-    public void afterVariableResolver(CatSendContextHolder context, CatHttpPoint httpPoint){
+    public void executeVariable(CatSendContextHolder context, CatSendProcessor sendHandler) {
+
+        JSONObject notes = sendHandler.getNotes();
+        CatHttpPoint httpPoint = sendHandler.getHttpPoint();
+
         //使用note，标记是否需要添加签名
         String need = notes.getString("needToken");
 
@@ -23,7 +33,11 @@ public class TokenSendProcessor extends CatSendProcessor {
 
             System.out.println(token);
         }
+
+        sendHandler.postVariableResolver(context);
+        sendHandler.afterVariableResolver(context);
     }
+
 
 
     private static class TokenInfo {
@@ -53,14 +67,17 @@ public class TokenSendProcessor extends CatSendProcessor {
 
     private static class TokenSend extends CatSendProcessor {
 
+        /**
+         * 使用继承CatSendProcessor形式修改参数
+         * */
         @Override
-        public void afterVariableResolver(CatSendContextHolder context, CatHttpPoint httpPoint){
+        public void postVariableResolver(CatSendContextHolder context){
             String pwd = notes.getString("pwd");
             String username = notes.getString("username");
 
-            Map<String, Object> keyValueParam = httpPoint.getKeyValueParam();
-            keyValueParam.put("username", username);
-            keyValueParam.put("pwd", pwd);
+            MultiValueMap<String, Object> keyValueParam = this.getHttpPoint().getKeyValueParam();
+            keyValueParam.add("username", username);
+            keyValueParam.add("pwd", pwd);
         }
     }
 }

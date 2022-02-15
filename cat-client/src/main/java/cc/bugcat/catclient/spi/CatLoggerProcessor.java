@@ -18,24 +18,16 @@ public interface CatLoggerProcessor {
 
 
 
-    void printLog(CatClientLogger logger);
+    default void printLog(CatClientLogger logger) {
+        if ( CatLogsMod.Off.equals(logger.getLogsMod()) ) {
 
-
-
-    static class Default implements CatLoggerProcessor {
-        @Override
-        public void printLog(CatClientLogger logger) {
-            if ( CatLogsMod.Off.equals(logger.getLogsMod()) ) {
-
+        } else {
+            if( logger.isFail() ){
+                LOGGER.error(logger.toJson());
             } else {
-                if( logger.isFail() ){
-                    LOGGER.error(logger.toJson());
-                } else {
-                    LOGGER.info(logger.toJson());
-                }
+                LOGGER.info(logger.toJson());
             }
         }
     }
-
 
 }

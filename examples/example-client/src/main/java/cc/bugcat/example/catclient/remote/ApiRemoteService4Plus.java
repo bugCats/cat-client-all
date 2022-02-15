@@ -12,7 +12,7 @@ import cc.bugcat.catclient.annotation.CatClient;
  * @author: bugcat
  * */
 @CatClient(host = "${core-server.remoteApi}")
-public interface ApiRemote4Ext extends ApiRemote4 {
+public interface ApiRemoteService4Plus extends ApiRemoteService4 {
 
 
 

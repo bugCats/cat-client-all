@@ -1,13 +1,12 @@
 package cc.bugcat.example.catclient.token;
 
+import cc.bugcat.catclient.beanInfos.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
-import cc.bugcat.example.catclient.sign.SignRemote;
+import cc.bugcat.example.dto.Demo;
+import cc.bugcat.example.tools.ResponseEntity;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import cc.bugcat.catclient.utils.CatClientUtil;
-import cc.bugcat.example.dto.Demo;
-import cc.bugcat.example.tools.ResponseEntity;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -17,17 +16,23 @@ public class TokenRemoteTest {
 
     private static TokenRemote remote;
     static {
+        /**
+         * 静态方法调用
+         * 如果使用Spring容器启动，则不需要这些
+         * */
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-
-
-        TokenFactory factory = new TokenFactory();
-        CatClientUtil.registerBean(TokenFactory.class, factory);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         prop.put("demo.username", "bugcat");
         prop.put("demo.pwd", "[密码]");
+
+        CatClientDepend clientDepend = CatClientDepend.builder()
+                .defaultSendInterceptor(new TokenInterceptor())
+                .build();
+
         remote = CatClientBuilders.builder(TokenRemote.class)
+                .clientDepend(clientDepend)
                 .environment(prop)
                 .build();
     }

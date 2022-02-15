@@ -1,9 +1,7 @@
 package cc.bugcat.example.api;
 
 import cc.bugcat.catclient.utils.CatClientBuilders;
-import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.example.api.vi.UserPageVi;
-import cc.bugcat.example.catclient.remote.ApiRemote1;
 import cc.bugcat.example.catclient.serverApi.Config;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;

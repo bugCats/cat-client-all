@@ -18,11 +18,11 @@ import java.util.TreeMap;
 @RestController
 public class SignServerController {
 
-    
+
     /**
-     * 
+     *
      * 参数名字典排序，参数值为空按空字符串处理
-     * 
+     *
      * */
 
     @PostMapping(value = "/cat/sign1")
@@ -31,12 +31,12 @@ public class SignServerController {
         TreeMap<String, String> treeMap = new TreeMap<>();
 
         request.getParameterMap().forEach((key, values) -> {
-            treeMap.put(key, values != null && values.length > 0 ? values[0] : "");
+            treeMap.put(key, values != null && values.length > 0 ? values[0] : null);
         });
-        
+
         System.out.println("sign1 >>> req: " + JSONObject.toJSONString(treeMap));
-        
+
         return ResponseEntity.ok("");
     }
-    
+
 }

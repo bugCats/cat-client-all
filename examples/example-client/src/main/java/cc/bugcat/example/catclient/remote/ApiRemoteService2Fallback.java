@@ -7,13 +7,13 @@ import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
 
 /**
- * 呆毛2，异常plus版
+ * 呆毛2，异常plus版回调类
  *
  * 异常回调类
  *
  * @author: bugcat
  * */
-public class ApiRemote2Error implements ApiRemote2 {
+public class ApiRemoteService2Fallback implements ApiRemoteService2 {
 
 
     @Override
@@ -25,7 +25,7 @@ public class ApiRemote2Error implements ApiRemote2 {
     @Override
     public String demo2(CatSendProcessor send, Demo req) {
         CatSendContextHolder context = CatSendContextHolder.getContextHolder();
-        context.getException().printStackTrace();
+        context.getException().printStackTrace(); //打印异常堆栈
         return "demo2 异常. ApiRemote2Error异常回调类返回";
     }
 

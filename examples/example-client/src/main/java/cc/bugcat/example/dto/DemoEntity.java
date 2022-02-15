@@ -1,26 +1,27 @@
 package cc.bugcat.example.dto;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * 复杂对象，使用form表单提交方式，对象内部不能有Map！
+ * 复杂对象，使用form表单提交方式
  * @author bugcat
  * */
-public class DemoEntity implements Serializable {
+public class DemoEntity {
 
-	
+
 	private Demo data;
-	
+
 	private String str;
 
 	private List<Integer> ints;
-	
+
 	private List<Demo> list;
-	
+
 	public DemoEntity() {
+
 	}
+
 
 	public DemoEntity(Demo data) {
 		this.str = "demo";
@@ -30,10 +31,10 @@ public class DemoEntity implements Serializable {
 	}
 
 
+
 	public List<Integer> getInts() {
 		return ints;
 	}
-
 	public void setInts(List<Integer> ints) {
 		this.ints = ints;
 	}
@@ -41,7 +42,6 @@ public class DemoEntity implements Serializable {
 	public Demo getData() {
 		return data;
 	}
-
 	public void setData(Demo data) {
 		this.data = data;
 	}
@@ -49,7 +49,6 @@ public class DemoEntity implements Serializable {
 	public String getStr() {
 		return str;
 	}
-
 	public void setStr(String str) {
 		this.str = str;
 	}
@@ -57,9 +56,8 @@ public class DemoEntity implements Serializable {
 	public List<Demo> getList() {
 		return list;
 	}
-
 	public void setList(List<Demo> list) {
 		this.list = list;
 	}
-	
+
 }

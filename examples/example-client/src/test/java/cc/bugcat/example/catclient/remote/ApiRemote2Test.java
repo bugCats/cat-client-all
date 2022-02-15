@@ -20,14 +20,18 @@ import java.util.Properties;
  * */
 public class ApiRemote2Test {
 
-    private static ApiRemote2 remote;
+    private static ApiRemoteService2 remote;
     static {
+        /**
+         * 静态方法调用
+         * 如果使用Spring容器启动，则不需要这些
+         * */
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
 
-        remote = CatClientBuilders.builder(ApiRemote2.class)
+        remote = CatClientBuilders.builder(ApiRemoteService2.class)
                 .environment(prop)
                 .build();
     }

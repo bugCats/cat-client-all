@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.*;
  *
  * ApiRemote1、ApiRemote2可以发现，API响应对象统一为 ResponseEntity，使用ResponseEntity将业务响应进行封装，
  *
- * 具体的业务参数，是ResponseEntity一个属性。
+ * 具体的业务参数，是ResponseEntity对象的data属性。
  *
  * 在执行方法之后，还需要根据 ResponseEntity.getErrCode() 判断是否执行成功，
- * ResponseEntity.getDate() 得到具体的业务数据
+ * ResponseEntity.getDate() 得到具体的业务数据。
  *
- * 如果不想这么做，只想获取业务参数，如果发生业务异常，直接抛出就行
+ * 如果不想这么做，只想获取业务参数，如果发生业务异常，直接抛出就行。
  * 可以采用去包装器类版。
  *
  *
@@ -37,10 +37,10 @@ import org.springframework.web.bind.annotation.*;
  * */
 @CatResponesWrapper(ResponseEntityWrapper.class)
 @CatClient(host = "${core-server.remoteApi}")
-public interface ApiRemote3 {
+public interface ApiRemoteService3 {
 
     /**
-     * 对比 ApiRemote1，部分方法响应没有ResponseEntity了, 部分响应改成String类型
+     * 对比 ApiRemoteService2，部分方法响应没有ResponseEntity了, 部分响应改成String类型
      * */
 
 
@@ -48,10 +48,7 @@ public interface ApiRemote3 {
     @CatMethod(value = "/cat/demo1", method = RequestMethod.POST)
     Demo demo1(@RequestBody Demo req);
 
-    /**
-     * @throws Exception  这个会提示异常，interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，
-     *          但是实际上服务端返回的数据类型是 ResponseEntity<Demo>
-     * */
+
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
     String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
 
@@ -62,14 +59,21 @@ public interface ApiRemote3 {
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark);
 
+
     /**
-     * @throws Exception  这个会提示异常，interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，
-     *          但是实际上服务端返回的数据类型是 Demo
+     * 服务端返回Demo，但是interface上添加了@CatResponesWrapper，表示需要拆包。
+     * 客户端拆包后，会自动检查errCode {@link ResponseEntityWrapper#checkValid(cc.bugcat.example.tools.ResponseEntity)}
+     * 此处会抛出异常
+     * @throws Exception
      * */
     @CatMethod(value = "/cat/demo5/{userId}", method = RequestMethod.GET)
     Demo demo5(@PathVariable("userId") Long userId);
 
 
+    /**
+     * 抛出自定义异常
+     * Void为占位符
+     * */
     @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
     Void demo6(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name);
 

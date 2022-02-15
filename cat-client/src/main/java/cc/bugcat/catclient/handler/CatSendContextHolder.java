@@ -2,10 +2,9 @@ package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodInterceptor;
+import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 
 import java.util.List;
 import java.util.UUID;
@@ -77,7 +76,7 @@ public final class CatSendContextHolder {
     private final CatMethodInfo methodInfo;
     private final CatClientFactory clientFactory;
     private final CatHttpRetryConfigurer retryConfigurer;
-    private final CatMethodInterceptor interceptor;
+    private final CatMethodSendInterceptor interceptor;
 
     private CatSendContextHolder(CatSendContextHolderBuilder builder) {
         this.uuid = UUID.randomUUID().toString();
@@ -153,7 +152,7 @@ public final class CatSendContextHolder {
     protected static class CatSendContextHolderBuilder {
         private CatClientInfo clientInfo;
         private CatMethodInfo methodInfo;
-        private CatMethodInterceptor interceptor;
+        private CatMethodSendInterceptor interceptor;
         private CatSendProcessor sendHandler;
         private CatClientFactory clientFactory;
         private CatHttpRetryConfigurer retryConfigurer;
@@ -168,7 +167,7 @@ public final class CatSendContextHolder {
             return this;
         }
 
-        public CatSendContextHolderBuilder interceptor(CatMethodInterceptor interceptor) {
+        public CatSendContextHolderBuilder interceptor(CatMethodSendInterceptor interceptor) {
             this.interceptor = interceptor;
             return this;
         }

@@ -12,7 +12,7 @@ import cc.bugcat.catclient.handler.CatSendProcessor;
  *
  * @author bugcat
  * */
-public interface CatMethodInterceptor {
+public interface CatMethodSendInterceptor {
 
 
 
@@ -34,15 +34,5 @@ public interface CatMethodInterceptor {
         return sendProcessor.postHttpSend();
     }
 
-
-
-
-
-    /**
-     * 默认的拦截器
-     * */
-    public static class DefaultInterceptor implements CatMethodInterceptor {
-
-    }
 
 }

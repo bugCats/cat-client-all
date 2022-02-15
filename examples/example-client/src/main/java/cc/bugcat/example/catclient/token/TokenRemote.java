@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * @author: bugcat
  * */
-@CatClient(host = "${core-server.remoteApi}", factory = TokenFactory.class, connect = 3000, socket = 3000)
+@CatClient(host = "${core-server.remoteApi}", interceptor = TokenInterceptor.class, connect = 3000, socket = 3000)
 public interface TokenRemote {
 
 

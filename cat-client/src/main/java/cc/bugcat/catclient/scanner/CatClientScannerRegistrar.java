@@ -2,38 +2,30 @@ package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
-import cc.bugcat.catclient.handler.DefaultCatClientFactory;
-import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.handler.DefineCatClients;
-import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.handler.CatClientFactorys;
-import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
-import cc.bugcat.catclient.spi.CatMethodInterceptor;
+import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
-import cc.bugcat.catclient.utils.CatRestHttp;
 import cc.bugcat.catface.utils.CatToosUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.support.*;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -45,8 +37,6 @@ import java.util.Set;
  * @author: bugcat
  * */
 public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
-
-
 
     //资源加载器
     private ResourceLoader resourceLoader;
@@ -80,66 +70,44 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * */
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatClient.class.getName()));
 
-        BeanDefinitionBuilder catClientUtilBuilder = BeanDefinitionBuilder.genericBeanDefinition(CatClientUtil.class);
-        registry.registerBeanDefinition(CatClientUtil.beanName, catClientUtilBuilder.getBeanDefinition());
+        // 扫描包路径
+        String[] scanPackages = CatToosUtil.scanPackages(metadata, annoAttrs);
 
-        //全局默认配置
-        Class<? extends CatClientConfiguration> configClass = annoAttrs.getClass("defaults");
-        Component component = AnnotationUtils.findAnnotation(configClass, Component.class);
-        String configBeanName = component != null && CatToosUtil.isNotBlank(component.value()) ? component.value() : CatToosUtil.uncapitalize(configClass.getSimpleName());
-        BeanDefinitionBuilder config = BeanDefinitionBuilder.genericBeanDefinition(configClass);
-        registry.registerBeanDefinition(configBeanName, config.getBeanDefinition());
-
-        //客户端数量
+        // 客户端数量
         int count = 0;
 
         // 通过class直接注册
         Class[] classes = annoAttrs.getClassArray("classes");
-        if( classes.length > 0 ){
-            count = count + registerCatClient(classes, registry);
-        }
-
-        String[] scanPackages = CatToosUtil.scanPackages(metadata, annoAttrs, "value");
+        count = count + registerCatClient(classes, registry);
 
         // 定义扫描对象
         CatClientScanner scanner = new CatClientScanner(registry);
         scanner.setResourceLoader(resourceLoader);
         scanner.addIncludeFilter(new AnnotationTypeFilter(CatClient.class));   //筛选带有@CatClient注解的类
         scanner.scan(scanPackages);
-
-        if( scanner.holders == null ){
-            scanner.holders = new HashSet<>();
-        }
-
-        count = count + scanner.holders.size();
-        for ( BeanDefinitionHolder holder : scanner.holders ){
+        scanner.holders.forEach(holder -> {
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
             beanDefinition(null, definition);
-        }
+        });
 
+        count = count + scanner.holders.size();
         CatLoggerProcessor.LOGGER.info("catclient 客户端数量：" + count );
 
+        BeanRegistry beanRegistry = new BeanRegistry(resourceLoader, registry, scanPackages);
+
         //扫描所有 CatClientFactory 子类
-        ClassPathBeanDefinitionScanner factoryScanner = new ClassPathBeanDefinitionScanner(registry);
-        factoryScanner.setResourceLoader(resourceLoader);
-        factoryScanner.addExcludeFilter(new AssignableTypeFilter(CatClientFactorys.CatClientFactoryDecorator.class));
-        factoryScanner.addExcludeFilter(new AssignableTypeFilter(DefaultCatClientFactory.class));
-        factoryScanner.addIncludeFilter(new AssignableTypeFilter(CatClientFactory.class));
-        factoryScanner.scan(scanPackages);
+        beanRegistry.scannerByClass(CatClientFactory.class, CatClientFactorys.CatClientFactoryDecorator.class);
 
         //扫描所有 CatMethodInterceptor 子类
-        ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
-        interceptorScanner.setResourceLoader(resourceLoader);
-        interceptorScanner.addIncludeFilter(new AssignableTypeFilter(CatMethodInterceptor.class));
-        interceptorScanner.scan(scanPackages);
+        beanRegistry.scannerByClass(CatMethodSendInterceptor.class);
 
-        //扫描所有的 CatHttp 子类
-        ClassPathBeanDefinitionScanner catHttpScanner = new ClassPathBeanDefinitionScanner(registry);
-        catHttpScanner.setResourceLoader(resourceLoader);
-        catHttpScanner.addExcludeFilter(new AssignableTypeFilter(CatRestHttp.class));
-        catHttpScanner.addIncludeFilter(new AssignableTypeFilter(CatHttp.class));
-        catHttpScanner.scan(scanPackages);
+        // CatClientConfiguration全局默认配置
+        beanRegistry.registerBean(annoAttrs.getClass("defaults"));
 
+        // spring 容器
+        beanRegistry.registerBean(CatClientUtil.class);
+
+        beanRegistry.registerBean(CatClientDependFactoryBean.BEAN_NAME, CatClientDependFactoryBean.class);
     }
 
 
@@ -175,13 +143,16 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         return count;
     }
 
-    private void registerClass(CatClient catClient, Class inter, BeanDefinitionRegistry registry){
-        String beanName = CatToosUtil.defaultIfBlank(catClient.value(), CatToosUtil.uncapitalize(inter.getSimpleName()));
+    /**
+     * 注册interface
+     * */
+    private void registerClass(CatClient catClient, Class interfaceClass, BeanDefinitionRegistry registry){
+        String beanName = CatToosUtil.defaultIfBlank(catClient.value(), CatToosUtil.uncapitalize(interfaceClass.getSimpleName()));
         AbstractBeanDefinition definition = null;
         try { definition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName); } catch ( Exception e ) { }
         if( definition == null ){
-            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(inter);
-            definition = builder.getRawBeanDefinition();
+            definition = new GenericBeanDefinition();
+            definition.setBeanClass(interfaceClass);
             registry.registerBeanDefinition(beanName, definition);
         }
         beanDefinition(catClient, definition);
@@ -189,7 +160,9 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
 
 
-
+    /**
+     * 修改CatClientInfoFactoryBean相关依赖配置
+     * */
     private String beanDefinition(CatClient catClient, AbstractBeanDefinition definition){
 
         String interfaceName = definition.getBeanClassName();   //扫描到的interface类名
@@ -204,7 +177,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
          * 只能说[org.springframework.beans.PropertyValue]很强大吧
          * */
 
-
         /**
          * 注册FactoryBean工厂，
          * 自动注入，会根据interface，从Spring容器中获取到对应的组件，这需要FactoryBean支持
@@ -215,12 +187,55 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         definition.getPropertyValues().addPropertyValue("envProp", envProp);
         definition.getPropertyValues().addPropertyValue("interfaceClass", interfaceName);
         definition.getPropertyValues().addPropertyValue("catClient", catClient);
-        definition.setDependsOn(CatClientUtil.beanName);
+        definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
+        definition.setDependsOn(CatClientDependFactoryBean.BEAN_NAME);
         definition.setPrimary(true);
         definition.setLazyInit(true);
-        definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
-
         return interfaceName;
+    }
+
+
+    /**
+     *
+     * */
+    private static class BeanRegistry {
+
+        private final ResourceLoader resourceLoader;
+        private final BeanDefinitionRegistry registry;
+        private final String[] packages;
+
+        private BeanRegistry(ResourceLoader resourceLoader, BeanDefinitionRegistry registry, String[] packages) {
+            this.resourceLoader = resourceLoader;
+            this.registry = registry;
+            this.packages = packages;
+        }
+
+        /**
+         * 注册指定class
+         * */
+        private void registerBean(Class beanClass){
+            registerBean(CatToosUtil.uncapitalize(beanClass.getSimpleName()), beanClass);
+        }
+
+        private void registerBean(String beanName, Class beanClass){
+            AbstractBeanDefinition definition = new GenericBeanDefinition();
+            definition.setBeanClass(beanClass);
+            registry.registerBeanDefinition(beanName, definition);
+        }
+
+
+        /**
+         * 扫描指定class的子类
+         * */
+        private void scannerByClass(Class clazz, Class... excludes){
+            ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
+            interceptorScanner.setResourceLoader(resourceLoader);
+            for ( Class exclude : excludes ) {
+                interceptorScanner.addExcludeFilter(new AssignableTypeFilter(exclude));
+            }
+            interceptorScanner.addIncludeFilter(new AssignableTypeFilter(clazz));
+            interceptorScanner.scan(packages);
+        }
     }
 
 
@@ -230,11 +245,9 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     private static class CatClientScanner extends ClassPathBeanDefinitionScanner {
 
         private Set<BeanDefinitionHolder> holders;
-
         public CatClientScanner(BeanDefinitionRegistry registry) {
             super(registry);
         }
-
 
         @Override
         protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
@@ -258,6 +271,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
             return isCandidate;
         }
     }
+
 
 
 }

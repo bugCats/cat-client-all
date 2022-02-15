@@ -16,26 +16,23 @@ import org.springframework.web.bind.annotation.*;
  *
  * 注意，@CatClient 注解不在这里，而是在子代类上
  *
+ * 如果使用DefineCatClients模式，会根据灵活
+ *
  * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote4Test}
  *
  * @author: bugcat
  * */
 @CatResponesWrapper(ResponseEntityWrapper.class)
-public interface ApiRemote4 {
+public interface ApiRemoteService4 {
 
 
-    /**
-     * 将req序列化成json，再使用post发送字符串。@RequestBody 不能少
-     *
-     * @param req 入参
-     * */
     @CatMethod(value = "/cat/demo1", method = RequestMethod.POST)
     ResponseEntity<Demo> demo1(@RequestBody Demo req);
 
 
     /**
-     * @throws Exception  这个会提示异常，interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，
-     *          但是实际上服务端返回的数据类型是 ResponseEntity<Demo>
+     * interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，但是实际上服务端返回的数据类型是 ResponseEntity<Demo>
+     *     但是此处直接使用String接收，不会报错
      * */
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
     String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);

@@ -1,5 +1,6 @@
 package cc.bugcat.example.catclient.remote;
 
+import cc.bugcat.catclient.beanInfos.CatClientDepend;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatSendProcessor;
@@ -25,12 +26,17 @@ import java.util.Properties;
 public class ApiRemote4Test {
 
 
-    private static ApiRemote4Ext remote;
+    private static ApiRemoteService4Plus remote;
     static {
+        /**
+         * 静态方法调用
+         * 如果使用Spring容器启动，则不需要这些
+         * */
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
+
         CatClientConfiguration configuration = new CatClientConfiguration(){
             @Override
             public int socket() {
@@ -47,9 +53,12 @@ public class ApiRemote4Test {
                 return new CatJacksonResolver();
             }
         };
-        prop.put(CatClientConfiguration.class, configuration);
 
-        remote = CatClientBuilders.builder(ApiRemote4Ext.class)
+        CatClientDepend clientDepend = CatClientDepend.builder()
+                .clientConfig(configuration)
+                .build();
+        remote = CatClientBuilders.builder(ApiRemoteService4Plus.class)
+                .clientDepend(clientDepend)
                 .environment(prop)
                 .build();
     }

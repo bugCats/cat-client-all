@@ -1,5 +1,7 @@
 package cc.bugcat.example.tools;
 
+import cc.bugcat.catclient.handler.CatClientLogger;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
 
@@ -36,8 +38,12 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
         if( ResponseEntity.succ.equals(obj.getErrCode())){
             //正常
         } else {
+            CatSendContextHolder contextHolder = CatSendContextHolder.getContextHolder();
+            CatClientLogger lastCatLog = contextHolder.getSendHandler().getHttpPoint().getLastCatLog();
+            lastCatLog.setErrorMessge("[" + obj.getErrCode() + "]" + obj.getErrMsg());
+
             //业务异常，可以直接继续抛出，在公共的异常处理类中，统一处理
-            throw new RuntimeException("[" + obj.getErrCode() + "]" + obj.getErrMsg());
+            throw new RuntimeException(lastCatLog.getErrorMessge());
         }
     }
 

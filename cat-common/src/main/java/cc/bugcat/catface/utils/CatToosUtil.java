@@ -32,7 +32,7 @@ public class CatToosUtil{
     public final static String INTERFACE_ATTRIBUTES_WRAPPER = "wrapper";
 
     public final static String INTERFACE_ATTRIBUTES_SERVICE_NAME = "serviceName";
-    public final static String INTERFACE_ATTRIBUTES_CLIENT_CONFIGURATION = "clientConfiguration";
+    public final static String INTERFACE_ATTRIBUTES_CLIENT_DEPENDS = "clientDepend";
 
 
     /**
@@ -55,8 +55,8 @@ public class CatToosUtil{
     /**
      * 获取扫描包路径，默认为启动类所在包路径
      */
-    public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs, String annoName) {
-        String[] pkgs = annoAttrs.getStringArray(annoName);
+    public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs) {
+        String[] pkgs = annoAttrs.getStringArray("value");
         if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ) {//如果没有设置扫描包路径，取启动类路径
             StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
             Class stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
@@ -126,7 +126,9 @@ public class CatToosUtil{
     public static String uncapitalize(final String str) {
         return capitalize(str, String::toLowerCase);
     }
-
+    /**
+     * 首字母大写
+     * */
     public static String capitalize(final String str) {
         return capitalize(str, String::toUpperCase);
     }

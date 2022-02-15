@@ -17,9 +17,7 @@ import java.util.*;
  *
  * @author bugcat
  * */
-@Component
 public class CatHttpRetryConfigurer implements InitializingBean {
-
 
     /**
      * 是否开启重连

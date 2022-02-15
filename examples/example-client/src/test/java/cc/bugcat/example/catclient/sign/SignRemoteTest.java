@@ -1,9 +1,9 @@
 package cc.bugcat.example.catclient.sign;
 
+import cc.bugcat.catclient.beanInfos.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.example.dto.DemoDTO;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -20,15 +20,22 @@ public class SignRemoteTest {
 
     private static SignRemote remote;
     static {
+        /**
+         * 静态方法调用
+         * 如果使用Spring容器启动，则不需要这些
+         * */
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
-
-        SignFactory factory = new SignFactory();
-        CatClientUtil.registerBean(SignFactory.class, factory);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
-        prop.put("demo.apikey", "bugcat");
+        prop.put("demo.apikey", "签名示例密钥");
+
+        CatClientDepend clientDepend = CatClientDepend.builder()
+                .defaultClientFactory(new SignFactory())
+                .build();
+
         remote = CatClientBuilders.builder(SignRemote.class)
+                    .clientDepend(clientDepend)
                     .environment(prop)
                     .build();
     }

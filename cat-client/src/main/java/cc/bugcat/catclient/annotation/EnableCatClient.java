@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.annotation;
 
+import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.DefineCatClients;
 import cc.bugcat.catclient.scanner.CatClientScannerRegistrar;
 import cc.bugcat.catclient.config.CatClientConfiguration;
@@ -17,7 +18,7 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(CatClientScannerRegistrar.class)
+@Import({CatHttpRetryConfigurer.class, CatClientScannerRegistrar.class})
 public @interface EnableCatClient {
 
 

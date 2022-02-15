@@ -1,46 +1,55 @@
 package cc.bugcat.example.catclient.sign;
 
-import cc.bugcat.catclient.beanInfos.CatParameter;
+import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catface.utils.CatToosUtil;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class SignSendProcessor extends CatSendProcessor {
 
     private String mk;
 
     @Override
-    public void doVariableResolver(CatSendContextHolder context, CatParameter parameter, CatHttpPoint httpPoint){
+    public void postVariableResolver(CatSendContextHolder context){
+
+        CatHttpPoint httpPoint = super.getHttpPoint();
 
         //使用note，标记是否需要添加签名
         String need = notes.getString("needSign");
-        Map<String, Object> keyValueParam = httpPoint.getKeyValueParam();
+
+        MultiValueMap<String, Object> keyValueParam = httpPoint.getKeyValueParam();
         if( CatToosUtil.isNotBlank(need) && keyValueParam != null && keyValueParam.size() > 0 ){
 
-            TreeMap<String, Object> treeMap = new TreeMap<>(keyValueParam);
+            Set<String> keys = new TreeSet<>(keyValueParam.keySet());
+            MultiValueMap<String, Object> treeMap = new LinkedMultiValueMap<>();
 
             StringBuffer sbr = new StringBuffer();
-            for( Map.Entry<String, Object> entry : treeMap.entrySet()  ){
-                String key = entry.getKey();
-                String value = entry.getValue() != null ? String.valueOf(entry.getValue()) : "";
-                sbr.append(key + "=" + value + "&");
-            }
+            keys.forEach(key -> {
+                Object value = keyValueParam.getFirst(key);
+                treeMap.add(key, value);
+                sbr.append("&" + key + "=" + ( value != null ? value : "" ));
+            });
 
-            // 密钥
-            String apikey = notes.getString("apikey");
+            /**
+             * 密钥
+             * demo11 从环境配置中获取
+             * demo12 从入参中获取
+             * */
+            String apikey = notes.getString("apikey"); //
 
-            String md5 = sbr.append("[" + apikey + "]").toString(); //没有引入加密工具类，假设已经加密了
-            treeMap.put("sign", md5);
-            System.out.println(md5);
+            String md5 = "@md5{" + apikey + "#" + sbr.deleteCharAt(0).toString() + "}"; //没有引入加密工具类，假设已经加密了
+            treeMap.add("sign", md5);
+
+            System.out.println("sign=>" + md5);
 
             httpPoint.setKeyValueParam(treeMap);
 
             // 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
-
         }
     }
 

@@ -22,6 +22,7 @@ public class CatServerInfo {
 
 
     private CatServerInfo(CatServer catServer, Map<String, Object> interfaceAttributes) {
+
         this.handers = catServer.handers();
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
@@ -35,12 +36,13 @@ public class CatServerInfo {
     }
 
 
-    public final static CatServerInfo buildServerInfo(Class serverClass) {
-        CatServer catServer = (CatServer) serverClass.getAnnotation(CatServer.class);
+    public final static CatServerInfo build(Class<?> serverClass) {
+        CatServer catServer = serverClass.getAnnotation(CatServer.class);
         Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(serverClass);
         CatServerInfo serverInfo = new CatServerInfo(catServer, interfaceAttributes);
         return serverInfo;
     }
+
 
 
     public Class getWarpClass() {

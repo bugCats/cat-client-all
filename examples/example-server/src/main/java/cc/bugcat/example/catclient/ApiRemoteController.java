@@ -22,13 +22,13 @@ import java.util.List;
 
 
 /**
- * 供 example-server 模块调用
+ * 供 example-client 模块调用
  * */
 @Api(tags = "服务端API - 一般场景")
 @RestController
-public class NomalServerController {
+public class ApiRemoteController {
 
-    
+
     @PostMapping(value = "/cat/demo1")
     public ResponseEntity<Demo> demo11(@Valid @RequestBody Demo req){
         System.out.println("demo1 >>> req: " + JSONObject.toJSONString(req));
@@ -43,9 +43,9 @@ public class NomalServerController {
         Demo resp = creart();
         return ResponseEntity.ok(resp);
     }
-    
-    
-    
+
+
+
     @GetMapping("/cat/demo3")
     public ResponseEntity<PageInfo<Demo>> demo13(@ModelAttribute Demo req){
 
@@ -55,14 +55,14 @@ public class NomalServerController {
         resp.setId(req.getId());
         List<Demo> list = new ArrayList<>();
         list.add(resp);
-        
+
         PageInfo<Demo> info = new PageInfo(1, 10, 1);
         info.setList(list);
-        
+
         return ResponseEntity.ok(info);
     }
 
-    
+
     @GetMapping("/cat/demo4")
     public ResponseEntity<Demo> demo14(String name, String mark){
 
@@ -82,7 +82,7 @@ public class NomalServerController {
         resp.setId(userId); //这个会提示异常
         return resp;
     }
-    
+
 
 
     @GetMapping("/cat/demo6/{userId}")
@@ -92,7 +92,7 @@ public class NomalServerController {
     }
 
 
-    
+
 
     @GetMapping("/cat/demo7")
     public ResponseEntity<Demo> demo17(String name){
@@ -101,8 +101,8 @@ public class NomalServerController {
         resp.setMark("正常拆包转器类");
         return ResponseEntity.ok(resp);
     }
-    
-    
+
+
 
     // 模拟服务器发生异常，测试异常回调
     @PostMapping(value = "/cat/demo21")
@@ -114,16 +114,16 @@ public class NomalServerController {
         Demo demo = creart();
         return ResponseEntity.ok(demo);
     }
-    
-    
+
+
     // 实际使用post访问，测试异常回调
     @GetMapping(value = "/cat/demo22")
     String demo2(Demo req) {
         return "";
     }
 
-    
-    
+
+
 
     private Demo creart(){
         Demo demo = new Demo();

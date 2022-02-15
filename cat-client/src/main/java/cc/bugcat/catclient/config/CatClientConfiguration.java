@@ -21,7 +21,7 @@ public class CatClientConfiguration {
     // 初始值
     public static final Class wrapper = AbstractResponesWrapper.Default.class;
     public static final Class factory = CatClientFactory.class;
-    public static final Class methodInterceptor = CatMethodInterceptor.class;
+    public static final Class methodInterceptor = CatMethodSendInterceptor.class;
     public static final CatLogsMod logsMod = CatLogsMod.Def;
     public static final int socket = 0;
     public static final int connect = 0;
@@ -69,7 +69,7 @@ public class CatClientConfiguration {
     /**
      * 默认的拦截器
      * */
-    public Class<? extends CatMethodInterceptor> methodInterceptor(){
+    public Class<? extends CatMethodSendInterceptor> methodInterceptor(){
         return methodInterceptor;
     }
 
@@ -93,7 +93,7 @@ public class CatClientConfiguration {
      * 默认日志打印
      * */
     public CatLoggerProcessor loggerProcessor(){
-        return new CatLoggerProcessor.Default();
+        return new CatLoggerProcessor(){};
     }
 
 }

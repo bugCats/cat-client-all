@@ -16,7 +16,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 @ComponentScan("springfox.documentation")
 public class SwaggerConfig {
-    
+
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder().title("bugcat").description("bugcat")
                 .termsOfServiceUrl("").version("1.0").build();
@@ -27,20 +27,20 @@ public class SwaggerConfig {
                 .apiInfo(apiInfo())
                 .select()
                 .apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
-                
+
 //                /**
 //                 * 如果把 @Api 放在interface上，并且需要兼容RequestHandlerSelectors.withClassAnnotation(Api.class)
 //                 * apis方法需要改成这样
 //                 * */
 //                .apis(input -> {
-//                    Class<?> beanType = input.getHandlerMethod().getBeanType();
+//                    Class beanType = input.getHandlerMethod().getBeanType();
 //                    return beanType.isAnnotationPresent(Api.class) || beanType.isAnnotationPresent(CatServer.class);
 //                })
-                
+
                 .paths(PathSelectors.any())
                 .build();
     }
-    
-    
-    
+
+
+
 }

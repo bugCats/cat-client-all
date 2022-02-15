@@ -13,23 +13,25 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**
  *
  * 呆毛2，异常plus版
+ * 增加了fallback，如果发生http异常，会执行ApiRemoteService2Fallback对应的方法
+ *
  * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote2Test}
  *
  * @author: bugcat
  * */
-@CatClient(host = "${core-server.remoteApi}", fallback = ApiRemote2Error.class)
-public interface ApiRemote2 {
+@CatClient(host = "${core-server.remoteApi}", fallback = ApiRemoteService2Fallback.class)
+public interface ApiRemoteService2 {
 
     /**
-     * ApiRemote2Error 异常处理类
+     * ApiRemoteService2Fallback 异常处理类
      *
      * 在呆毛1 ApiRemote1.demo9 可以看到，如果发生了http异常（40x、50x等），有一个全局的异常提示
      *
      * 如果需要精确到指定的方法、返回不同的异常提示，可以采用异常plus版
      *
-     * fallback = ApiRemote2Error.class
+     * fallback = ApiRemoteService2Fallback.class
      *
-     * 其中，ApiRemote2Error 必须实现了 ApiRemote2 接口
+     * 其中，ApiRemoteService2Fallback 必须实现了 ApiRemoteService2 接口
      *
      * */
 

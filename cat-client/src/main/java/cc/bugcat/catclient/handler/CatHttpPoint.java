@@ -3,10 +3,7 @@ package cc.bugcat.catclient.handler;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 当前http请求的相关入参
@@ -15,6 +12,11 @@ import java.util.Map;
  * */
 public class CatHttpPoint {
 
+
+    /**
+     * 其他额外参数
+     * */
+    private Map<String, Object> attributes = new HashMap<>();
 
     /**
      * 因为有重连机制，所有可能有多组日志
@@ -68,6 +70,14 @@ public class CatHttpPoint {
 
 
 
+
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
 
     public void addCatLog(CatClientLogger catLog){
         catLogs.add(catLog);

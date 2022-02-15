@@ -6,7 +6,7 @@ import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodInterceptor;
+import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
@@ -59,7 +59,7 @@ public @interface CatClient {
     /**
      * http发送拦截器
      * */
-    Class<? extends CatMethodInterceptor> interceptor() default CatMethodInterceptor.class;
+    Class<? extends CatMethodSendInterceptor> interceptor() default CatMethodSendInterceptor.class;
 
 
     /**

@@ -20,7 +20,7 @@ public class CatClientFactorys {
 
 
 
-    public static CatClientFactory factoryDecorator(CatClientFactory factory){
+    public static CatClientFactory decorator(CatClientFactory factory){
         return new CatClientFactoryDecorator(factory);
     }
 
@@ -37,7 +37,7 @@ public class CatClientFactorys {
         private final CatJsonResolver jsonResolver;
         private final CatHttp catHttp;
 
-        public CatClientFactoryDecorator(CatClientFactory bridge) {
+        private CatClientFactoryDecorator(CatClientFactory bridge) {
             this.bridge = bridge;
             this.catHttp = bridge.getCatHttp();
             this.loggerProcessor = bridge.getLoggerProcessor();

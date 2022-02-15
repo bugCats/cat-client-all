@@ -11,16 +11,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
- * spring容器工具类
+ * spring 容器
  * @author bugcat
  * */
 public class CatClientUtil implements ApplicationContextAware {
 
-    public static final String beanName = "catClientUtil";
 
     public static final Pattern keyPat1 = Pattern.compile("^\\$\\{(.+)\\}$");
     public static final Pattern keyPat2 = Pattern.compile("^\\#\\{(.+)\\}$");
+
 
     private static Map<Class, Object> catClinetMap = new ConcurrentHashMap<>(); //自定义组件容器
     private static ApplicationContext context;
@@ -33,10 +34,6 @@ public class CatClientUtil implements ApplicationContextAware {
         }
     }
 
-
-    public static ApplicationContext getApplicationContext() {
-        return context;
-    }
 
 
     /**
@@ -75,20 +72,17 @@ public class CatClientUtil implements ApplicationContextAware {
     }
 
 
+
     /**
      * catClinetMap注册bean
      * */
-    public static void registerBean(Class type, Object bean){
+    public void registerBean(Object bean){
+        catClinetMap.putIfAbsent(bean.getClass(), bean);
+    }
+
+    protected static void registerBean(Class type, Object bean){
         catClinetMap.putIfAbsent(type, bean);
     }
-
-    /**
-     * catClinetMap刷新bean
-     * */
-    public static void refreshBean(Class type, Object bean){
-        catClinetMap.put(type, bean);
-    }
-
 
     /**
      * catClinetMap是否包含
@@ -96,9 +90,7 @@ public class CatClientUtil implements ApplicationContextAware {
     public static boolean contains(Class key) {
         return catClinetMap.containsKey(key);
     }
-    public static boolean notContains(Class key) {
-        return !contains(key);
-    }
+
 
 
     /**
@@ -107,6 +99,8 @@ public class CatClientUtil implements ApplicationContextAware {
     public static Properties envProperty(Environment environment){
         return new EnvironmentProperty(environment);
     }
+
+
 
     /**
      * 适配自定义环境变量为Properties
@@ -151,6 +145,8 @@ public class CatClientUtil implements ApplicationContextAware {
             return value == null ? key : value;
         }
     }
+
+
 
     /**
      * spring环境参数

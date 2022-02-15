@@ -22,13 +22,18 @@ import java.util.Properties;
 public class ApiRemote3Test {
 
 
-    private static ApiRemote3 remote;
+    private static ApiRemoteService3 remote;
     static {
+        /**
+         * 静态方法调用
+         * 如果使用Spring容器启动，则不需要这些
+         * */
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
-        remote = CatClientBuilders.builder(ApiRemote3.class)
+
+        remote = CatClientBuilders.builder(ApiRemoteService3.class)
                 .environment(prop)
                 .build();
     }
@@ -36,7 +41,7 @@ public class ApiRemote3Test {
 
     /**
      *
-     * 服务端代码 {@link cc.bugcat.example.catclient.NomalServerController}
+     * 服务端代码 {@link cc.bugcat.example.catclient.ApiRemoteController}
      *
      * 注意controller返回对象, demo1~demo4均为ResponseEntity, 但是在本示例中, 直接使用泛型对象接收
      *
@@ -93,10 +98,16 @@ public class ApiRemote3Test {
         System.out.println(JSONObject.toJSONString(resp2));
     }
 
-
+    /**
+     *
+     * */
     @Test
     public void demo5() throws Exception {
-        //controller响应Demo, 示例中直接使用Demo接收
+        /**
+         * 服务端返回Demo，但是interface上添加了@CatResponesWrapper，表示需要拆包。
+         * 客户端拆包后，会自动检查errCode {@link ResponseEntityWrapper#checkValid(cc.bugcat.example.tools.ResponseEntity)}
+         * 此处会抛出异常
+         * */
         Demo resp1 = remote.demo5(System.currentTimeMillis());
         System.out.println(JSONObject.toJSONString(resp1));
 
@@ -109,14 +120,19 @@ public class ApiRemote3Test {
     public void demo6() throws Exception {
         CatSendProcessor sendHandler = new CatSendProcessor();
 
-        //controller响应ResponseEntity<Void>, 示例使用Void接收, 表示无业务参数
+        /**
+         * controller响应ResponseEntity<Void>, 示例使用Void接收, 表示无业务参数
+         * 抛出自定义异常
+         * */
         Void nul = remote.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
     }
 
 
     @Test
     public void demo9() throws Exception {
-        // 默认异常
+        /**
+         * 模拟发生http异常
+         * */
         String resp = remote.demo9();
         System.out.println(JSONObject.toJSONString(resp));
     }

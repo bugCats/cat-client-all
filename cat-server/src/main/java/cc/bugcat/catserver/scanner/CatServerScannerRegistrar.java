@@ -56,7 +56,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         log.info("catServer 服务端启用...");
 
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(metadata.getAnnotationAttributes(EnableCatServer.class.getName()));
-        String[] pkgs = CatToosUtil.scanPackages(metadata, annoAttrs, "value");
+        String[] pkgs = CatToosUtil.scanPackages(metadata, annoAttrs);
 
         BeanDefinitionBuilder catServerUtil = BeanDefinitionBuilder.genericBeanDefinition(CatServerUtil.class);
         String catServerUtilBeanName = CatToosUtil.uncapitalize(CatServerUtil.class.getSimpleName());
@@ -86,20 +86,22 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         scanner.scan(pkgs);
 
         log.info("catServer 服务端数量：" + servers.size() );
-        BeanDefinitionBuilder catServerInitBean = BeanDefinitionBuilder.genericBeanDefinition(CatServerInitBean.class);
+
+        BeanDefinitionBuilder catServerInitBean = BeanDefinitionBuilder.genericBeanDefinition(CatServerFactoryBean.class);
         catServerInitBean.addConstructorArgValue(servers);
-        registry.registerBeanDefinition(CatToosUtil.uncapitalize(CatServerInitBean.class.getSimpleName()), catServerInitBean.getBeanDefinition());
+        registry.registerBeanDefinition(CatToosUtil.uncapitalize(CatServerFactoryBean.class.getSimpleName()), catServerInitBean.getBeanDefinition());
 
 
         try {
             // swagger扫描
-            Class swagger = Class.forName("cc.bugcat.catserver.utils.CatSwaggerScanner");
+            Class swagger = resourceLoader.getClassLoader().loadClass("cc.bugcat.catserver.utils.CatSwaggerScanner");
             BeanDefinitionBuilder catProvider = BeanDefinitionBuilder.genericBeanDefinition(swagger);
             catProvider.getBeanDefinition().setPrimary(true);
             registry.registerBeanDefinition(CatToosUtil.uncapitalize(swagger.getSimpleName()), catProvider.getBeanDefinition());
         } catch ( Exception e ) {
 
         }
+
     }
 
 

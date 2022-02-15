@@ -2,14 +2,9 @@ package cc.bugcat.catclient.utils;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
-import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.CatClientFactorys;
 import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.beanInfos.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatHttp;
-import cc.bugcat.catclient.spi.CatMethodInterceptor;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -42,16 +37,13 @@ public abstract class CatClientBuilders {
 
 
 
-
     public static final class CatClientBuilder<T> {
 
         private Class<T> interfaceClass;
         private Properties properties;
+        private CatClientDepend clientDepend;
         private CatClient catClient;
 
-        static {
-            Inner.noop();
-        }
         private CatClientBuilder() { }
 
         public static <T> CatClientBuilder<T> builder(Class<T> interfaceClass){
@@ -78,6 +70,11 @@ public abstract class CatClientBuilders {
             return this;
         }
 
+        public CatClientBuilder<T> clientDepend(CatClientDepend clientDepend) {
+            this.clientDepend = clientDepend;
+            return this;
+        }
+
         public CatClientBuilder<T> catClient(CatClient catClient){
             this.catClient = catClient;
             return this;
@@ -91,7 +88,7 @@ public abstract class CatClientBuilders {
                 catClient = interfaceClass.getAnnotation(CatClient.class);
             }
 
-            T bean = (T) buildClinet(interfaceClass, catClient, properties);
+            T bean = (T) buildClinet(interfaceClass, catClient, clientDepend, properties);
             return bean;
         }
     }
@@ -101,11 +98,9 @@ public abstract class CatClientBuilders {
 
         private Class<? extends DefineCatClients> defineClients;
         private Properties properties;
+        private CatClientDepend clientDepend;
         private Predicate<Class> filter;
 
-        static {
-            Inner.noop();
-        }
         public DefineCatClientBuilder() { }
 
         public static DefineCatClientBuilder builder(Class<? extends DefineCatClients> defineClients){
@@ -117,6 +112,12 @@ public abstract class CatClientBuilders {
             this.properties = properties;
             return this;
         }
+
+        public DefineCatClientBuilder clientDepend(CatClientDepend clientDepend) {
+            this.clientDepend = clientDepend;
+            return this;
+        }
+
         public DefineCatClientBuilder filter(Predicate<Class> filter){
             this.filter = filter;
             return this;
@@ -139,7 +140,7 @@ public abstract class CatClientBuilders {
                 }
                 Class clazz = method.getReturnType();
                 if( filter.test(clazz) ){
-                    Object value = buildClinet(clazz, catClient, properties);
+                    Object value = buildClinet(clazz, catClient, clientDepend, properties);
                     clientMap.put(clazz, value);
                 }
             }
@@ -148,54 +149,22 @@ public abstract class CatClientBuilders {
     }
 
 
-    private static Object buildClinet(Class interfaceClass, CatClient catClient, Properties properties){
+    private static Object buildClinet(Class interfaceClass, CatClient catClient, CatClientDepend clientDepend, Properties properties){
         if( CatClientUtil.contains(interfaceClass) ){
             return CatClientUtil.getBean(interfaceClass);
         }
         Properties envProp = CatClientUtil.envProperty(properties);
-        CatClientConfiguration config = CatClientUtil.getBean(CatClientConfiguration.class);
-        if( config != null && CatClientUtil.notContains(config.getClass())){
-            CatClientUtil.refreshBean(config.getClass(), config);
+        if( clientDepend == null ){
+            clientDepend = CatClientUtil.getBean(CatClientDepend.class);
+            if( clientDepend == null ){
+                clientDepend = CatClientDepend.builder().build();
+            }
         }
-        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, config, envProp);
+        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend, envProp);
         Object bean = CatClientInfoFactoryBean.createCatClient(interfaceClass, clientInfo, envProp);
         CatClientUtil.registerBean(interfaceClass, bean);
         return bean;
     }
-
-
-
-    /**
-     * 如果使用main方法执行，需要初始化加载一些bean
-     * */
-    private static class Inner {
-
-        static {
-
-            if( CatClientUtil.getApplicationContext() == null ){
-
-                CatClientConfiguration config = new CatClientConfiguration();
-                CatClientUtil.registerBean(CatClientConfiguration.class, config);
-
-                CatHttp http = config.catHttp();
-                CatClientUtil.registerBean(CatHttp.class, http);
-
-                CatClientFactory factory = CatClientFactorys.defaultClientFactory();
-                factory.setClientConfiguration(config);
-                CatClientUtil.registerBean(CatClientFactory.class, factory);
-
-                CatMethodInterceptor interceptor = new CatMethodInterceptor.DefaultInterceptor();
-                CatClientUtil.registerBean(CatMethodInterceptor.class, interceptor);
-
-                CatHttpRetryConfigurer retry = new CatHttpRetryConfigurer();
-                try { retry.afterPropertiesSet(); } catch ( Exception e ) { }
-                CatClientUtil.registerBean(CatHttpRetryConfigurer.class, retry);
-            }
-        }
-
-        private static final void noop(){}
-    }
-
 
 
 }

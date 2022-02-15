@@ -32,26 +32,17 @@ import java.util.function.IntFunction;
  * 将动态生成的interface实现类，注册成Controller
  * @author: bugcat
  * */
-public class CatServerInitBean implements InitializingBean{
-
-
-    private final static MethodInterceptor defaults = new MethodInterceptor() {
-        @Override
-        public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-            return methodProxy.invokeSuper(target, args);
-        }
-    };
-
-
+public class CatServerFactoryBean implements InitializingBean{
 
     private final Set<Class> servers;
     private Map<Class, CatAsmResult> ctrlCacheMap;
 
 
-    public CatServerInitBean(Set<Class> servers){
+    public CatServerFactoryBean(Set<Class> servers){
         this.servers = servers;
         this.ctrlCacheMap = new HashMap<>(servers.size() * 2);
     }
+
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -63,7 +54,6 @@ public class CatServerInitBean implements InitializingBean{
         List<CtrlFactory> factories = new ArrayList<>(servers.size());
         for(Class serverClass : servers){
             CtrlFactory info = new CtrlFactory(serverClass);
-            info.parse();
             factories.add(info);
         }
 
@@ -82,8 +72,10 @@ public class CatServerInitBean implements InitializingBean{
             Catface catface = serverInfo.getCatface();
 
             for(Method method : factory.bridgeMethods ){
+
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
                 Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.REQUEST_MAPPING);
+
                 if( serverInfo.isCatface() ){
                     attrs = new HashMap<>();
                     attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method.getDeclaringClass().getSimpleName(), method)});
@@ -112,26 +104,21 @@ public class CatServerInitBean implements InitializingBean{
 
     private final class CtrlFactory implements Comparable<CtrlFactory> {
 
-        private final Class serverClass;
-
         private CatServerInfo serverInfo;
-        private int level = 0;  //继承关系：如果是子类，那么level比父类大，排在后面
+
+        //继承关系：如果是子类，那么level比父类大，排在后面
+        private int level = 0;
+
+        // 通过动态代理生成的ctrl对象
         private Object ctrl;
+
+        // ctrl的方法，与原serverClass方法映射
         private Set<Method> bridgeMethods = new HashSet<>();
 
-        private CtrlFactory(Class serverClass) {
-            this.serverClass = serverClass;
-        }
 
-        @Override
-        public int compareTo(CtrlFactory info) {
-            return level - info.level;
-        }
-
-        private void parse() throws Exception {
-
-            serverInfo = CatServerInfo.buildServerInfo(serverClass);
-            ctrl = createCatCtrl(serverClass, serverInfo);
+        private CtrlFactory(Class serverClass) throws Exception {
+            this.serverInfo = CatServerInfo.build(serverClass);
+            this.ctrl = createCatCtrl(serverClass, serverInfo);
 
             for (Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass() ) {
                 level = level + 1;
@@ -148,6 +135,13 @@ public class CatServerInitBean implements InitializingBean{
                 }
             }
         }
+
+
+        @Override
+        public int compareTo(CtrlFactory info) {
+            return level - info.level;
+        }
+
     }
 
 
@@ -198,6 +192,13 @@ public class CatServerInitBean implements InitializingBean{
         }
         // 此时thisInters中，全部为增强后的扩展interface
 
+
+        MethodInterceptor defaults = new MethodInterceptor() {
+            @Override
+            public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+                return methodProxy.invokeSuper(target, args);
+            }
+        };
 
         CatMethodInterceptorBuilder builder = CatMethodInterceptorBuilder.builder();
         builder.serverInfo(serverInfo).serverClass(serverClass);

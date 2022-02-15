@@ -282,13 +282,15 @@ public final class CatInterfaceEnhancer implements Opcodes{
     private static String className(Class inter){
         return inter.getName() + CatToosUtil.BRIDGE_NAME;
     }
+
     public static String transformReturn(String desc){
-        if( desc != null && desc.endsWith(")V") ){
+        if( desc != null && desc.endsWith(")V") ){ //方法返回参数为void，修改成Void
             return desc.replace(")V", ")Ljava/lang/Void;");
         } else {
             return desc;
         }
     }
+
     public static boolean isBridgeClass(Class clazz){
         return clazz != null && clazz.getSimpleName().contains(CatToosUtil.BRIDGE_NAME);
     }

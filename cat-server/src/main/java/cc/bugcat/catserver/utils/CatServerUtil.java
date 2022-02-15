@@ -21,23 +21,26 @@ import java.util.function.Function;
  *
  * @author bugcat
  * */
-@ComponentScan("cc.bugcat.catserver")
 public class CatServerUtil implements ApplicationContextAware{
 
+    public static final String beanName = "catServerUtil";
 
     private static ApplicationContext context;
 
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        context = applicationContext;
+    public synchronized void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        if ( context == null ) {
+            context = applicationContext;
+        }
     }
+
 
 
     public static <T> T getBean (Class<T> clazz){
         try {
             return context.getBean(clazz);
-        } catch ( Exception e ) {
+        } catch ( Exception ex ) {
             Map<String, T> beans = context.getBeansOfType(clazz);
             if( beans.size() == 1 ){
                 return beans.values().iterator().next();
@@ -59,6 +62,8 @@ public class CatServerUtil implements ApplicationContextAware{
             throw new NoSuchBeanDefinitionException(clazz);
         }
     }
+
+
 
     public static ClassLoader getClassLoader(){
         return context.getClassLoader();
