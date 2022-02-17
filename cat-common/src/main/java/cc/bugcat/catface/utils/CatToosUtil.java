@@ -25,14 +25,12 @@ import java.util.function.Function;
 
 public class CatToosUtil{
 
-    public static final String BRIDGE_NAME = "$bugcat$";
-    public static final String REQUEST_MAPPING = RequestMapping.class.getName();
 
     public final static String INTERFACE_ATTRIBUTES_CATFACE = "catface";
     public final static String INTERFACE_ATTRIBUTES_WRAPPER = "wrapper";
 
     public final static String INTERFACE_ATTRIBUTES_SERVICE_NAME = "serviceName";
-    public final static String INTERFACE_ATTRIBUTES_CLIENT_DEPENDS = "clientDepend";
+    public final static String INTERFACE_ATTRIBUTES_DEPENDS = "interfaceDepend";
 
 
     /**
@@ -54,7 +52,7 @@ public class CatToosUtil{
 
     /**
      * 获取扫描包路径，默认为启动类所在包路径
-     */
+     * */
     public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs) {
         String[] pkgs = annoAttrs.getStringArray("value");
         if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ) {//如果没有设置扫描包路径，取启动类路径
@@ -68,7 +66,7 @@ public class CatToosUtil{
 
     /**
      * 按顺序，获取第一个有效的注解value值
-     */
+     * */
     public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns) {
         for ( Class clazz : anns ) {
             Annotation annotation = element.getAnnotation(clazz);
@@ -120,12 +118,14 @@ public class CatToosUtil{
         return objectDefaultMethod.contains(sign);
     }
 
+
     /**
      * 首字母小写
-     */
+     * */
     public static String uncapitalize(final String str) {
         return capitalize(str, String::toLowerCase);
     }
+
     /**
      * 首字母大写
      * */
@@ -149,7 +149,7 @@ public class CatToosUtil{
 
     /**
      * 是否为基础数据类型
-     */
+     * */
     public static boolean isSimpleClass(Class clz) {
         if ( clz.isPrimitive() || clz == String.class ) {
             return true;
@@ -165,9 +165,8 @@ public class CatToosUtil{
 
     /**
      * 方法签名：
-     *
      * @return method.name([parameterType, parameterType])
-     */
+     * */
     public static String signature(Method method) {
         StringBuilder sbr = new StringBuilder(300);
         Type[] types = method.getGenericParameterTypes();
@@ -212,7 +211,7 @@ public class CatToosUtil{
 
     public static String getDefaultRequestUrl(Catface catface, String serviceName, Method method) {
         String namespace = "";
-        String aliasValue = CatToosUtil.uncapitalize(serviceName).replace(BRIDGE_NAME, "");
+        String aliasValue = CatToosUtil.uncapitalize(serviceName);
         if ( catface != null ) {
             namespace = CatToosUtil.isBlank(catface.namespace()) ? "" : "/" + catface.namespace();
             aliasValue = CatToosUtil.isBlank(catface.value()) ? aliasValue : catface.value();

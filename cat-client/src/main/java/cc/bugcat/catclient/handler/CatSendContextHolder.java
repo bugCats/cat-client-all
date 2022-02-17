@@ -74,7 +74,7 @@ public final class CatSendContextHolder {
     private final CatSendProcessor sendHandler;
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
-    private final CatClientFactory clientFactory;
+    private final CatClientFactoryDecorator factoryDecorator;
     private final CatHttpRetryConfigurer retryConfigurer;
     private final CatMethodSendInterceptor interceptor;
 
@@ -84,7 +84,7 @@ public final class CatSendContextHolder {
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
         this.interceptor = builder.interceptor;
-        this.clientFactory = builder.clientFactory;
+        this.factoryDecorator = builder.factoryDecorator;
         this.retryConfigurer = builder.retryConfigurer;
     }
 
@@ -112,7 +112,7 @@ public final class CatSendContextHolder {
     protected void printLog() {
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
         List<CatClientLogger> catLogs = httpPoint.getCatLogs();
-        catLogs.forEach(catLog -> clientFactory.getLoggerProcessor().printLog(catLog));
+        catLogs.forEach(catLog -> factoryDecorator.getLoggerProcessor().printLog(catLog));
     }
 
 
@@ -134,8 +134,8 @@ public final class CatSendContextHolder {
     public CatMethodInfo getMethodInfo() {
         return methodInfo;
     }
-    public CatClientFactory getClientFactory() {
-        return clientFactory;
+    public CatClientFactoryDecorator getFactoryDecorator() {
+        return factoryDecorator;
     }
     public CatHttpRetryConfigurer getRetryConfigurer() {
         return retryConfigurer;
@@ -154,7 +154,7 @@ public final class CatSendContextHolder {
         private CatMethodInfo methodInfo;
         private CatMethodSendInterceptor interceptor;
         private CatSendProcessor sendHandler;
-        private CatClientFactory clientFactory;
+        private CatClientFactoryDecorator factoryDecorator;
         private CatHttpRetryConfigurer retryConfigurer;
 
         public CatSendContextHolderBuilder clientInfo(CatClientInfo clientInfo) {
@@ -177,8 +177,8 @@ public final class CatSendContextHolder {
             return this;
         }
 
-        public CatSendContextHolderBuilder clientFactory(CatClientFactory clientFactory) {
-            this.clientFactory = clientFactory;
+        public CatSendContextHolderBuilder factoryDecorator(CatClientFactoryDecorator factoryDecorator) {
+            this.factoryDecorator = factoryDecorator;
             return this;
         }
 

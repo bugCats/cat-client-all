@@ -1,6 +1,6 @@
 package cc.bugcat.example.catclient.token;
 
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.ResponseEntity;

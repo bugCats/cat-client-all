@@ -113,7 +113,7 @@ public class CatSendProcessor {
      * */
     public void afterVariableResolver(CatSendContextHolder context){
 
-        CatJsonResolver jsonResolver = context.getClientFactory().getJsonResolver();
+        CatJsonResolver jsonResolver = context.getFactoryDecorator().getJsonResolver();
         CatMethodInfo methodInfo = context.getMethodInfo();
 
         Object value = httpPoint.getObjectParam();
@@ -165,7 +165,7 @@ public class CatSendProcessor {
         long start = System.currentTimeMillis();
 
         CatMethodInfo methodInfo = context.getMethodInfo();
-        CatClientFactory clientFactory = context.getClientFactory();
+        CatClientFactoryDecorator factoryDecorator = context.getFactoryDecorator();
 
         CatClientLogger catLog = new CatClientLogger();
         catLog.setUuid(context.getUuid());
@@ -176,7 +176,7 @@ public class CatSendProcessor {
 
         String respStr = null;
         try {
-            respStr = clientFactory.getCatHttp().doHttp(httpPoint, catLog);
+            respStr = factoryDecorator.getCatHttp().doHttp(httpPoint, catLog);
         } catch ( CatHttpException ex ) {
             catLog.setException(ex);
             throw ex;

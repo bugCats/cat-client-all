@@ -7,12 +7,14 @@ import cc.bugcat.catclient.spi.*;
 import cc.bugcat.catclient.utils.CatRestHttp;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 
 /**
  * 全局默认值
  *
- * {@link EnableCatClient#defaults()}
+ * {@link EnableCatClient#configuration()}
  *
  * @author bugcat
  * */
@@ -76,24 +78,27 @@ public class CatClientConfiguration {
     /**
      * 默认http类
      * */
-    public CatHttp catHttp(){
-        return new CatRestHttp();
+    public Supplier<CatHttp> catHttp(){
+        final CatHttp catHttp = new CatRestHttp();
+        return () -> catHttp;
     }
 
 
     /**
      * 默认序列化对象
      * */
-    public CatJsonResolver jsonResolver(){
-        return new CatJacksonResolver();
+    public Supplier<CatJsonResolver> jsonResolver(){
+        final CatJsonResolver jsonResolver = new CatJacksonResolver();
+        return () -> jsonResolver;
     }
 
 
     /**
      * 默认日志打印
      * */
-    public CatLoggerProcessor loggerProcessor(){
-        return new CatLoggerProcessor(){};
+    public Supplier<CatLoggerProcessor> loggerProcessor(){
+        final CatLoggerProcessor loggerProcessor = new CatLoggerProcessor(){};
+        return () -> loggerProcessor;
     }
 
 }

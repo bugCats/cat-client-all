@@ -5,54 +5,97 @@ import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
-import cc.bugcat.catserver.spi.CatInterceptor;
+import cc.bugcat.catserver.config.CatServerConfiguration;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 
 import java.util.Map;
 
+
+/**
+ * {@code @CatServer} 注解对象信息
+ *
+ * */
 public class CatServerInfo {
 
 
-    private final Class warpClass;      //响应包装器类
-    private final AbstractResponesWrapper warp;      //响应包装器类
+    /**
+     * 全局配置
+     * */
+    private CatServerConfiguration serverConfig;
 
-    private final Class<? extends CatInterceptor>[] handers;
+    /**
+     * 被标记的CatServer类
+     * */
+    private final Class<?> serverClass;
 
-    private final Catface catface;  //是否使用精简模式
+    /**
+     * api标签归类
+     * */
+    private final String[] tags;
+
+    /**
+     * controller的拦截器
+     * */
+    private final Class<? extends CatServerInterceptor>[] interceptors;
+
+    /**
+     * 自动加包装器处理类
+     * */
+    private final AbstractResponesWrapper wrapperHandler;
+
+    /**
+     * 是否启用精简模式
+     * */
+    private final Catface catface;
     private final boolean isCatface;
 
 
-    private CatServerInfo(CatServer catServer, Map<String, Object> interfaceAttributes) {
 
-        this.handers = catServer.handers();
+    private CatServerInfo(Class<?> serverClass, Map<String, Object> interfaceAttributes) {
+
+        CatServer catServer = serverClass.getAnnotation(CatServer.class);
+
+        this.serverConfig = (CatServerConfiguration) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS);
+
+        this.serverClass = serverClass;
+        this.tags = catServer.tags();
+        this.interceptors = catServer.interceptors();
+
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
-        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? null : responesWrapper.value();
-        this.warp = wrapper == null || AbstractResponesWrapper.Default.class.equals(wrapper) ? null : AbstractResponesWrapper.getResponesWrapper(wrapper);
-        this.warpClass = warp == null ? null : warp.getWrapperClass();
+        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? serverConfig.wrapper() : responesWrapper.value();
+        this.wrapperHandler = CatServerConfiguration.wrapper.equals(wrapper) ? null : AbstractResponesWrapper.getResponesWrapper(wrapper);
 
+        //是否启用精简模式
         this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
         this.isCatface = catface != null;
+
     }
 
 
-    public final static CatServerInfo build(Class<?> serverClass) {
-        CatServer catServer = serverClass.getAnnotation(CatServer.class);
+    public final static CatServerInfo build(Class<?> serverClass, CatServerConfiguration serverConfig) {
         Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(serverClass);
-        CatServerInfo serverInfo = new CatServerInfo(catServer, interfaceAttributes);
+        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, serverConfig);
+        CatServerInfo serverInfo = new CatServerInfo(serverClass, interfaceAttributes);
         return serverInfo;
     }
 
 
-
-    public Class getWarpClass() {
-        return warpClass;
+    public CatServerConfiguration getServerConfig() {
+        return serverConfig;
     }
-    public AbstractResponesWrapper getWarp() {
-        return warp;
+    public Class<?> getServerClass() {
+        return serverClass;
     }
-    public Class<? extends CatInterceptor>[] getHanders() {
-        return handers;
+    public String[] getTags() {
+        return tags;
+    }
+    public AbstractResponesWrapper getWrapperHandler() {
+        return wrapperHandler;
+    }
+    public Class<? extends CatServerInterceptor>[] getInterceptors() {
+        return interceptors;
     }
     public Catface getCatface() {
         return catface;

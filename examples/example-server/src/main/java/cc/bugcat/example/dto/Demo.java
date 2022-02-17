@@ -1,6 +1,7 @@
 package cc.bugcat.example.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -12,7 +13,7 @@ import javax.validation.constraints.NotNull;
  */
 @ApiModel
 public class Demo {
-	
+
 	@NotNull
 	@ApiModelProperty("主键")
 	private Long id;  // 主键
@@ -20,13 +21,13 @@ public class Demo {
 	@ApiModelProperty("姓名")
 	private String name;  // 姓名
 
-	@ApiModelProperty("")
+	@JsonIgnore
 	private String password;  // 密码。32位小写MD5
 
 	@ApiModelProperty("备注")
 	private String mark;  // 备注
 
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -58,8 +59,8 @@ public class Demo {
 	public void setMark(String mark) {
 		this.mark = mark;
 	}
-	
-	
+
+
 
 
 }

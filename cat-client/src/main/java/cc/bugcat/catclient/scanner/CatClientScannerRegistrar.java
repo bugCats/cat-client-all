@@ -2,7 +2,7 @@ package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
-import cc.bugcat.catclient.handler.CatClientFactorys;
+import cc.bugcat.catclient.handler.CatClientFactoryDecorator;
 import cc.bugcat.catclient.handler.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
@@ -96,13 +96,13 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         BeanRegistry beanRegistry = new BeanRegistry(resourceLoader, registry, scanPackages);
 
         //扫描所有 CatClientFactory 子类
-        beanRegistry.scannerByClass(CatClientFactory.class, CatClientFactorys.CatClientFactoryDecorator.class);
+        beanRegistry.scannerByClass(CatClientFactory.class);
 
         //扫描所有 CatMethodInterceptor 子类
         beanRegistry.scannerByClass(CatMethodSendInterceptor.class);
 
         // CatClientConfiguration全局默认配置
-        beanRegistry.registerBean(annoAttrs.getClass("defaults"));
+        beanRegistry.registerBean(annoAttrs.getClass("configuration"));
 
         // spring 容器
         beanRegistry.registerBean(CatClientUtil.class);
@@ -227,12 +227,9 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         /**
          * 扫描指定class的子类
          * */
-        private void scannerByClass(Class clazz, Class... excludes){
+        private void scannerByClass(Class clazz){
             ClassPathBeanDefinitionScanner interceptorScanner = new ClassPathBeanDefinitionScanner(registry);
             interceptorScanner.setResourceLoader(resourceLoader);
-            for ( Class exclude : excludes ) {
-                interceptorScanner.addExcludeFilter(new AssignableTypeFilter(exclude));
-            }
             interceptorScanner.addIncludeFilter(new AssignableTypeFilter(clazz));
             interceptorScanner.scan(packages);
         }

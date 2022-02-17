@@ -1,6 +1,8 @@
 package cc.bugcat.example.catserver.serverApi;
 
 
+import cc.bugcat.catserver.spi.CatInterceptor;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.example.api.UserService;
 import cc.bugcat.example.api.vi.UserPageVi;
 import cc.bugcat.example.api.vi.UserSaveVi;
@@ -15,25 +17,25 @@ import java.util.Arrays;
 
 
 /**
- * 
+ *
  * 结合客户端完整示例
- * 
+ *
  * 通过[cc.bugcat.example.catclient.serverApi.ServerApiController]这个类发起调用
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
  * 通过示例可以发现:
- *  
+ *
  *  客户端自动注入UserService，可以像是用普通Service类一样，直接执行UserService.userPage等方法
- *  
+ *
  *  服务端实现UserService，可以像普通Service一样，实现抽象方法，然后就可以被客户端调用
- *  
- * 
+ *
+ *
  * @CatServer 也可以当作普通的Controller，在swagger上调用
- * 
+ *
  * */
-@CatServer(handers = UserInterceptor.class)
+@CatServer(interceptors = {UserInterceptor2.class, CatServerInterceptor.class, UserInterceptor3.class, UserInterceptor.class,})
 public class UserServiceImpl implements UserService{
 
 
@@ -48,7 +50,7 @@ public class UserServiceImpl implements UserService{
 
         PageInfo<UserInfo> page = new PageInfo<>(vi.getPageNum(), vi.getCount(), 1);
         page.setList(Arrays.asList(info));
-        
+
         return ResponseEntity.ok(page);
     }
 
@@ -64,16 +66,19 @@ public class UserServiceImpl implements UserService{
         return info;
     }
 
+    /**
+     * 异常之后，会执行UserServiceImplFailback#userSave(UserSaveVi)方法
+     * */
     @Override
-    public ResponseEntity<Void> userSave(@RequestParam("name") UserSaveVi vi) {
-        System.out.println("userSave >>> " + JSONObject.toJSONString(vi));
+    public ResponseEntity<Void> userSave(UserSaveVi vi) {
+        String nul = null;
+        nul.trim();
         return ResponseEntity.ok(null);
     }
 
     @Override
     public void status(String userId, String status) {
         System.out.println("userSave >>> userId=" + userId + ", status=" + status);
-//        return null;
     }
 
     @Override

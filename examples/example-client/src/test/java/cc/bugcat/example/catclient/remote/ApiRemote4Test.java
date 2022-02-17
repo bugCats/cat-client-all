@@ -1,6 +1,6 @@
 package cc.bugcat.example.catclient.remote;
 
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatSendProcessor;
@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
+import java.util.function.Supplier;
 
 
 /**
@@ -49,8 +50,8 @@ public class ApiRemote4Test {
             }
 
             @Override
-            public CatJsonResolver jsonResolver() {
-                return new CatJacksonResolver();
+            public Supplier<CatJsonResolver> jsonResolver() {
+                return () -> new CatJacksonResolver();
             }
         };
 

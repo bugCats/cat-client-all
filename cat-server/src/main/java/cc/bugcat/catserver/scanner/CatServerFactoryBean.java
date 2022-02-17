@@ -2,16 +2,12 @@ package cc.bugcat.catserver.scanner;
 
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
-import cc.bugcat.catserver.handler.CatMethodInterceptorBuilder;
 import cc.bugcat.catserver.asm.CatAsmResult;
-import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
-import cc.bugcat.catserver.handler.CatFaceResolverBuilder;
-import cc.bugcat.catserver.handler.CatMethodMapping;
+import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cglib.proxy.CallbackHelper;
-import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -22,7 +18,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,202 +27,96 @@ import java.util.function.IntFunction;
  * 将动态生成的interface实现类，注册成Controller
  * @author: bugcat
  * */
-public class CatServerFactoryBean implements InitializingBean{
+public class CatServerFactoryBean implements InitializingBean {
 
-    private final Set<Class> servers;
-    private Map<Class, CatAsmResult> ctrlCacheMap;
+    /**
+     * 包含有 @CatServer 注解的类
+     * */
+    private Set<Class> serverClassSet;
 
+    private Class<? extends CatServerConfiguration> configClass;
 
-    public CatServerFactoryBean(Set<Class> servers){
-        this.servers = servers;
-        this.ctrlCacheMap = new HashMap<>(servers.size() * 2);
-    }
 
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
-        if( servers == null ){
+        if( serverClassSet == null ){
             return;
         }
 
-        List<CtrlFactory> factories = new ArrayList<>(servers.size());
-        for(Class serverClass : servers){
-            CtrlFactory info = new CtrlFactory(serverClass);
-            factories.add(info);
-        }
-
-        /**
-         * level越大，说明继承次数越多，
-         * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
-         * */
-        factories.sort(CtrlFactory::compareTo);
-
-        IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
-        IntFunction<String[]> stringToArray = String[]::new;
-
-        RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
-        for( CtrlFactory factory : factories ){
-            CatServerInfo serverInfo = factory.serverInfo;
-            Catface catface = serverInfo.getCatface();
-
-            for(Method method : factory.bridgeMethods ){
-
-                StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                Map<String, Object> attrs = metadata.getAnnotationAttributes(CatToosUtil.REQUEST_MAPPING);
-
-                if( serverInfo.isCatface() ){
-                    attrs = new HashMap<>();
-                    attrs.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, method.getDeclaringClass().getSimpleName(), method)});
-                    attrs.put("method", new RequestMethod[]{RequestMethod.POST});
-                } else {
-                    if( attrs == null ){
-                        continue;
-                    }
-                }
-                RequestMappingInfo mappingInfo = RequestMappingInfo
-                        .paths(getValue(attrs, "value", stringToArray))
-                        .methods(getValue(attrs, "method", requestMethodToArray))
-                        .params(getValue(attrs, "params", stringToArray))
-                        .headers(getValue(attrs, "headers", stringToArray))
-                        .produces(getValue(attrs, "produces", stringToArray))
-                        .consumes(getValue(attrs, "consumes", stringToArray))
-                        .build();
-                mapper.unregisterMapping(mappingInfo);
-                mapper.registerMapping(mappingInfo, factory.ctrl, method); // 注册映射处理
-            }
-        }
-
-        ctrlCacheMap = null;
-    }
-
-
-    private final class CtrlFactory implements Comparable<CtrlFactory> {
-
-        private CatServerInfo serverInfo;
-
-        //继承关系：如果是子类，那么level比父类大，排在后面
-        private int level = 0;
-
-        // 通过动态代理生成的ctrl对象
-        private Object ctrl;
-
-        // ctrl的方法，与原serverClass方法映射
-        private Set<Method> bridgeMethods = new HashSet<>();
-
-
-        private CtrlFactory(Class serverClass) throws Exception {
-            this.serverInfo = CatServerInfo.build(serverClass);
-            this.ctrl = createCatCtrl(serverClass, serverInfo);
-
-            for (Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass() ) {
-                level = level + 1;
-            }
-
-            Class thisClazz = ctrl.getClass(); //cglib动态生成的class => interface的实现类
-            Class[] inters = thisClazz.getInterfaces();
-
-            for( Class inter : inters ){ //增强后的interface
-                if ( CatInterfaceEnhancer.isBridgeClass(inter) ) {
-                    for( Method method : inter.getMethods() ){
-                        bridgeMethods.add(method);
-                    }
-                }
-            }
-        }
-
-
-        @Override
-        public int compareTo(CtrlFactory info) {
-            return level - info.level;
-        }
-
-    }
-
-
-
-    private Object createCatCtrl(Class serverClass, CatServerInfo serverInfo) throws Exception {
-
-        ClassLoader classLoader = CatServerUtil.getClassLoader();
-
-        //类加载器
-        CatInterfaceEnhancer serverAsm = new CatInterfaceEnhancer();
-
-        // 被@CatServer标记的类，包含的所有interface
-        List<Class> inters = new ArrayList<>();
-        for ( Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass()) {
-            for ( Class inter : superClass.getInterfaces() ) {
-                inters.add(inter);
-            }
-        }
-
-        Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
-
-        CatMethodMapping mapping = new CatMethodMapping();
-        Map<String, CatFaceResolverBuilder> resolverMap = new HashMap<>();
-
-        Class[] thisInters = new Class[inters.size()];
-
-        for(int i = 0; i < inters.size(); i ++ ){ // 遍历每个interface
-            Class inter = inters.get(i);
-
-            CatAsmResult ctrlCache = ctrlCacheMap.get(inter);
-            if( ctrlCache == null ){
-                ctrlCache = serverAsm.enhancer(inter, serverInfo); //使用asm增强interface
-                ctrlCacheMap.put(inter, ctrlCache);
-            }
-
-            mapping.putAll(ctrlCache.getMapping());
-            resolverMap.putAll(ctrlCache.getResolverMap());
-            thisInters[i] = ctrlCache.getEnhancerClass();
-
-            for(Method method : inter.getMethods()){
-                if( CatToosUtil.isObjectMethod(CatToosUtil.signature(method)) ){
-                    continue;
-                }
-                String uuid = CatMethodMapping.uuid(method);
-                StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                metadataMap.put(uuid, metadata);
-            }
-        }
-        // 此时thisInters中，全部为增强后的扩展interface
-
-
-        MethodInterceptor defaults = new MethodInterceptor() {
+        final MethodInterceptor defaults = new MethodInterceptor() {
             @Override
             public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
                 return methodProxy.invokeSuper(target, args);
             }
         };
 
-        CatMethodInterceptorBuilder builder = CatMethodInterceptorBuilder.builder();
-        builder.serverInfo(serverInfo).serverClass(serverClass);
+        Map<Class, CatAsmResult> controllerCache = new HashMap<>(serverClassSet.size() * 2);
+        List<CatControllerFactoryBean> controllerFactoryBeans = new ArrayList<>(serverClassSet.size());
 
-        CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
-            @Override
-            protected Object getCallback (Method method) {
-                String uuid = mapping.getInterfaceUuid(method);
-                StandardMethodMetadata metadata = metadataMap.get(uuid);
-                if ( metadata != null ) {//原interface方法
-                    CatFaceResolverBuilder resolver = resolverMap.get(uuid);
-                    builder.interMethodMetadata(metadata).argumentResolver(resolver.build());
-                    return builder.build();
-                } else {
-                    return defaults;
+        CatServerConfiguration serverConfig = CatServerUtil.getBean(configClass);
+
+        for(Class serverClass : serverClassSet){
+
+            CatControllerFactoryBean info = CatControllerFactoryBean.builder()
+                    .defaultInterceptor(defaults)
+                    .controllerCache(controllerCache)
+                    .serverClass(serverClass)
+                    .serverConfig(serverConfig)
+                    .build();
+
+            controllerFactoryBeans.add(info);
+        }
+
+        /**
+         * level越大，说明继承次数越多，
+         * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
+         * */
+        controllerFactoryBeans.sort(CatControllerFactoryBean::compareTo);
+
+        IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
+        IntFunction<String[]> stringToArray = String[]::new;
+
+        /**
+         * 手动注册controller对象
+         * */
+        RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
+
+        for( CatControllerFactoryBean factory : controllerFactoryBeans ){
+
+            CatServerInfo serverInfo = factory.getServerInfo();
+            Catface catface = serverInfo.getCatface();
+
+            for(Method method : factory.getBridgeMethods() ){
+
+                StandardMethodMetadata metadata = new StandardMethodMetadata(method);
+                Map<String, Object> attributes = metadata.getAnnotationAttributes(CatServerUtil.REQUEST_MAPPING);
+
+                if( serverInfo.isCatface() ){ //使用精简模式
+                    attributes = new HashMap<>();
+                    String serviceName = method.getDeclaringClass().getSimpleName().replace(CatServerUtil.BRIDGE_NAME, "");
+                    attributes.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, serviceName, method)});
+                    attributes.put("method", new RequestMethod[]{RequestMethod.POST});
                 }
+                if( attributes == null ){
+                    continue;
+                }
+
+                RequestMappingInfo mappingInfo = RequestMappingInfo
+                        .paths(getValue(attributes, "value", stringToArray))
+                        .methods(getValue(attributes, "method", requestMethodToArray))
+                        .params(getValue(attributes, "params", stringToArray))
+                        .headers(getValue(attributes, "headers", stringToArray))
+                        .produces(getValue(attributes, "produces", stringToArray))
+                        .consumes(getValue(attributes, "consumes", stringToArray))
+                        .build();
+
+                mapper.unregisterMapping(mappingInfo);
+                mapper.registerMapping(mappingInfo, factory.getController(), method); // 注册映射处理
             }
-        };
+        }
 
-        Enhancer enhancer = new Enhancer();
-        enhancer.setClassLoader(classLoader);
-        enhancer.setSuperclass(Object.class);
-        enhancer.setInterfaces(thisInters);
-        enhancer.setCallbackFilter(helper);
-        enhancer.setCallbacks(helper.getCallbacks());
-
-        Object ctrl = enhancer.create();
-
-        return ctrl;
+        serverClassSet = null;
     }
 
 
@@ -247,6 +136,22 @@ public class CatServerFactoryBean implements InitializingBean{
             arr[0] = (T) value;
             return arr;
         }
+    }
+
+
+
+    public Set<Class> getServerClassSet() {
+        return serverClassSet;
+    }
+    public void setServerClassSet(Set<Class> serverClassSet) {
+        this.serverClassSet = serverClassSet;
+    }
+
+    public Class<? extends CatServerConfiguration> getConfigClass() {
+        return configClass;
+    }
+    public void setConfigClass(Class<? extends CatServerConfiguration> configClass) {
+        this.configClass = configClass;
     }
 
 }

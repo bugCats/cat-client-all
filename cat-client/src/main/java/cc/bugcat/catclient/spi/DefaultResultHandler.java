@@ -52,9 +52,9 @@ public class DefaultResultHandler implements CatResultProcessor {
         }
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatClientInfo catClientInfo = context.getClientInfo();
-        CatJsonResolver resolver = context.getClientFactory().getJsonResolver();
+        CatJsonResolver resolver = context.getFactoryDecorator().getJsonResolver();
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
-        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapper());
+        AbstractResponesWrapper wrapperHandler = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapperHandler());
 
         Class returnClass = returnInfo.getClazz();
         if( String.class.equals(returnClass) ){
@@ -62,7 +62,7 @@ public class DefaultResultHandler implements CatResultProcessor {
         }
 
         // 没有设置包装器类
-        if ( wrapper == null ) {
+        if ( wrapperHandler == null ) {
 
             //日期、基本数据类型、及包装类
             if(returnInfo.isSimple()){
@@ -78,13 +78,13 @@ public class DefaultResultHandler implements CatResultProcessor {
         } else {
 
             //设置了包装器类
-            Class wrapperClass = wrapper.getWrapperClass();
+            Class wrapperClass = wrapperHandler.getWrapperClass();
 
             //方法的响应，与包装器类型相同
             if( returnClass.equals(wrapperClass) ) {
                 return resolver.toJavaBean(result, returnInfo.getType());
             } else {
-                return resolver.toJavaBean(result, wrapper, returnInfo.getType());
+                return resolver.toJavaBean(result, wrapperHandler, returnInfo.getType());
             }
         }
     }
@@ -95,11 +95,11 @@ public class DefaultResultHandler implements CatResultProcessor {
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
 
-        AbstractResponesWrapper wrapper = AbstractResponesWrapper.getResponesWrapper(clientInfo.getWrapper());
-        if ( wrapper == null || resp == null ) {
+        AbstractResponesWrapper wrapperHandler = AbstractResponesWrapper.getResponesWrapper(clientInfo.getWrapperHandler());
+        if ( wrapperHandler == null || resp == null ) {
             return resp;
         }
-        Class wrapperClass = wrapper.getWrapperClass();
+        Class wrapperClass = wrapperHandler.getWrapperClass();
         Class returnClass = methodInfo.getReturnInfo().getClazz();
 
         //方法的响应，与包装器类型相同，直接返回对象
@@ -107,8 +107,8 @@ public class DefaultResultHandler implements CatResultProcessor {
             return resp;
         } else if( wrapperClass.isAssignableFrom(resp.getClass()) ){
             // 方法的响应与包装器类型不同相同，并且响应类型是包装器类：拆包裹、校验
-            wrapper.checkValid(resp);
-            return wrapper.getValue(resp);
+            wrapperHandler.checkValid(resp);
+            return wrapperHandler.getValue(resp);
         }else {
             return resp;
         }

@@ -4,6 +4,8 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.*;
 
+import java.util.function.Supplier;
+
 
 /**
  * 默认工厂，设置请求发送类、结果响应类
@@ -12,9 +14,7 @@ import cc.bugcat.catclient.spi.*;
  * */
 public class DefaultCatClientFactory implements CatClientFactory {
 
-
     private CatClientConfiguration configuration;
-
 
     /**
      * 全局配置对象
@@ -28,7 +28,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * http发送对象
      * */
     @Override
-    public CatHttp getCatHttp() {
+    public Supplier<CatHttp> getCatHttp() {
         return configuration.catHttp();
     }
 
@@ -36,8 +36,16 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * 对象序列化与反序列化
      * */
     @Override
-    public CatJsonResolver getJsonResolver() {
+    public Supplier<CatJsonResolver> getJsonResolver() {
         return configuration.jsonResolver();
+    }
+
+    /**
+     * 日志处理类对象
+     * */
+    @Override
+    public Supplier<CatLoggerProcessor> getLoggerProcessor() {
+        return configuration.loggerProcessor();
     }
 
     /**
@@ -46,14 +54,6 @@ public class DefaultCatClientFactory implements CatClientFactory {
     @Override
     public CatSendProcessor newSendHandler() {
         return new DefaultSendHandler();
-    }
-
-    /**
-     * 日志处理类对象
-     * */
-    @Override
-    public CatLoggerProcessor getLoggerProcessor() {
-        return configuration.loggerProcessor();
     }
 
     /**

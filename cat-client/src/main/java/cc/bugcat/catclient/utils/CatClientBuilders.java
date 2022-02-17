@@ -3,7 +3,7 @@ package cc.bugcat.catclient.utils;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.handler.DefineCatClients;
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 
 import java.lang.reflect.Method;

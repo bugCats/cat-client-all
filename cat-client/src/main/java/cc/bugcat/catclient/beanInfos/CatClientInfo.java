@@ -3,6 +3,7 @@ package cc.bugcat.catclient.beanInfos;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.config.CatClientConfiguration;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.handler.CatLogsMod;
@@ -81,7 +82,7 @@ public final class CatClientInfo {
     /**
      * 响应包装器类处理{@link AbstractResponesWrapper}
      * */
-    private final Class<? extends AbstractResponesWrapper> wrapper;
+    private final Class<? extends AbstractResponesWrapper> wrapperHandler;
 
 
     /**
@@ -96,7 +97,7 @@ public final class CatClientInfo {
 
     private CatClientInfo(CatClient client, Map<String, Object> interfaceAttributes, Properties envProp){
 
-        this.clientDepend = (CatClientDepend) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CLIENT_DEPENDS);
+        this.clientDepend = (CatClientDepend) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS);
         this.serviceName = (String) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME);
 
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
@@ -130,7 +131,7 @@ public final class CatClientInfo {
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
         Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? clientConfig.wrapper() : responesWrapper.value();
-        this.wrapper = CatClientConfiguration.wrapper.equals(wrapper) ? null : wrapper;
+        this.wrapperHandler = CatClientConfiguration.wrapper.equals(wrapper) ? null : wrapper;
 
         this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
     }
@@ -150,7 +151,7 @@ public final class CatClientInfo {
         }
         Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(interfaceClass);
         interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME, interfaceClass.getSimpleName());
-        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_CLIENT_DEPENDS, depends);
+        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, depends);
         CatClientInfo clientInfo = new CatClientInfo(catClient, interfaceAttributes, envProp);
         return clientInfo;
     }
@@ -189,8 +190,8 @@ public final class CatClientInfo {
     public Class getFallback() {
         return fallback;
     }
-    public Class<? extends AbstractResponesWrapper> getWrapper() {
-        return wrapper;
+    public Class<? extends AbstractResponesWrapper> getWrapperHandler() {
+        return wrapperHandler;
     }
     public Catface getCatface() {
         return catface;

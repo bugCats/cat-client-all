@@ -34,13 +34,13 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
      * 直接抛出异常
      */
     @Override
-    public void checkValid(ResponseEntity obj) {
-        if( ResponseEntity.succ.equals(obj.getErrCode())){
+    public void checkValid(ResponseEntity wrapper) {
+        if( ResponseEntity.succ.equals(wrapper.getErrCode())){
             //正常
         } else {
             CatSendContextHolder contextHolder = CatSendContextHolder.getContextHolder();
             CatClientLogger lastCatLog = contextHolder.getSendHandler().getHttpPoint().getLastCatLog();
-            lastCatLog.setErrorMessge("[" + obj.getErrCode() + "]" + obj.getErrMsg());
+            lastCatLog.setErrorMessge("[" + wrapper.getErrCode() + "]" + wrapper.getErrMsg());
 
             //业务异常，可以直接继续抛出，在公共的异常处理类中，统一处理
             throw new RuntimeException(lastCatLog.getErrorMessge());
@@ -49,8 +49,8 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
 
 
     @Override
-    public Object getValue(ResponseEntity obj) {
-        return obj.getData();
+    public Object getValue(ResponseEntity wrapper) {
+        return wrapper.getData();
     }
 
 
@@ -60,7 +60,8 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
     }
 
     @Override
-    public ResponseEntity createEntryOnException(Throwable ex, Type returnType) {
-        return ResponseEntity.fail("-1", ex.getMessage());
+    public ResponseEntity createEntryOnException(Throwable throwable, Type returnType) {
+        return ResponseEntity.fail("-1", throwable.getMessage() == null ? "NullPointerException" : throwable.getMessage());
     }
+
 }

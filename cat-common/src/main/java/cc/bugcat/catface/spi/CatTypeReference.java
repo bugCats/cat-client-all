@@ -10,22 +10,22 @@ import java.util.concurrent.ConcurrentMap;
 
 
 /**
- * jackson json转对象泛型
+ * jackson、fastjson 序列化与反序列化泛型处理
+ *
  * @see AbstractResponesWrapper#getWrapperType(Type)
  * */
 public abstract class CatTypeReference<T> {
 
-    static ConcurrentMap<Type, Type> classTypeCache
-            = new ConcurrentHashMap<Type, Type>(16, 0.75f, 1);
+    protected static ConcurrentMap<Type, Type> classTypeCache = new ConcurrentHashMap<Type, Type>(16, 0.75f, 1);
 
 
     protected final Type type;
 
 
-
     /**
-     * new JackTypeReference<ResponseEntity<T>>(){};
-     */
+     * 对于有泛型的类反序列化方式：
+     * new JackTypeReference<ResponseEntity<Demo>>(){};
+     * */
     protected CatTypeReference(){
         Type superClass = getClass().getGenericSuperclass();
         type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
@@ -33,8 +33,12 @@ public abstract class CatTypeReference<T> {
 
 
     /**
-     * new JackTypeReference<ResponseEntity<T>>(type){};
-     */
+     * 对于有泛型的类，并且泛型是变量情况，反序列化方式：
+     * new JackTypeReference<ResponseEntity<T>>(Demo){};
+     * new JackTypeReference<Map<S, T>>(String, Demo){};
+     *
+     * @param actualTypeArguments 实际的泛型Type。顺序与泛型占位符一致
+     * */
     protected CatTypeReference(Type... actualTypeArguments) {
         Class thisClass = this.getClass();
         Type superClass = thisClass.getGenericSuperclass();
@@ -61,7 +65,11 @@ public abstract class CatTypeReference<T> {
     }
 
 
+    /**
+     * 反序列化对象的Type。包含了泛型Type
+     * */
     public Type getType() {
         return this.type;
     }
+
 }

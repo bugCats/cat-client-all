@@ -24,14 +24,14 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
 
     private final CatMethodSendInterceptor methodInterceptor;
     private final CatHttpRetryConfigurer retryConfigurer;
-    private final CatClientFactory clientFactory;
+    private final CatClientFactoryDecorator factoryDecorator;
 
     private CatMethodAopInterceptor(Builder builder){
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
         this.methodInterceptor = builder.methodInterceptor;
         this.retryConfigurer = builder.retryConfigurer;
-        this.clientFactory = builder.clientFactory;
+        this.factoryDecorator = builder.factoryDecorator;
     }
 
 
@@ -100,11 +100,11 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             sendHandler = (CatSendProcessor) args[handlerIndex];
         } else {
             //否则通过工厂创建一个发送类
-            sendHandler = clientFactory.newSendHandler();
+            sendHandler = factoryDecorator.newSendHandler();
         }
 
         // 响应处理类
-        CatResultProcessor resultHandler = clientFactory.getResultHandler();
+        CatResultProcessor resultHandler = factoryDecorator.getResultHandler();
 
         //处理参数列表，如果存在PathVariable参数，将参数映射到url上
         CatParameter parameter = methodInfo.parseArgs(args);
@@ -115,7 +115,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 .clientInfo(clientInfo)
                 .methodInfo(methodInfo)
                 .interceptor(methodInterceptor)
-                .clientFactory(clientFactory)
+                .factoryDecorator(factoryDecorator)
                 .retryConfigurer(retryConfigurer)
                 .build();
 
@@ -219,7 +219,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         private CatMethodInfo methodInfo;
         private CatMethodSendInterceptor methodInterceptor;
         private CatHttpRetryConfigurer retryConfigurer;
-        private CatClientFactory clientFactory;
+        private CatClientFactoryDecorator factoryDecorator;
 
         public Builder clientInfo(CatClientInfo clientInfo) {
             this.clientInfo = clientInfo;
@@ -237,8 +237,8 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             this.retryConfigurer = retryConfigurer;
             return this;
         }
-        public Builder clientFactory(CatClientFactory clientFactory) {
-            this.clientFactory = clientFactory;
+        public Builder factoryDecorator(CatClientFactoryDecorator factoryDecorator) {
+            this.factoryDecorator = factoryDecorator;
             return this;
         }
 

@@ -1,11 +1,11 @@
 package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.CatClientFactorys;
+import cc.bugcat.catclient.handler.CatClientFactoryDecorator;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
@@ -81,6 +81,15 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         }
 
         CatClientDepend clientDepend = clientInfo.getClientDepend();
+
+        CatClientFactory clientFactory = getAndExectue((Class<CatClientFactory>)clientInfo.getFactoryClass(), bean -> {
+            if( bean == null ){
+                bean = clientDepend.getDefaultClientFactory();
+            }
+            bean.setClientConfiguration(clientDepend.getClientConfig());
+            return bean;
+        });
+
         final MethodInterceptor defaultInterceptor = clientDepend.getDefaultInterceptor();
         final CatHttpRetryConfigurer retryConfigurer = clientDepend.getRetryConfigurer();
         final CatMethodSendInterceptor methodInterceptor = getAndExectue((Class<CatMethodSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
@@ -89,14 +98,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             }
             return bean;
         });
-        final CatClientFactory clientFactory = getAndExectue((Class<CatClientFactory>)clientInfo.getFactoryClass(), bean -> {
-            if( bean == null ){
-                bean = clientDepend.getDefaultClientFactory();
-            }
-            bean.setClientConfiguration(clientDepend.getClientConfig());
-            return CatClientFactorys.decorator(bean);
-        });
-
+        final CatClientFactoryDecorator factoryDecorator = new CatClientFactoryDecorator(clientFactory);
 
         CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
@@ -121,7 +123,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                     CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
                             .clientInfo(clientInfo)
                             .methodInfo(methodInfo)
-                            .clientFactory(clientFactory)
+                            .factoryDecorator(factoryDecorator)
                             .methodInterceptor(methodInterceptor)
                             .retryConfigurer(retryConfigurer)
                             .build();

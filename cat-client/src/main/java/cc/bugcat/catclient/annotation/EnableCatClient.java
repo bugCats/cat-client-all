@@ -42,6 +42,6 @@ public @interface EnableCatClient {
      * 可以用来统一修改{@link CatClient}、{@link CatMethod}的默认值
      * 作用于全局
      * */
-    Class<? extends CatClientConfiguration> defaults() default CatClientConfiguration.class;
+    Class<? extends CatClientConfiguration> configuration() default CatClientConfiguration.class;
 
 }

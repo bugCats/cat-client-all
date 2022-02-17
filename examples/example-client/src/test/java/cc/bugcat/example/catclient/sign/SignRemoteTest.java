@@ -1,6 +1,6 @@
 package cc.bugcat.example.catclient.sign;
 
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

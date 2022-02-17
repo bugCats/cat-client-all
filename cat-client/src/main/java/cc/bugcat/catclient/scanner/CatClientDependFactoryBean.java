@@ -1,6 +1,6 @@
 package cc.bugcat.catclient.scanner;
 
-import cc.bugcat.catclient.beanInfos.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.utils.CatClientUtil;

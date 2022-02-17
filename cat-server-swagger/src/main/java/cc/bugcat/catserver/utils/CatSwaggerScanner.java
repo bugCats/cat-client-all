@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.utils;
 
 import cc.bugcat.catface.utils.CatToosUtil;
+import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
@@ -120,7 +121,7 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
 
     public static Class getRealInterfaceClass(Class interClass){
         try {
-            return CatServerUtil.getClassLoader().loadClass(interClass.getName().replace(CatToosUtil.BRIDGE_NAME, ""));
+            return CatServerUtil.getClassLoader().loadClass(interClass.getName().replace(CatServerUtil.BRIDGE_NAME, ""));
         } catch ( Exception e ) {
             return interClass;
         }

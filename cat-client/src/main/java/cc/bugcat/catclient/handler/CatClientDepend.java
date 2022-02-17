@@ -1,8 +1,7 @@
-package cc.bugcat.catclient.beanInfos;
+package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.CatClientFactorys;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
@@ -139,7 +138,7 @@ public class CatClientDepend {
             }
 
             if( defaultClientFactory == null ){
-                defaultClientFactory = CatClientFactorys.defaultClientFactory();
+                defaultClientFactory = new DefaultCatClientFactory();
             }
 
             return new CatClientDepend(this);

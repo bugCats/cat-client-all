@@ -1,43 +1,23 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catserver.handler.CatFaceResolverBuilder;
-import cc.bugcat.catserver.handler.CatMethodMapping;
+import cc.bugcat.catserver.beanInfos.CatMethodInfo;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 增强被@CatServer标记的interface处理结果
- * 
  * */
 public class CatAsmResult {
 
-    
+
     //增强后的class
     private Class enhancerClass;
 
-    
-    //增强后的class与原class method映射关系
-    private CatMethodMapping mapping = new CatMethodMapping();
+    //增强前后的方法信息
+    private Map<String, CatMethodInfo> methodInfoMap = new HashMap<>();
 
-    
-    //方法上的虚拟入参
-    private Map<String, CatFaceResolverBuilder> resolverMap = new HashMap<>();   
 
-    
-    
-    public void putResolver(String signature, CatFaceResolverBuilder build){
-        resolverMap.put(signature, build);
-    }
-    public CatFaceResolverBuilder getResolver(String signature){
-        return resolverMap.get(signature);
-    }
-    
-    public Map<String, CatFaceResolverBuilder> getResolverMap() {
-        return resolverMap;
-    }
-    
-    
     public Class getEnhancerClass() {
         return enhancerClass;
     }
@@ -45,9 +25,11 @@ public class CatAsmResult {
         this.enhancerClass = enhancerClass;
     }
 
-    public CatMethodMapping getMapping() {
-        return mapping;
+    public Map<String, CatMethodInfo> getMethodInfoMap() {
+        return methodInfoMap;
     }
-
+    public void putCatMethodInfo(CatMethodInfo methodInfo) {
+        methodInfoMap.put(methodInfo.getEnhancerSignatureId(), methodInfo);
+    }
 
 }

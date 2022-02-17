@@ -1,17 +1,23 @@
 package cc.bugcat.example;
 
 import cc.bugcat.catserver.annotation.EnableCatServer;
+import cc.bugcat.example.catserver.serverApi.UserInterceptorConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-@EnableCatServer("cc.bugcat")
+@EnableCatServer(configuration = UserInterceptorConfig.class)
 @SpringBootApplication
 public class CatServerApplication {
 
 	public static void main(String[] args) {
+
+	    //输出cglib动态代理字节码
+//        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "E:\\tmp");
+
         SpringApplication app = new SpringApplication(CatServerApplication.class);
         app.run(args);
         System.out.println("http://localhost:8012/swagger-ui.html");
