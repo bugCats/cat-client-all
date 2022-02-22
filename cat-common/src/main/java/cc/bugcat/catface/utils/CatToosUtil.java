@@ -6,25 +6,25 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
-import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.util.ClassUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+
+/**
+ *
+ * @author bugcat
+ * */
 public class CatToosUtil{
 
+    public final static String GROUP_ID = "cc.bugcat";
 
     public final static String INTERFACE_ATTRIBUTES_CATFACE = "catface";
     public final static String INTERFACE_ATTRIBUTES_WRAPPER = "wrapper";
@@ -34,19 +34,64 @@ public class CatToosUtil{
 
 
     /**
-     * spring EL解析式
-     */
+     * spring EL表达式：#{arg.name}
+     * 使用方法入参，计算表达式
+     * */
     public static ExpressionParser parser = new SpelExpressionParser();
 
 
+    /**
+     * Object.class中的方法
+     * */
     private static final Set<String> objectDefaultMethod;
-
     static {
         Set<String> methodSet = new HashSet<>();
         for ( Method method : Object.class.getDeclaredMethods() ) {
             methodSet.add(signature(method));
         }
         objectDefaultMethod = Collections.unmodifiableSet(methodSet);
+    }
+
+
+
+    /**
+     * 进入异常流程时，存储异常信息
+     * */
+    private static ThreadLocal<Throwable> threadLocal = new ThreadLocal<>();
+
+    /**
+     * 在异常回调流程中获取异常信息
+     * */
+    public static Throwable getException(){
+        return threadLocal.get();
+    }
+
+    /**
+     * 在异常回调流程中再次抛出
+     * */
+    public static void throwException(){
+        Throwable throwable = threadLocal.get();
+        throw new RuntimeException(throwable);
+    }
+
+    public static void setException(Throwable throwable){
+        threadLocal.set(throwable);
+    }
+    public static void removeException(){
+        threadLocal.remove();
+    }
+
+
+
+    /**
+     * 得到原始异常
+     * */
+    public static Throwable getCause(Throwable throwable){
+        Throwable error = throwable;
+        while ( error.getCause() != null ) {
+            error = error.getCause();
+        }
+        return error;
     }
 
 
@@ -57,15 +102,15 @@ public class CatToosUtil{
         String[] pkgs = annoAttrs.getStringArray("value");
         if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ) {//如果没有设置扫描包路径，取启动类路径
             StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
-            Class stratClass = annotationMetadata.getIntrospectedClass();    //启动类class
-            String basePackage = stratClass.getPackage().getName();
+            Class startClass = annotationMetadata.getIntrospectedClass();    //启动类class
+            String basePackage = startClass.getPackage().getName();
             pkgs = new String[]{basePackage};  //获取启动类所在包路径
         }
         return pkgs;
     }
 
     /**
-     * 按顺序，获取第一个有效的注解value值
+     * 按顺序，获取第一个存在的注解的value值
      * */
     public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns) {
         for ( Class clazz : anns ) {
@@ -113,7 +158,6 @@ public class CatToosUtil{
     public static boolean isObjectMethod(Method method) {
         return isObjectMethod(signature(method));
     }
-
     public static boolean isObjectMethod(String sign) {
         return objectDefaultMethod.contains(sign);
     }
@@ -148,18 +192,28 @@ public class CatToosUtil{
 
 
     /**
-     * 是否为基础数据类型
+     * 判断否为基础数据类型
      * */
-    public static boolean isSimpleClass(Class clz) {
-        if ( clz.isPrimitive() || clz == String.class ) {
+    public static boolean isSimpleClass(Class clazz) {
+        if ( clazz.isPrimitive() || clazz == String.class ) {
             return true;
         } else {
             try {
-                return ((Class) clz.getField("TYPE").get(null)).isPrimitive();
+                return ((Class) clazz.getField("TYPE").get(null)).isPrimitive();
             } catch ( Exception e ) {
                 return false;
             }
         }
+    }
+
+
+    /**
+     * 过滤堆栈
+     * */
+    public static StackTraceElement[] filterStackTrace(Throwable throwable, String groupId){
+        StackTraceElement[] stackTraces = throwable.getStackTrace();
+        return Arrays.stream(stackTraces).filter(stackTrace -> stackTrace.getClassName().contains(groupId))
+                .toArray(StackTraceElement[]::new);
     }
 
 
@@ -193,8 +247,8 @@ public class CatToosUtil{
     }
 
     /**
-     * 递归遍历interface、以及父类，获取第一次出现的xx注解
-     */
+     * 递归遍历interface、以及父类，获取第一次出现的annotationType注解
+     * */
     public static <A extends Annotation> A responesWrap(Class inter, Class<A> annotationType) {
         A annotation = AnnotationUtils.findAnnotation(inter, annotationType);
         if ( annotation == null ) {
@@ -208,7 +262,9 @@ public class CatToosUtil{
         return annotation;
     }
 
-
+    /**
+     * 精简模式下，获取url
+     * */
     public static String getDefaultRequestUrl(Catface catface, String serviceName, Method method) {
         String namespace = "";
         String aliasValue = CatToosUtil.uncapitalize(serviceName);
@@ -218,6 +274,19 @@ public class CatToosUtil{
         }
         String path = namespace + "/" + aliasValue + "/" + method.getName();
         return path;
+    }
+
+
+    /**
+     * 从contrasts去掉standar，如果均没有则返回defaultValue
+     * */
+    public static <T> T comparator(Object standar, List<Object> contrasts, T defaultValue){
+        for ( Object contrast : contrasts ) {
+            if ( !standar.equals(contrast) ) {
+                return (T) contrast;
+            }
+        }
+        return defaultValue;
     }
 
 

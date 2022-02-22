@@ -3,7 +3,7 @@ package cc.bugcat.example.catclient.token;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catclient.annotation.CatNote;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;

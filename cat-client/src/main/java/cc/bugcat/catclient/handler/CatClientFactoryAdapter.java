@@ -1,31 +1,28 @@
 package cc.bugcat.catclient.handler;
 
-import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatHttp;
-import cc.bugcat.catclient.spi.CatJsonResolver;
-import cc.bugcat.catclient.spi.CatLoggerProcessor;
+import cc.bugcat.catclient.spi.*;
+
+import java.util.function.Supplier;
 
 
 /**
+ * CatClient工厂类适配器
  * @author bugcat
- */
-public class CatClientFactoryDecorator {
-
-
-    private final CatClientFactory bridge;
+ * */
+public class CatClientFactoryAdapter {
 
     private final CatLoggerProcessor loggerProcessor;
     private final CatResultProcessor resultHandler;
     private final CatJsonResolver jsonResolver;
     private final CatHttp catHttp;
+    private final Supplier<CatSendProcessor> sendProcessorSupplier;
 
-    public CatClientFactoryDecorator(CatClientFactory bridge) {
-        this.bridge = bridge;
+    public CatClientFactoryAdapter(CatClientFactory bridge) {
         this.resultHandler = bridge.getResultHandler();
-        this.catHttp = bridge.getCatHttp().get();
-        this.loggerProcessor = bridge.getLoggerProcessor().get();
-        this.jsonResolver = bridge.getJsonResolver().get();
+        this.catHttp = bridge.getCatHttp();
+        this.loggerProcessor = bridge.getLoggerProcessor();
+        this.jsonResolver = bridge.getJsonResolver();
+        this.sendProcessorSupplier = bridge.newSendHandler();
     }
 
 
@@ -40,7 +37,7 @@ public class CatClientFactoryDecorator {
      * 如果在定义请求方法时，没有传入请求发送类，则在代理类中，自动生成一个请求发送类对象
      */
     public CatSendProcessor newSendHandler() {
-        return bridge.newSendHandler();
+        return sendProcessorSupplier.get();
     }
 
     /**

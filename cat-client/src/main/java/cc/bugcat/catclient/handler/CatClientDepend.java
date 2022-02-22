@@ -5,6 +5,7 @@ import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.DefaultCatClientFactory;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -12,7 +13,21 @@ import java.lang.reflect.Method;
 
 /**
  * CatClientInfoFactoryBean 相关依赖
+ *
+ * 组件加载依赖管理
+ *
+ * 加载顺序：
+ *
+ *  CatClientUtil
+ *
+ *  CatClientConfiguration、CatHttpRetryConfigurer
+ *
+ *  CatClientDependFactoryBean -> CatClientDepend
+ *
+ *  CatClientInfoFactoryBean -> catClient-interface
+ *
  * @see CatClientDependFactoryBean
+ * @author bugcat
  * */
 public class CatClientDepend {
 
@@ -27,7 +42,7 @@ public class CatClientDepend {
     private final CatClientConfiguration clientConfig;
 
     /**
-     * 全局默认的Object方法拦截器
+     * 全局Object的默认方法拦截器：toString、hashCode...
      * */
     private final MethodInterceptor defaultInterceptor;
 
@@ -75,7 +90,9 @@ public class CatClientDepend {
 
 
 
-
+    /**
+     * 如果使用main方法调用，需要手动创建该对象
+     * */
     public static Builder builder(){
         return new Builder();
     }
@@ -117,11 +134,11 @@ public class CatClientDepend {
 
             if( retryConfigurer == null ){
                 retryConfigurer = new CatHttpRetryConfigurer();
-                try { retryConfigurer.afterPropertiesSet(); } catch ( Exception e ) { }
             }
 
             if( clientConfig == null ){
                 clientConfig = new CatClientConfiguration();
+                clientConfig.afterPropertiesSet();
             }
 
             if( defaultInterceptor == null ){

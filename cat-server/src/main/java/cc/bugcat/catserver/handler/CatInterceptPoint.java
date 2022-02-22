@@ -13,24 +13,52 @@ import java.util.Map;
 
 
 /**
- * 拦截器 方法之间的入参
- * 对于每次请求，为单例
+ * 拦截器
+ * 方法之间的入参
+ * 对于每次请求为单例
+ *
+ * @author bugcat
  * */
 public final class CatInterceptPoint {
 
+    /**
+     * interface方法上的注解属性
+     * */
+    private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>();
 
-    private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>(); // 注解属性
-    private final Map<String, Object> attributesMap = new HashMap<>();    //自定义属性
+    /**
+     * 自定义属性
+     * */
+    private final Map<String, Object> attributesMap = new HashMap<>();
 
 
     private final HttpServletRequest request;
     private final HttpServletResponse response;
 
+    /**
+     * CatServer注解信息
+     * */
     private final CatServerInfo serverInfo;
-    private final Method method;            //访问的方法
-    private final Object target;            //访问的对象
-    private final Object[] arguments;       //方法入参
-    private final StandardMethodMetadata interMethod;    //对应的interface的方法
+
+    /**
+     * 调用的方法。为interface上的
+     * */
+    private final Method method;
+
+    /**
+     * 对应的interface的方法
+     * */
+    private final StandardMethodMetadata interMethod;
+
+    /**
+     * 访问的CatServer类对象
+     * */
+    private final Object target;
+
+    /**
+     * 方法入参
+     * */
+    private final Object[] arguments;
 
 
     private CatInterceptPoint(Builder builder) {
@@ -89,6 +117,9 @@ public final class CatInterceptPoint {
     public Class<?> getServerClass(){
         return serverInfo.getServerClass();
     }
+    public CatServerInfo getServerInfo() {
+        return serverInfo;
+    }
     public Object getTarget() {
         return target;
     }
@@ -101,12 +132,15 @@ public final class CatInterceptPoint {
 
 
 
+
+
     protected static Builder builder(){
         return new Builder();
     }
 
 
     protected static class Builder {
+
         private HttpServletRequest request;
         private HttpServletResponse response;
         private CatServerInfo serverInfo;

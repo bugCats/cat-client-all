@@ -40,33 +40,41 @@ package cc.bugcat.catclient;
  *
  *  0、Spring容器启动
  *
- *  ↓
+ *      ↓
  *
  *  1、EnableCatClient 启用，@Import -> CatClientScannerRegistrar
  *
- *  ↓
+ *      ↓
  *
  *  2、CatClientScannerRegistrar 扫描包含@CatClient的interface，向Spring容器注册对应的FactoryBean
  *
- *  ↓
+ *      ↓
  *
- *  3、CatClientInfoFactoryBean 解析interface上的@CatClient注解 => CatClientInfo
+ *  3、CatClientDependFactoryBean => CatClientDepend，组件依赖项，保证后续流程中，所依赖项已全部加载
  *
- *  ↓
+ *      ↓
  *
- *  4、通过cglib，使用interface创建动态代理类
+ *  4.1、CatClientInfoFactoryBean 解析interface上的@CatClient注解 => CatClientInfo
  *
- *  ↓
+ *      ↓
  *
- *  5、解析@CatMethod注解 => CatMethodInfo
+ *  4.2、通过cglib，使用interface创建动态代理类
  *
- *  ↓
+ *      ↓
  *
- *  6、为interface的每个方法，添加拦截器 => CatMethodAopInterceptor
+ *  4.3、解析方法上的@CatMethod注解 => CatMethodInfo
  *
- *  ↓
+ *      ↓
  *
- *  7、CatClientInfoFactoryBean 返回cglib动态代理后的对象，实现自动注入
+ *  4.4、为interface的每个方法，添加拦截器 => CatMethodAopInterceptor
+ *
+ *      ↓
+ *
+ *  4.5、CatClientInfoFactoryBean 返回cglib动态代理后的对象，实现组件自动注入
+ *
+ *
+ *
+ *
  *
  *
  *
@@ -87,11 +95,15 @@ package cc.bugcat.catclient;
  *
  *  6、执行CatSendProcessor#httpSend()方法发送http请求
  *
- *  7、使用DefaultResultHandler#resultToBean(..)解析响应字符串
+ *  7、执行CatMethodSendInterceptor拦截器，拦截器中执行发送http请求
  *
- *  8、DefaultResultHandler#doFinally(..)做最后结果处理
+ *  8、使用DefaultResultHandler#resultToBean(..)解析响应字符串
  *
- *  9、如果发生http异常，可通过MethodProxy#invokeSuper(..)执行回调类方法，返回默认异常值；或者通过DefaultResultHandler#onHttpError(..)统一处理
+ *  9、DefaultResultHandler#doFinally(..)做最后结果处理
+ *
+ *  10、如果发生http异常，可通过MethodProxy#invokeSuper(..)执行回调类方法，返回默认异常值；或者通过DefaultResultHandler#onHttpError(..)统一处理
+ *
+ *
  *
  *
  *

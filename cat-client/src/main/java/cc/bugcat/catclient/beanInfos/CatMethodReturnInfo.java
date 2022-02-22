@@ -12,22 +12,22 @@ import java.lang.reflect.Type;
 public class CatMethodReturnInfo {
 
     /**
-     * 参数的类名称
+     * 方法返回对象类的名称
      * */
     private final String name;
 
     /**
-     * 是否为简单对象：String、基本数据类型+包装类
+     * 是否为简单数据类型：String、基本数据类型、包装类
      * */
     private final boolean simple;
 
     /**
-     * 参数class
+     * 方法返回对象类的class
      * */
     private final Class clazz;
 
     /**
-     * 参数的Type
+     * 方法返回对象类的Type
      * */
     private final Type type;
 

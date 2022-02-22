@@ -2,7 +2,7 @@ package cc.bugcat.catclient.utils;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
-import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 
@@ -26,10 +26,16 @@ public abstract class CatClientBuilders {
         return CatClientBuilder.builder(interfaceClass);
     }
 
+    /**
+     * 通过DefineCatClients + interface创建
+     * */
     public static <T> CatClientBuilder<T> builder(Class<? extends DefineCatClients> defineClients, Class<T> interfaceClass){
         return CatClientBuilder.builder(defineClients, interfaceClass);
     }
 
+    /**
+     * 通过DefineCatClients创建
+     * */
     public static DefineCatClientBuilder define(Class<? extends DefineCatClients> defineClients){
         return DefineCatClientBuilder.builder(defineClients);
     }

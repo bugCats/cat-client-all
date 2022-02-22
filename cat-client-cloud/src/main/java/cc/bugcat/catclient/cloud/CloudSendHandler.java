@@ -1,55 +1,48 @@
 package cc.bugcat.catclient.cloud;
 
-import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.spi.ServerChoose;
 
 
 /**
- * 多例
+ * cloud模式发送类
+ *
+ * @author bugcat
  * */
 public class CloudSendHandler extends CatSendProcessor {
 
     private ServerChoose chooser;
 
-    private CatInstanceEntry instanceEntry;
-    private String path;
-
-
-    public CloudSendHandler() {
-        this.chooser = getServerChoose();
-    }
+    private CatInstanceResolver instanceEntry;
 
     public CloudSendHandler(ServerChoose chooser) {
         this.chooser = chooser;
     }
 
+
+    /**
+     * 将服务名修改成实际的ip+端口
+     * */
     @Override
-    public void afterVariableResolver(CatSendContextHolder context){
-
-        CatMethodInfo methodInfo = context.getMethodInfo();
-
-        this.path = super.getHttpPoint().getPath();
-
-        this.instanceEntry = new CatInstanceEntry(methodInfo.getHost());
+    public void postVariableResolver(CatSendContextHolder context){
+        CatHttpPoint httpPoint = super.getHttpPoint();
+        instanceEntry = new CatInstanceResolver(httpPoint.getPath());
         String ipAddr = chooser.hostAddr(instanceEntry);
-        this.instanceEntry.ipAddrResolver(ipAddr);
-        super.getHttpPoint().setPath(instanceEntry.getHostAddr() + path);
+        String sendPath = instanceEntry.resolver(ipAddr);
+        httpPoint.setPath(sendPath);
     }
 
 
+    /**
+     * 重新选择另外
+     * */
     public void chooseOtherHost(){
         String ipAddr = chooser.retryHostAddr(instanceEntry);
-        this.instanceEntry.ipAddrResolver(ipAddr);
-        super.getHttpPoint().setPath(instanceEntry.getHostAddr() + path);
+        String sendPath = instanceEntry.resolver(ipAddr);
+        super.getHttpPoint().setPath(sendPath);
     }
 
-
-    protected ServerChoose getServerChoose(){
-        return CatClientCloudFactory.getServerChoose();
-    }
 
 }

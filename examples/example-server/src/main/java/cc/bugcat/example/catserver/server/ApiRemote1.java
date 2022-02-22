@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.*;
  * */
 @Api(tags = "服务端API - 一般场景1")
 public interface ApiRemote1 {
-    
+
 
     @ApiOperation(value = "服务端示例1")
     @PostMapping("/server/demo1")
-    ResponseEntity<Demo> demo1(@RequestBody Demo req);
+    default ResponseEntity<Demo> demo1(@RequestBody Demo req) {
+        return null;
+    }
 
 
 
@@ -33,8 +35,8 @@ public interface ApiRemote1 {
     @ApiOperation(value = "服务端示例3")
     @GetMapping("/server/demo3")
     ResponseEntity<PageInfo<Demo>> demo3(@ModelAttribute Demo req);
-   
-    
 
-    
+
+
+
 }

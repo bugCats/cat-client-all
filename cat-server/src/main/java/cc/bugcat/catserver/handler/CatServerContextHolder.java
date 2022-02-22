@@ -5,8 +5,15 @@ import cc.bugcat.catserver.spi.CatServerResultHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.function.Function;
 
+
+/**
+ * 拦截器控制器
+ * @author bugcat
+ * */
 public class CatServerContextHolder {
 
 
@@ -20,10 +27,15 @@ public class CatServerContextHolder {
         return threadLocal.get();
     }
 
+    protected static void remove() {
+        threadLocal.remove();
+    }
+
 
     private final CatInterceptPoint interceptPoint;
     private final List<? extends CatInterceptor> interceptors;
     private final CatInterceptor controllerMethod;
+    private final CatMethodInfo methodInfo;
     private final CatServerResultHandler resultHandler;
 
 
@@ -43,14 +55,12 @@ public class CatServerContextHolder {
         this.interceptPoint = builder.interceptPoint;
         this.interceptors = builder.interceptors;
         this.controllerMethod = builder.controllerMethod;
+        this.methodInfo = builder.methodInfo;
         this.resultHandler = builder.resultHandler;
         this.interceptorCount = interceptors.size();
     }
 
 
-    protected void remove() {
-        threadLocal.remove();
-    }
 
     public CatInterceptPoint getInterceptPoint() {
         return interceptPoint;
@@ -68,12 +78,12 @@ public class CatServerContextHolder {
     /**
      * 执行
      * */
-    public Object executeRequest() throws Exception {
+    public Object executeRequest() throws Throwable {
         if ( interceptorIndex < interceptorCount ){
             try {
                 CatInterceptor interceptor = interceptors.get(interceptorIndex ++ );
                 return interceptor.postHandle(this);
-            } catch ( Exception ex ) {
+            } catch ( Throwable ex ) {
                 throw ex;
             }
         }
@@ -84,9 +94,11 @@ public class CatServerContextHolder {
     /**
      * 当发生异常时
      * */
-    public Object onErrorToWrapper(Throwable exception) {
+    public Object onErrorToWrapper(Throwable throwable) {
         try {
-            return resultHandler.onError(exception);
+            Method method = methodInfo.getInterMethod().getIntrospectedMethod();
+            Class<?> returnType = method.getReturnType();
+            return resultHandler.onError(throwable, returnType);
         } catch ( Throwable ex ) {
             throw new RuntimeException(ex);
         }
@@ -104,6 +116,7 @@ public class CatServerContextHolder {
         private CatInterceptPoint interceptPoint;
         private List<? extends CatInterceptor> interceptors;
         private CatInterceptor controllerMethod;
+        private CatMethodInfo methodInfo;
         private CatServerResultHandler resultHandler;
 
         public Builder interceptPoint(CatInterceptPoint interceptPoint) {
@@ -118,6 +131,11 @@ public class CatServerContextHolder {
 
         public Builder controllerMethod(CatInterceptor controllerMethod) {
             this.controllerMethod = controllerMethod;
+            return this;
+        }
+
+        public Builder methodInfo(CatMethodInfo methodInfo) {
+            this.methodInfo = methodInfo;
             return this;
         }
 

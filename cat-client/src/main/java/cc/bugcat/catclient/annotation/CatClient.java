@@ -1,10 +1,10 @@
 package cc.bugcat.catclient.annotation;
 
-import cc.bugcat.catclient.handler.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import org.springframework.core.annotation.AliasFor;
@@ -58,28 +58,40 @@ public @interface CatClient {
 
     /**
      * http发送拦截器
+     * 可以添加日志、修改入参签名、token等处理
      * */
     Class<? extends CatMethodSendInterceptor> interceptor() default CatMethodSendInterceptor.class;
 
 
     /**
-     * 异常处理类，当接口发生http异常（40x、50x），执行的回调方法。类似FeignClient的fallback。
-     * 默认使用{@link CatResultProcessor#onHttpError}处理
+     * 异常处理类，当接口发生http异常（40x、50x），执行的回调方法。
+     *
+     * 类似FeignClient的fallback。
+     *
+     * 1、Object.class：尝试使用interface默认方法，如果interface没有默认实现，再执行{@link CatResultProcessor#onHttpError}
+     * 2、Void.class：关闭回调模式
+     * 3、其他class值，必须实现该interface。当发生异常后，执行实现类的对应方法。
+     *
+     * 如果在回调方法中，继续抛出异常，或者关闭回调模式，会执行{@link CatResultProcessor#onHttpError}进行处理
+     *
+     * CatResultProcessor可以通过扩展后的CatClientFactory进行增强
+     *
      * @see CatMethodAopInterceptor#intercept
      * */
     Class fallback() default Object.class;
 
 
+
     /**
-     * 读值超时；-1 代表不限制
+     * http读值超时毫秒；-1 代表不限制
      * */
-    int socket() default CatClientConfiguration.socket;
+    int socket() default CatClientConfiguration.SOCKET;
 
 
     /**
-     * 链接超时；-1 代表不限制
+     * http链接超时毫秒；-1 代表不限制
      * */
-    int connect() default CatClientConfiguration.connect;
+    int connect() default CatClientConfiguration.CONNECT;
 
 
     /**
@@ -89,7 +101,9 @@ public @interface CatClient {
 
 
     /**
-     * 分组标记，配置重连分组
+     * 分组标记，字面量
+     *
+     * 用于配置重连分组、日志、自定义标签等。
      * */
     String[] tags() default "";
 

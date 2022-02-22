@@ -1,6 +1,7 @@
 package cc.bugcat.example.catserver.server;
 
 
+import cc.bugcat.catserver.annotation.CatBefore;
 import cc.bugcat.example.catserver.DemoService;
 import cc.bugcat.example.dto.DemoEntity;
 import com.alibaba.fastjson.JSONObject;
@@ -16,14 +17,14 @@ import java.util.List;
 
 
 /**
- * 
+ *
  * 没错！支持继承！
  * 子类重写父类方法之后，就实现了api升级！
- * 
+ *
  * 但是<b>不建议！</b>
- * 
+ *
  * @author bugcat
- * 
+ *
  * */
 @Api(tags = "服务端API - 继承类")
 @CatServer
@@ -32,8 +33,9 @@ public class ApiRemoteImplExt extends ApiRemoteImpl {
 
     @Autowired
     private DemoService demoService;
-    
 
+
+    @CatBefore(ApiRemoteParameterResolver.class)
     public ResponseEntity<Demo> demo1(Demo req) {
         System.out.println("demo21 >>> req: " + JSONObject.toJSONString(req));
         Demo resp = demoService.creart();
@@ -46,7 +48,7 @@ public class ApiRemoteImplExt extends ApiRemoteImpl {
         return "ok";
     }
 
-    
+
     public ResponseEntity<PageInfo<Demo>> demo3(Demo req) {
         System.out.println("demo23 >>> req: " + JSONObject.toJSONString(req));
 
@@ -60,7 +62,7 @@ public class ApiRemoteImplExt extends ApiRemoteImpl {
 
         return ResponseEntity.ok(info);
     }
-    
+
 
     public Demo demo5(Long uid) {
         System.out.println("demo25 >>> req: userId=" + uid);
@@ -69,6 +71,6 @@ public class ApiRemoteImplExt extends ApiRemoteImpl {
         return resp;
     }
 
-    
-    
+
+
 }

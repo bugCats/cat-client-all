@@ -6,49 +6,83 @@ import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.*;
 import cc.bugcat.catclient.utils.CatRestHttp;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import org.springframework.beans.factory.InitializingBean;
 
 
 /**
  * 全局默认值
  *
- * {@link EnableCatClient#configuration()}
+ * 在{@link EnableCatClient#configuration()}配置
  *
  * @author bugcat
  * */
-public class CatClientConfiguration {
+public class CatClientConfiguration implements InitializingBean {
 
-    // 初始值
-    public static final Class wrapper = AbstractResponesWrapper.Default.class;
-    public static final Class factory = CatClientFactory.class;
-    public static final Class methodInterceptor = CatMethodSendInterceptor.class;
-    public static final CatLogsMod logsMod = CatLogsMod.Def;
-    public static final int socket = 0;
-    public static final int connect = 0;
+    /**
+     * 包装器类
+     * */
+    public static final Class<? extends AbstractResponesWrapper> WRAPPER = AbstractResponesWrapper.Default.class;
+
+    /**
+     * 默认工厂类
+     * */
+    public static final Class<? extends CatClientFactory> CLIENT_FACTORY = CatClientFactory.class;
+
+    /**
+     * 默认http拦截器类
+     * */
+    public static final Class<? extends CatMethodSendInterceptor> METHOD_INTERCEPTOR = CatMethodSendInterceptor.class;
+
+    /**
+     * 默认打印日志方案
+     * */
+    public static final CatLogsMod LOGS_MOD = CatLogsMod.Def;
+
+    /**
+     * 关闭异常回调模式
+     * */
+    public static final Class FALLBACK_OFF = Void.class;
+
+    /**
+     * http链接读取超时
+     * */
+    public static final int SOCKET = 0;
+    public static final int CONNECT = 0;
+
+
+
+    protected CatHttp defaultCatHttp;
+    protected CatJsonResolver defaultJsonResolver;
+    protected CatLoggerProcessor defaultLoggerProcessor;
+
+    @Override
+    public void afterPropertiesSet() {
+        this.defaultCatHttp = new CatRestHttp();
+        this.defaultJsonResolver = new CatJacksonResolver();
+        this.defaultLoggerProcessor = new CatLoggerProcessor(){};
+    }
 
 
     /**
      * 统一的响应实体包装器类
      * */
-    public Class<? extends AbstractResponesWrapper> wrapper(){
-        return wrapper;
+    public Class<? extends AbstractResponesWrapper> getWrapper(){
+        return WRAPPER;
     }
 
 
     /**
-     * 读值超时，默认 1s；-1 代表不限制
+     * http读值超时毫秒，默认 1s；-1 代表不限制
      * */
-    public int socket(){
+    public int getSocket(){
         return 1000;
     }
 
 
     /**
-     * 读值超时，默认 1s；-1 代表不限制
+     * http链接超时毫秒，默认 1s；-1 代表不限制
      * */
-    public int connect(){
+    public int getConnect(){
         return 1000;
     }
 
@@ -56,7 +90,7 @@ public class CatClientConfiguration {
     /**
      * 默认日志记录方案
      * */
-    public CatLogsMod logsMod(){
+    public CatLogsMod getLogsMod(){
         return CatLogsMod.All2;
     }
 
@@ -64,41 +98,42 @@ public class CatClientConfiguration {
     /**
      * 发送类和响应处理类工厂
      * */
-    public Class<? extends CatClientFactory> clientFactory(){
-        return factory;
+    public Class<? extends CatClientFactory> getClientFactory(){
+        return CLIENT_FACTORY;
     }
 
+
     /**
-     * 默认的拦截器
+     * 默认的http发送拦截器
      * */
-    public Class<? extends CatMethodSendInterceptor> methodInterceptor(){
-        return methodInterceptor;
+    public Class<? extends CatMethodSendInterceptor> getMethodInterceptor(){
+        return METHOD_INTERCEPTOR;
     }
 
     /**
      * 默认http类
+     * 建议为单例
      * */
-    public Supplier<CatHttp> catHttp(){
-        final CatHttp catHttp = new CatRestHttp();
-        return () -> catHttp;
+    public CatHttp getCatHttp(){
+        return defaultCatHttp;
     }
 
 
     /**
      * 默认序列化对象
+     * 建议为单例
      * */
-    public Supplier<CatJsonResolver> jsonResolver(){
-        final CatJsonResolver jsonResolver = new CatJacksonResolver();
-        return () -> jsonResolver;
+    public CatJsonResolver jsonResolver(){
+        return defaultJsonResolver;
     }
 
 
     /**
      * 默认日志打印
+     * 建议为单例
      * */
-    public Supplier<CatLoggerProcessor> loggerProcessor(){
-        final CatLoggerProcessor loggerProcessor = new CatLoggerProcessor(){};
-        return () -> loggerProcessor;
+    public CatLoggerProcessor loggerProcessor(){
+        return defaultLoggerProcessor;
     }
 
 }

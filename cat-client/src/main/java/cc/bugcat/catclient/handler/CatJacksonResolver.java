@@ -5,6 +5,7 @@ import cc.bugcat.catclient.spi.CatJsonResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +36,7 @@ public class CatJacksonResolver implements CatJsonResolver{
         if( mapper == null ){
             mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            mapper.enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES);
         }
     }
 

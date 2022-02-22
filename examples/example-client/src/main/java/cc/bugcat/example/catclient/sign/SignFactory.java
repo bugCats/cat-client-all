@@ -1,13 +1,15 @@
 package cc.bugcat.example.catclient.sign;
 
-import cc.bugcat.catclient.handler.CatSendProcessor;
-import cc.bugcat.catclient.handler.DefaultCatClientFactory;
+import cc.bugcat.catclient.spi.CatSendProcessor;
+import cc.bugcat.catclient.spi.DefaultCatClientFactory;
+
+import java.util.function.Supplier;
 
 public class SignFactory extends DefaultCatClientFactory {
 
     @Override
-    public CatSendProcessor newSendHandler() {
-        return new SignSendProcessor();
+    public Supplier<CatSendProcessor> newSendHandler() {
+        return () -> new SignSendProcessor();
     }
 
 }

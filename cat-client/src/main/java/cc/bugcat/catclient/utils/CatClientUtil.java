@@ -92,6 +92,9 @@ public class CatClientUtil implements ApplicationContextAware {
     }
 
 
+    public static ApplicationContext getContext(){
+        return context;
+    }
 
     /**
      * 适配Spring环境变量为Properties

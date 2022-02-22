@@ -7,7 +7,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -23,22 +22,28 @@ import java.util.function.Function;
 
 /**
  * cat-server 工具类
+ *
+ *
  * @author bugcat
  * */
 public class CatServerUtil implements ApplicationContextAware{
 
-    public static final String beanName = "catServerUtil";
 
     /**
      * 通过cglib动态生成的类名、方法名后缀
      * */
     public static final String BRIDGE_NAME = "_byBugcat";
 
+    /**
+     * interface方法上包含的注解
+     * */
     public static final String REQUEST_MAPPING = RequestMapping.class.getName();
 
 
+    /**
+     * spring容器
+     * */
     private static ApplicationContext context;
-
 
 
     @Override

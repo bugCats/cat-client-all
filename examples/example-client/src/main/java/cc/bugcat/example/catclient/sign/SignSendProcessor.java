@@ -2,7 +2,7 @@ package cc.bugcat.example.catclient.sign;
 
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;

@@ -8,7 +8,7 @@ import cc.bugcat.example.tools.ResponseEntity;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;

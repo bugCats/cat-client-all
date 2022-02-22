@@ -1,7 +1,7 @@
 package cc.bugcat.example.catclient.serverApi;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.example.api.UserService;
 import cc.bugcat.example.api.FaceDemoService;
 

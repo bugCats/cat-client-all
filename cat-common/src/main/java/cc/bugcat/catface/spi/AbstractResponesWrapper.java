@@ -11,9 +11,10 @@ import java.util.Map;
  * http响应包装器类处理
  *
  * 部分框架，服务端的响应，为统一对象，具体的业务数据，是统一对象通过泛型确认的属性。
- * 比喻{@link ResponseEntity} {@link HttpEntity}，具体响应是通过泛型 T 确认的body属性
  *
- * 可以称这类ResponseEntity、HttpEntity为响应包装器类
+ * 比喻{@link ResponseEntity<>} {@link HttpEntity<>}，{@code ResponesDTO<User>}，具体响应是通过泛型 T 确认的一个属性
+ *
+ * 可以称这类ResponseEntity、HttpEntity、ResponesDTO为响应包装器类
  *
  * 1、对于cat-client，此处可以设置去包装器类，从而interface的方法，可以直接返回具体的业务对象
  *
@@ -35,20 +36,20 @@ public abstract class AbstractResponesWrapper<T> {
 
 
 
-    public final static AbstractResponesWrapper getResponesWrapper(Class<? extends AbstractResponesWrapper> clazz){
-        if( clazz == null ){
+    public final static AbstractResponesWrapper getResponesWrapper(Class<? extends AbstractResponesWrapper> wrapperClass){
+        if( wrapperClass == null ){
             return null;
         }
-        AbstractResponesWrapper wrapper = wrapperMap.get(clazz);
+        AbstractResponesWrapper wrapper = wrapperMap.get(wrapperClass);
         if( wrapper == null ){
             synchronized ( wrapperMap ) {
-                wrapper = wrapperMap.get(clazz);
+                wrapper = wrapperMap.get(wrapperClass);
                 if ( wrapper == null ) {
                     try {
-                        wrapper = clazz.newInstance();
-                        wrapperMap.put(clazz, wrapper);
+                        wrapper = wrapperClass.newInstance();
+                        wrapperMap.put(wrapperClass, wrapper);
                     } catch ( Exception e ) {
-                        throw new RuntimeException("获取" + clazz.getSimpleName() + "包装器类异常");
+                        throw new RuntimeException("获取" + wrapperClass.getSimpleName() + "包装器类异常");
                     }
                 }
             }
@@ -64,10 +65,12 @@ public abstract class AbstractResponesWrapper<T> {
 
 
     /**
-     * 获取json转对象泛型 eg: new CatTypeReference<ResponseEntity<T>>(type){};
+     * 获取json转对象泛型：new CatTypeReference<ResponseEntity<T>>(type){};
+     * @see CatTypeReference
+     *
      * @param type 业务类型的Type。其中，ResponseEntity 为包装器类
      * */
-    public abstract <T> CatTypeReference getWrapperType(Type type);
+    public abstract <T> CatTypeReference<T> getWrapperType(Type type);
 
 
     /**

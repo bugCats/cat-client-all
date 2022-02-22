@@ -12,6 +12,7 @@ import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -24,7 +25,7 @@ public final class CatClientInfo {
 
     /**
      * 全局默认配置类
-     * 可以在{@link EnableCatClient}注解的{@code defaults}属性指定
+     * 可以在{@link EnableCatClient}注解的{@code configuration}属性指定
      * */
     private final CatClientDepend clientDepend;
 
@@ -34,7 +35,8 @@ public final class CatClientInfo {
     private final String serviceName;
 
     /**
-     * 远程服务器主机：http://${host}/ctx，此时${host}已经被变量填充
+     * 远程服务器主机：http://${host}/ctx
+     * 此时${host}已经被变量填充
      * */
     private final String host;
 
@@ -82,7 +84,7 @@ public final class CatClientInfo {
     /**
      * 响应包装器类处理{@link AbstractResponesWrapper}
      * */
-    private final Class<? extends AbstractResponesWrapper> wrapperHandler;
+    private final AbstractResponesWrapper wrapperHandler;
 
 
     /**
@@ -107,31 +109,37 @@ public final class CatClientInfo {
 
         int connect = client.connect();
         connect = connect < 0 ? -1 : connect;
-        this.connect = CatClientConfiguration.connect == connect ? clientConfig.connect() : connect;
+        this.connect = CatToosUtil.comparator(CatClientConfiguration.CONNECT, Arrays.asList(connect), clientConfig.getConnect());
 
         int socket = client.socket();
         socket = socket < 0 ? -1 : socket;
-        this.socket = CatClientConfiguration.socket == socket ? clientConfig.socket() : socket;
+        this.socket = CatToosUtil.comparator(CatClientConfiguration.SOCKET, Arrays.asList(socket), clientConfig.getSocket());
 
-        CatLogsMod logsMod = client.logsMod();
-        logsMod = CatClientConfiguration.logsMod.equals(logsMod) ? clientConfig.logsMod() : logsMod;
-        this.logsMod = CatLogsMod.Def.equals(logsMod) ? CatLogsMod.All2 : logsMod;
+        this.logsMod = CatToosUtil.comparator(CatClientConfiguration.LOGS_MOD, Arrays.asList(client.logsMod(), clientConfig.getLogsMod()), CatLogsMod.All2);
 
         this.tags = client.tags();
 
-        Class<? extends CatClientFactory> factoryClass = client.factory();
-        this.factoryClass = CatClientConfiguration.factory.equals(factoryClass) ? clientConfig.clientFactory() : factoryClass;
+        this.factoryClass = CatToosUtil.comparator(CatClientConfiguration.CLIENT_FACTORY, Arrays.asList(client.factory()), clientConfig.getClientFactory());
 
-        Class<? extends CatMethodSendInterceptor> interceptorClass = client.interceptor();
-        this.interceptorClass = CatClientConfiguration.methodInterceptor.equals(interceptorClass) ? clientConfig.methodInterceptor() : interceptorClass;
-
-        this.fallback = client.fallback();
-        this.fallbackMod = fallback != Object.class;
+        this.interceptorClass = CatToosUtil.comparator(CatClientConfiguration.METHOD_INTERCEPTOR, Arrays.asList(client.interceptor()), clientConfig.getMethodInterceptor());
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
-        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? clientConfig.wrapper() : responesWrapper.value();
-        this.wrapperHandler = CatClientConfiguration.wrapper.equals(wrapper) ? null : wrapper;
+        if ( responesWrapper != null ){
+            Class<? extends AbstractResponesWrapper> wrapper = CatToosUtil.comparator(CatClientConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), clientConfig.getWrapper()), null);
+            this.wrapperHandler = wrapper != null ? AbstractResponesWrapper.getResponesWrapper(wrapper) : null;
+        } else {
+            this.wrapperHandler = null;
+        }
+
+        Class fallback = client.fallback();
+        if ( CatClientConfiguration.FALLBACK_OFF.equals(fallback) ) { // Void.class 关闭回调
+            this.fallback = Object.class;
+            this.fallbackMod = false;
+        } else {
+            this.fallback = client.fallback();
+            this.fallbackMod = true;
+        }
 
         this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
     }
@@ -190,7 +198,7 @@ public final class CatClientInfo {
     public Class getFallback() {
         return fallback;
     }
-    public Class<? extends AbstractResponesWrapper> getWrapperHandler() {
+    public AbstractResponesWrapper getWrapperHandler() {
         return wrapperHandler;
     }
     public Catface getCatface() {

@@ -1,9 +1,8 @@
 package cc.bugcat.catserver.spi;
 
 
-import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 import cc.bugcat.catserver.handler.CatInterceptPoint;
-import cc.bugcat.catserver.handler.CatServerContextHolder;
+import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 
 
 /**
@@ -19,27 +18,9 @@ import cc.bugcat.catserver.handler.CatServerContextHolder;
  *
  * @see CatMethodAopInterceptor
  *
+ * @author bugcat
  * */
 public interface CatServerInterceptor extends CatInterceptor {
-
-
-    /**
-     * 关闭拦截器
-     * */
-    public static class Off implements CatServerInterceptor {
-
-    }
-
-    /**
-     * 默认拦截器组
-     * */
-    public final static CatServerInterceptor DEFAULT = new CatServerInterceptor() {};
-    /**
-     * 关闭拦截器
-     * */
-    public final static CatServerInterceptor OFF = new CatServerInterceptor.Off() {};
-
-
 
 
     /**
@@ -57,13 +38,7 @@ public interface CatServerInterceptor extends CatInterceptor {
     }
 
 
-    /**
-     * 执行拦截器
-     * */
-    @Override
-    default Object postHandle(CatServerContextHolder contextHolder) throws Exception {
-        return contextHolder.executeRequest();
-    }
+
 
 
 }

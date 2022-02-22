@@ -1,21 +1,27 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catserver.beanInfos.CatMethodInfo;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 增强被@CatServer标记的interface处理结果
+ * 被@CatServer标记的interface增强后的处理结果
+ *
+ * @author bugcat
  * */
 public class CatAsmResult {
 
 
-    //增强后的class
+    /**
+     * 增强后的class
+     * */
     private Class enhancerClass;
 
-    //增强前后的方法信息
-    private Map<String, CatMethodInfo> methodInfoMap = new HashMap<>();
+
+    /**
+     * 增强前后的方法信息
+     * */
+    private Map<String, CatAsmMethod> methodInfoMap = new HashMap<>();
+
 
 
     public Class getEnhancerClass() {
@@ -25,10 +31,10 @@ public class CatAsmResult {
         this.enhancerClass = enhancerClass;
     }
 
-    public Map<String, CatMethodInfo> getMethodInfoMap() {
+    public Map<String, CatAsmMethod> getMethodInfoMap() {
         return methodInfoMap;
     }
-    public void putCatMethodInfo(CatMethodInfo methodInfo) {
+    public void putCatMethodInfo(CatAsmMethod methodInfo) {
         methodInfoMap.put(methodInfo.getEnhancerSignatureId(), methodInfo);
     }
 

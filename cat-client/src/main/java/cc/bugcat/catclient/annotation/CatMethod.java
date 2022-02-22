@@ -65,7 +65,7 @@ public @interface CatMethod {
 
 
     /**
-     * 读值超时：
+     * http读值超时毫秒；
      * -1 不限；0 同当前interface配置；其他值，超时的毫秒数
      * */
     int socket() default 0;
@@ -73,7 +73,7 @@ public @interface CatMethod {
 
 
     /**
-     * 链接超时：
+     * http链接超时毫秒；
      * -1 不限；0 同当前interface配置；其他值，超时的毫秒数
      * */
     int connect() default 0;
@@ -85,7 +85,6 @@ public @interface CatMethod {
      * Def：同当前interface配置
      * */
     CatLogsMod logsMod() default CatLogsMod.Def;
-
 
 
 }

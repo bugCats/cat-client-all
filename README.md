@@ -239,7 +239,7 @@ public class CatServerApplication {
 
 可以在*interface*上直接添加 **@CatClient** ，通过注解扫描加载：   
 ```java
-@CatClient(host = "${user-server}", connect = 3000, logs = RequestLogs.All2)
+@CatClient(host = "${user-server}", getConnect = 3000, logs = RequestLogs.All2)
 public interface UserService {
     
     @CatMethod( value = "/user/userPage", method = RequestMethod.POST)
@@ -263,7 +263,7 @@ public interface UserService {
 public interface Remotes extends CatClients {
 
 
-    @CatClient(host = "${core-server.remoteApi}", connect = 3000, socket = 3000)
+    @CatClient(host = "${core-server.remoteApi}", getConnect = 3000, getSocket = 3000)
     UserService userService();
 
 }

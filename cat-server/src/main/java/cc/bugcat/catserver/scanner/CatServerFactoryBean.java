@@ -7,7 +7,6 @@ import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -16,15 +15,13 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.IntFunction;
 
 /**
  * 将动态生成的interface实现类，注册成Controller
+ *
+ *
  * @author: bugcat
  * */
 public class CatServerFactoryBean implements InitializingBean {

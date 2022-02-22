@@ -30,6 +30,9 @@ import static springfox.documentation.spring.web.paths.Paths.splitCamelCase;
 /**
  * swagger扫描
  * 如果启用swagger，需要修改扫描地方
+ *
+ *
+ * @author bugcat
  * */
 public class CatSwaggerScanner extends ApiListingReferenceScanner {
 

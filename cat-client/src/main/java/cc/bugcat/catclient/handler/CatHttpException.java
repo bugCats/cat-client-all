@@ -1,5 +1,7 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catface.utils.CatToosUtil;
+
 /**
  * http异常
  *
@@ -7,12 +9,13 @@ package cc.bugcat.catclient.handler;
  * */
 public class CatHttpException extends Exception {
 
-    private final Integer statusCode;         //异常代码
+    private final Integer statusCode;       //异常代码
     private final String statusText;
-    private final Exception exception;    //原始异常
+    private final Throwable exception;      //原始异常
 
 
     public CatHttpException(int statusCode, String statusText, Exception exception) {
+        super(CatToosUtil.getCause(exception));
         this.statusCode = statusCode;
         this.statusText = statusText;
         this.exception = exception;
@@ -25,13 +28,12 @@ public class CatHttpException extends Exception {
         return statusText;
     }
 
-    public Exception getIntrospectedException(){
-        return exception;
+    public Throwable getIntrospectedException(){
+        return super.getCause() != null ? getCause() : exception;
     }
 
-    public Class<? extends Exception> getIntrospectedClass() {
-        return exception.getClass();
+    public Class<? extends Throwable> getIntrospectedClass() {
+        return this.getIntrospectedException().getClass();
     }
-
 
 }

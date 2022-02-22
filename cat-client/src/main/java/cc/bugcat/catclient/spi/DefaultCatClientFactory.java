@@ -1,8 +1,7 @@
-package cc.bugcat.catclient.handler;
+package cc.bugcat.catclient.spi;
 
 
 import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.spi.*;
 
 import java.util.function.Supplier;
 
@@ -14,7 +13,9 @@ import java.util.function.Supplier;
  * */
 public class DefaultCatClientFactory implements CatClientFactory {
 
+
     private CatClientConfiguration configuration;
+    private CatResultProcessor defaultResultHandler;
 
     /**
      * 全局配置对象
@@ -22,21 +23,22 @@ public class DefaultCatClientFactory implements CatClientFactory {
     @Override
     public void setClientConfiguration(CatClientConfiguration clientConfiguration) {
         this.configuration = clientConfiguration;
+        this.defaultResultHandler = new DefaultResultHandler();
     }
 
     /**
      * http发送对象
      * */
     @Override
-    public Supplier<CatHttp> getCatHttp() {
-        return configuration.catHttp();
+    public CatHttp getCatHttp() {
+        return configuration.getCatHttp();
     }
 
     /**
      * 对象序列化与反序列化
      * */
     @Override
-    public Supplier<CatJsonResolver> getJsonResolver() {
+    public CatJsonResolver getJsonResolver() {
         return configuration.jsonResolver();
     }
 
@@ -44,25 +46,26 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * 日志处理类对象
      * */
     @Override
-    public Supplier<CatLoggerProcessor> getLoggerProcessor() {
+    public CatLoggerProcessor getLoggerProcessor() {
         return configuration.loggerProcessor();
     }
 
-    /**
-     * 发送类对象
-     * */
-    @Override
-    public CatSendProcessor newSendHandler() {
-        return new DefaultSendHandler();
-    }
 
     /**
      * 结果处理类对象
      * */
     @Override
     public CatResultProcessor getResultHandler() {
-        return new DefaultResultHandler();
+        return defaultResultHandler;
     }
 
+    /**
+     * 发送类对象
+     * 必须为多例
+     * */
+    @Override
+    public Supplier<CatSendProcessor> newSendHandler() {
+        return () -> new DefaultSendHandler();
+    }
 
 }

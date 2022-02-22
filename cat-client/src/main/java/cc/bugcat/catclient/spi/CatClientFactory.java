@@ -1,8 +1,6 @@
 package cc.bugcat.catclient.spi;
 
 import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.handler.CatResultProcessor;
-import cc.bugcat.catclient.handler.CatSendProcessor;
 
 import java.util.function.Supplier;
 
@@ -22,27 +20,28 @@ public interface CatClientFactory {
     /**
      * 得到http请求对象
      * */
-    Supplier<CatHttp> getCatHttp();
+    CatHttp getCatHttp();
 
     /**
      * 得到对象序列化与反序列化对象
      * */
-    Supplier<CatJsonResolver> getJsonResolver();
+    CatJsonResolver getJsonResolver();
 
 
     /**
      * 得到日志处理对象
      * */
-    Supplier<CatLoggerProcessor> getLoggerProcessor();
-
-    /**
-     * 创建一个新的http发送对象
-     * */
-    CatSendProcessor newSendHandler();
+    CatLoggerProcessor getLoggerProcessor();
 
     /**
      * 得到结果处理对象
      * */
     CatResultProcessor getResultHandler();
+
+    /**
+     * 创建一个新的http发送对象
+     * 必须为多例
+     * */
+    Supplier<CatSendProcessor> newSendHandler();
 
 }

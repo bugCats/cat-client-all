@@ -1,7 +1,7 @@
 package cc.bugcat.example;
 
 import cc.bugcat.catclient.annotation.EnableCatClient;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.example.catclient.remote.ApiRemoteService1;
 import cc.bugcat.example.catclient.remote.ApiRemoteService2;
 import cc.bugcat.example.catclient.remote.ApiRemoteService3;
@@ -11,7 +11,6 @@ import cc.bugcat.example.catclient.sign.SignRemote;
 import cc.bugcat.example.catclient.token.TokenRemote;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.dto.DemoDTO;
-import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
 import com.alibaba.fastjson.JSONObject;
@@ -19,7 +18,6 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

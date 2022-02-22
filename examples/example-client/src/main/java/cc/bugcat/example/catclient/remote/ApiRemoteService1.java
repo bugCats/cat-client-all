@@ -3,7 +3,9 @@ package cc.bugcat.example.catclient.remote;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catclient.annotation.CatNote;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
+import cc.bugcat.catclient.spi.CatSendProcessor;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.tools.PageInfo;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
  * 需要启动 example-server 系统，调用 cc.bugcat.example.catclient.ApiRemoteController
  *
  * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote1Test}
+ *
+ *
  *
  * @author: bugcat
  * */
@@ -32,7 +36,19 @@ public interface ApiRemoteService1 {
      * @param req 入参
      * */
     @CatMethod(value = "/cat/demo1", method = RequestMethod.POST)
-    ResponseEntity<Demo> demo1(@RequestBody Demo req);
+    default ResponseEntity<Demo> demo1(@RequestBody Demo req) {
+
+        /**
+         * 当发生异常时执行
+         * */
+
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable ex = holder.getException();
+
+
+        Throwable exception = CatToosUtil.getException();
+        return ResponseEntity.fail("-1", exception.getMessage());
+    }
 
 
 
@@ -43,7 +59,17 @@ public interface ApiRemoteService1 {
      * @param req
      * */
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
-    String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
+    default String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req) {
+
+        /**
+         * 当发生异常时执行
+         * */
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable ex = holder.getException();
+
+        Throwable exception = CatToosUtil.getException();
+        return "-1@" + exception.getMessage();
+    }
 
 
 
@@ -55,7 +81,17 @@ public interface ApiRemoteService1 {
      * @param send  http请求发送类，必须是SendProcessor的子类；可无、位置可任意（对比demo2）
      * */
     @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
-    ResponseEntity<PageInfo<Demo>> demo3(Demo req, CatSendProcessor send);
+    default ResponseEntity<PageInfo<Demo>> demo3(Demo req, CatSendProcessor send) {
+
+        /**
+         * 当发生异常时执行
+         * */
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable ex = holder.getException();
+
+        Throwable exception = CatToosUtil.getException();
+        return ResponseEntity.fail("-1", exception.getMessage());
+    }
 
 
     /**
@@ -65,7 +101,10 @@ public interface ApiRemoteService1 {
      * @param mark 参数
      * */
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
-    ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark);
+    default ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark){
+        Throwable exception = CatToosUtil.getException();
+        return ResponseEntity.fail("-1", exception.getMessage());
+    }
 
 
     /**
@@ -74,7 +113,15 @@ public interface ApiRemoteService1 {
      * @param userId url上的参数，同样必须使用@PathVariable指定参数的名称，参数位置随意
      * */
     @CatMethod(value = "/cat/demo5/{userId}", method = RequestMethod.GET)
-    Demo demo5(@PathVariable("userId") Long userId);
+    default Demo demo5(@PathVariable("userId") Long userId){
+
+        /**
+         * 不做任何处理，继续抛出
+         * */
+
+        CatToosUtil.throwException();
+        return null;
+    }
 
 
 
@@ -87,7 +134,15 @@ public interface ApiRemoteService1 {
      * @param name 键值对参数
      * */
     @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
-    Void demo6(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name);
+    default Void demo6(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name){
+
+        /**
+         * 不做任何处理，继续抛出
+         * */
+
+        CatToosUtil.throwException();
+        return null;
+    }
 
 
 
@@ -98,7 +153,15 @@ public interface ApiRemoteService1 {
      * @param token 请求头中的参数
      * */
     @CatMethod(value = "/cat/demo5/{userId}", method = RequestMethod.GET)
-    Demo demo7(@PathVariable("userId") Long userId, @RequestHeader("token") String token);
+    default Demo demo7(@PathVariable("userId") Long userId, @RequestHeader("token") String token){
+
+        /**
+         * 不做任何处理，继续抛出
+         * */
+
+        CatToosUtil.throwException();
+        return null;
+    }
 
 
 
@@ -106,7 +169,9 @@ public interface ApiRemoteService1 {
      * 模拟发生http异常
      * */
     @CatMethod(value = "/cat/demo9", method = RequestMethod.GET)
-    ResponseEntity<String> demo9();
+    default ResponseEntity<String> demo9() {
+        return ResponseEntity.fail("-1", "模拟发生http异常");
+    }
 
 
 }

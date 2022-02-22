@@ -1,7 +1,7 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.utils.CatToosUtil;
-import cc.bugcat.catserver.handler.CatArgumentResolverStrategy;
+import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.*;
 import org.springframework.cglib.core.ReflectUtils;
@@ -49,11 +49,12 @@ import java.util.Map;
  *  UserInfo queryByUser(@RequestBody UserInfo_Virtual_queryByUser req);
  *
  *
+ * @author bugcat
  * */
 public class CatVirtualParameterEnhancer {
 
 
-    public static Class generator(CatArgumentResolverStrategy strategy) throws Exception {
+    public static Class generator(CatParameterResolverStrategy strategy) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
 
@@ -80,23 +81,26 @@ public class CatVirtualParameterEnhancer {
             String desc = descs[idx] + ";";
             String sign = signs[idx];
 
-            FieldSignature field = new FieldSignature();    // 字段描述信息
+            // 字段描述信息
+            FieldSignature field = new FieldSignature();
             field.fieldName = fieldName;
             field.descriptor = desc;
             field.signature = sign;
             field.resolve(annotations[idx]);
             fields[idx] = field;
 
-            FieldSignature getter = new FieldSignature();   // get方法描述信息
+            // get方法描述信息
+            FieldSignature getter = new FieldSignature();
             getter.fieldName = fieldName;
             getter.methodName = "get" + alias;
             getter.descriptor = "()" + desc;
             getter.signature = "()" + sign;
             getter.field = field;
 
-            FieldSignature setter = new FieldSignature();   // set方法描述信息
+            // set方法描述信息
+            FieldSignature setter = new FieldSignature();
             setter.fieldName = fieldName;
-            setter.methodName = "set" + alias;
+            setter.methodName = "setException" + alias;
             setter.descriptor = "(" + desc + ")V";
             setter.signature = "(" + sign + ")V";
             setter.field = field;
@@ -122,9 +126,9 @@ public class CatVirtualParameterEnhancer {
         cr.accept(visitor, ClassReader.EXPAND_FRAMES);
 
         byte[] newbs = cw.toByteArray();
-        Class gen = ReflectUtils.defineClass(className, newbs, classLoader);
-        CatInterfaceEnhancer.printClass(gen, newbs);
+        CatInterfaceEnhancer.printClass(className, newbs);
 
+        Class gen = ReflectUtils.defineClass(className, newbs, classLoader);
         return gen;
     }
 
@@ -147,7 +151,10 @@ public class CatVirtualParameterEnhancer {
     }
 
 
-    private static class MethodBuilder implements Opcodes{
+    /**
+     * 为虚拟入参对象，生成getter setter 和 toArray 方法体
+     * */
+    private static class MethodBuilder implements Opcodes {
 
         private final String classType;   // com/bugcat/example/asm/DemoUser
         private final String classDesc;   // Lcom/bugcat/example/asm/DemoUser;
@@ -280,7 +287,7 @@ public class CatVirtualParameterEnhancer {
 
 
     /**
-     * 全部转换
+     * 全部转换注解
      * */
     private static class AnnotationResolver {
 
@@ -326,6 +333,9 @@ public class CatVirtualParameterEnhancer {
      * */
     public static interface VirtualParameter {
         public Object[] toArray();
+        /**
+         * return new Object[]{arg0, arg1, arg2, ...};
+         * */
     }
 
 }

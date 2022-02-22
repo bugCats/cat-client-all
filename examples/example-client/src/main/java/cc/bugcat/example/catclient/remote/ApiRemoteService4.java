@@ -1,7 +1,7 @@
 package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.dto.Demo;

@@ -1,20 +1,32 @@
-package cc.bugcat.catserver.beanInfos;
+package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catserver.handler.CatArgumentResolverStrategy;
+import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 
 /**
- * 增强后interface的方法描述
+ * 增强后interface的方法描述信息
+ *
+ * @author bugcat
  * */
-public class CatMethodInfo {
+public class CatAsmMethod {
 
-    // 增强前方法签名
+
+    /**
+     * 增强前方法签名
+     * */
     private String interfaceSignatureId;
 
-    // 增强后方法签名
+
+    /**
+     * 增强后方法签名
+     * */
     private String enhancerSignatureId;
 
-    // 方法上的虚拟入参处理策略
-    private CatArgumentResolverStrategy resolverStrategy;
+
+    /**
+     * 方法上的虚拟入参处理策略
+     * */
+    private CatParameterResolverStrategy resolverStrategy;
+
 
 
 
@@ -32,10 +44,11 @@ public class CatMethodInfo {
         this.enhancerSignatureId = enhancerSignatureId;
     }
 
-    public CatArgumentResolverStrategy getResolverStrategy() {
+    public CatParameterResolverStrategy getResolverStrategy() {
         return resolverStrategy;
     }
-    public void setResolverStrategy(CatArgumentResolverStrategy resolverStrategy) {
+    public void setResolverStrategy(CatParameterResolverStrategy resolverStrategy) {
         this.resolverStrategy = resolverStrategy;
     }
+
 }

@@ -2,8 +2,7 @@ package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
-import cc.bugcat.catclient.handler.CatClientFactoryDecorator;
-import cc.bugcat.catclient.handler.DefineCatClients;
+import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;

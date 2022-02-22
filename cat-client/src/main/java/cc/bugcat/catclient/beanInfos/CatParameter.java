@@ -5,7 +5,7 @@ import java.util.Map;
 
 
 /**
- * 每次http请求解析后的参数对象
+ * 每次http请求，解析方法上的参数列表后的参数对象
  *
  * @author bugcat
  * */
@@ -26,10 +26,11 @@ public class CatParameter {
      * */
     private Map<String, Object> argMap;
 
-
     /**
      * 方法上经过处理之后的有效参数
-     * 当参数被@RequestBody、@ModelAttribute标记，或者仅当只有一个参数、并且为复杂对象时，value为对象；其他情况为Map
+     *
+     * 当参数被@RequestBody、@ModelAttribute标记，或者仅当只有一个复杂对象时，value为对象；
+     * 其他情况为Map
      * */
     private Object value;
 

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
  *
  *  CatClientInfoFactoryBean -> catClient-interface
  *
+ * @author bugcat
  * */
 public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDepend> {
 

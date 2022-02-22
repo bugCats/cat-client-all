@@ -8,12 +8,14 @@ import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 
+import java.util.Arrays;
 import java.util.Map;
 
 
 /**
  * {@code @CatServer} 注解对象信息
  *
+ * @author bugcat
  * */
 public class CatServerInfo {
 
@@ -39,7 +41,7 @@ public class CatServerInfo {
     private final Class<? extends CatServerInterceptor>[] interceptors;
 
     /**
-     * 自动加包装器处理类
+     * 响应包装器类处理{@link AbstractResponesWrapper}
      * */
     private final AbstractResponesWrapper wrapperHandler;
 
@@ -58,14 +60,19 @@ public class CatServerInfo {
         this.serverConfig = (CatServerConfiguration) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS);
 
         this.serverClass = serverClass;
-        this.tags = catServer.tags();
-        this.interceptors = catServer.interceptors();
 
+        this.tags = catServer.tags();
+
+        this.interceptors = catServer.interceptors();
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
-        Class<? extends AbstractResponesWrapper> wrapper = responesWrapper == null ? serverConfig.wrapper() : responesWrapper.value();
-        this.wrapperHandler = CatServerConfiguration.wrapper.equals(wrapper) ? null : AbstractResponesWrapper.getResponesWrapper(wrapper);
+        if ( responesWrapper != null ){
+            Class<? extends AbstractResponesWrapper> wrapper = CatToosUtil.comparator(CatServerConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), serverConfig.getWrapper()), null);
+            this.wrapperHandler = wrapper != null ? AbstractResponesWrapper.getResponesWrapper(wrapper) : null;
+        } else {
+            this.wrapperHandler = null;
+        }
 
         //是否启用精简模式
         this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);

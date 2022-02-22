@@ -16,12 +16,12 @@ public class CatMethodParamInfo {
     private final int index;
 
     /**
-     * 是否为String、基本数据类型、包装类
+     * 是否为简单数据类型：String、基本数据类型、包装类
      * */
     private final boolean simple;
 
     /**
-     * 是否为主要参数？只能容许有一个被@RequestBody、@ModelAttribute 标记的入参
+     * 是否为主要参数？只能有一个被@RequestBody、@ModelAttribute 标记的入参
      * */
     private final boolean primary;
 

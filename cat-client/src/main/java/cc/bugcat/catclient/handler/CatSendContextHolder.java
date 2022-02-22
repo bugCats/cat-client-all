@@ -3,8 +3,10 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
+import cc.bugcat.catface.utils.CatToosUtil;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +17,8 @@ import java.util.UUID;
  * 在同一个线程中，可以通过{@link CatSendContextHolder#getContextHolder()}获取到当前环境参数
  *
  * 一般用于异常回调模式中，获取原始http异常信息
+ *
+ * 或者使用{@link CatToosUtil#getException()}获取原始http异常
  *
  * @author bugcat
  * */
@@ -30,15 +34,17 @@ public final class CatSendContextHolder {
     }
 
 
+    protected void remove() {
+        threadLocal.remove();
+        CatToosUtil.removeException();
+    }
+
 
     /**
      * http原始响应内容，不一定有值
      * */
     private String responseBody;
-    /**
-     * http、或者对象反序列化异常时，一定不为null
-     * */
-    private Exception exception;
+
     /**
      * 如果发生异常，可以在异常回调模式中，返回默认结果
      * 或者在{@link CatResultProcessor#onHttpError(CatSendContextHolder)}方法中赋默认值
@@ -51,11 +57,12 @@ public final class CatSendContextHolder {
         return responseBody;
     }
 
-    public Exception getException() {
-        return exception;
+    public Throwable getException() {
+        return CatToosUtil.getException();
     }
-    public void setException(Exception exception) {
-        this.exception = exception;
+
+    public void setException(Throwable error) {
+        CatToosUtil.setException(CatToosUtil.getCause(error));
     }
 
     public Object getResult() {
@@ -74,7 +81,7 @@ public final class CatSendContextHolder {
     private final CatSendProcessor sendHandler;
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
-    private final CatClientFactoryDecorator factoryDecorator;
+    private final CatClientFactoryAdapter factoryAdapter;
     private final CatHttpRetryConfigurer retryConfigurer;
     private final CatMethodSendInterceptor interceptor;
 
@@ -84,7 +91,7 @@ public final class CatSendContextHolder {
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
         this.interceptor = builder.interceptor;
-        this.factoryDecorator = builder.factoryDecorator;
+        this.factoryAdapter = builder.factoryAdapter;
         this.retryConfigurer = builder.retryConfigurer;
     }
 
@@ -112,13 +119,9 @@ public final class CatSendContextHolder {
     protected void printLog() {
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
         List<CatClientLogger> catLogs = httpPoint.getCatLogs();
-        catLogs.forEach(catLog -> factoryDecorator.getLoggerProcessor().printLog(catLog));
+        catLogs.forEach(catLog -> factoryAdapter.getLoggerProcessor().printLog(catLog));
     }
 
-
-    protected void remove() {
-        threadLocal.remove();
-    }
 
 
 
@@ -134,8 +137,8 @@ public final class CatSendContextHolder {
     public CatMethodInfo getMethodInfo() {
         return methodInfo;
     }
-    public CatClientFactoryDecorator getFactoryDecorator() {
-        return factoryDecorator;
+    public CatClientFactoryAdapter getFactoryAdapter() {
+        return factoryAdapter;
     }
     public CatHttpRetryConfigurer getRetryConfigurer() {
         return retryConfigurer;
@@ -154,7 +157,7 @@ public final class CatSendContextHolder {
         private CatMethodInfo methodInfo;
         private CatMethodSendInterceptor interceptor;
         private CatSendProcessor sendHandler;
-        private CatClientFactoryDecorator factoryDecorator;
+        private CatClientFactoryAdapter factoryAdapter;
         private CatHttpRetryConfigurer retryConfigurer;
 
         public CatSendContextHolderBuilder clientInfo(CatClientInfo clientInfo) {
@@ -177,8 +180,8 @@ public final class CatSendContextHolder {
             return this;
         }
 
-        public CatSendContextHolderBuilder factoryDecorator(CatClientFactoryDecorator factoryDecorator) {
-            this.factoryDecorator = factoryDecorator;
+        public CatSendContextHolderBuilder factoryAdapter(CatClientFactoryAdapter factoryAdapter) {
+            this.factoryAdapter = factoryAdapter;
             return this;
         }
 

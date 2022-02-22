@@ -34,8 +34,8 @@ public abstract class CatTypeReference<T> {
 
     /**
      * 对于有泛型的类，并且泛型是变量情况，反序列化方式：
-     * new JackTypeReference<ResponseEntity<T>>(Demo){};
-     * new JackTypeReference<Map<S, T>>(String, Demo){};
+     * 1、new JackTypeReference<ResponseEntity<T>>(Demo){};
+     * 2、new JackTypeReference<Map<S, T>>(String, Demo){};
      *
      * @param actualTypeArguments 实际的泛型Type。顺序与泛型占位符一致
      * */

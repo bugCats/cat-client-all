@@ -3,11 +3,11 @@ package cc.bugcat.catserver.scanner;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatAsmResult;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
-import cc.bugcat.catserver.beanInfos.CatMethodInfo;
+import cc.bugcat.catserver.asm.CatAsmMethod;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.handler.CatArgumentResolverStrategy;
-import cc.bugcat.catserver.handler.CatMethodAopInterceptorBuilder;
+import cc.bugcat.catserver.handler.CatMethodBuilderFactory;
+import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
@@ -19,6 +19,9 @@ import java.util.*;
 
 /**
  * controller对象工厂
+ *
+ *
+ * @author bugcat
  * */
 public class CatControllerFactoryBean implements Comparable<CatControllerFactoryBean> {
 
@@ -87,14 +90,44 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
 
     public static class Builder {
 
+        /**
+         * 原始的被@CatServer标记的类
+         * */
         private Class serverClass;
+
+        /**
+         * {@code @CatServer}注解信息
+         * */
         private CatServerInfo serverInfo;
+
+        /**
+         * 通过动态代理生成的controller对象
+         * */
         private Object controller;
+
+        /**
+         * 增强后的interface方法
+         * */
         private Set<Method> bridgeMethods = new HashSet<>();
+
+        /**
+         * 当前CatServer类的继承层数
+         * */
         private int level = 0;
 
+        /**
+         * interface增强后结果缓存，防止同一个interface被反复增强
+         * */
         private Map<Class, CatAsmResult> controllerCache;
+
+        /**
+         * object方法拦截器
+         * */
         private MethodInterceptor defaultInterceptor;
+
+        /**
+         * 全局配置
+         * */
         private CatServerConfiguration serverConfig;
 
 
@@ -163,11 +196,17 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
 
             Class[] thisInters = new Class[interfaces.size()];
 
-            // 增强前的方法签名id
+            final Map<String, Method> serverMethodMap = new HashMap<>();
+            for ( Method method : serverClass.getMethods() ) {
+                String signatureId = CatServerUtil.signatureId(method);
+                serverMethodMap.put(signatureId, method);
+            }
+
+            // 增强前的interface方法签名id
             final Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
 
-            // 增强后的方法签名id：CatMethodInfo
-            final Map<String, CatMethodInfo> allMethodInfoMap = new HashMap<>();
+            // 增强后的interface方法签名id：CatMethodInfo
+            final Map<String, CatAsmMethod> allMethodInfoMap = new HashMap<>();
 
             for( int idx = interfaces.size() - 1; idx >= 0; idx -- ){ // 遍历每个interface
                 Class interfaceClass = interfaces.get(idx);
@@ -192,8 +231,8 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
             }
             // 此时thisInters中，全部为增强后的扩展interface
 
-            CatMethodAopInterceptorBuilder builder = CatMethodAopInterceptorBuilder.builder();
-            builder.serverInfo(serverInfo).serverClass(serverClass);
+            CatMethodBuilderFactory factory = CatMethodBuilderFactory.newFactory();
+            factory.serverInfo(serverInfo).serverClass(serverClass);
 
             CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
                 @Override
@@ -201,13 +240,18 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
 
                     // method为增强后的方法
                     String signatureId = CatServerUtil.signatureId(method);
-                    CatMethodInfo methodInfo = allMethodInfoMap.get(signatureId);
+                    CatAsmMethod methodInfo = allMethodInfoMap.get(signatureId);
                     if ( methodInfo != null ){
                         StandardMethodMetadata metadata = metadataMap.get(methodInfo.getInterfaceSignatureId());
                         if ( metadata != null ) {//原interface方法
-                            CatArgumentResolverStrategy resolver = methodInfo.getResolverStrategy();
-                            builder.interMethodMetadata(metadata).argumentResolver(resolver.createCatArgumentResolver());
-                            return builder.build();
+
+                            Method serverMethod = serverMethodMap.get(methodInfo.getInterfaceSignatureId());
+                            CatParameterResolverStrategy resolver = methodInfo.getResolverStrategy();
+                            factory.interMethodMetadata(metadata)
+                                    .serverMethod(serverMethod)
+                                    .parameterResolver(resolver.createParameterResolver());
+
+                            return factory.build();
                         }
                     }
 

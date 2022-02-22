@@ -1,9 +1,10 @@
-package cc.bugcat.catclient.handler;
+package cc.bugcat.catclient.spi;
 
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
+import cc.bugcat.catclient.handler.*;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatJsonResolver;
 import cc.bugcat.catclient.spi.CatObjectResolver;
@@ -17,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 /**
@@ -35,6 +37,9 @@ public class CatSendProcessor {
      * */
     private int retryCount = 0;
 
+    private Supplier<CatHttpPoint> httpPointSupplier;
+    private Supplier<CatObjectResolver> objectResolverSupplier;
+
     private CatSendContextHolder context;
     private CatHttpPoint httpPoint;
 
@@ -45,7 +50,7 @@ public class CatSendProcessor {
      * */
     public final void sendConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
         this.context = context;
-        this.retryCount = context.getRetryConfigurer() != null && context.getRetryConfigurer().isEnable() ? context.getRetryConfigurer().getRetries() : 0;
+        this.retryCount = context.getRetryConfigurer().isEnable() ? context.getRetryConfigurer().getRetries() : 0;
 
         CatMethodInfo methodInfo = context.getMethodInfo();
 
@@ -113,7 +118,7 @@ public class CatSendProcessor {
      * */
     public void afterVariableResolver(CatSendContextHolder context){
 
-        CatJsonResolver jsonResolver = context.getFactoryDecorator().getJsonResolver();
+        CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
         CatMethodInfo methodInfo = context.getMethodInfo();
 
         Object value = httpPoint.getObjectParam();
@@ -165,7 +170,7 @@ public class CatSendProcessor {
         long start = System.currentTimeMillis();
 
         CatMethodInfo methodInfo = context.getMethodInfo();
-        CatClientFactoryDecorator factoryDecorator = context.getFactoryDecorator();
+        CatClientFactoryAdapter factoryAdapter = context.getFactoryAdapter();
 
         CatClientLogger catLog = new CatClientLogger();
         catLog.setUuid(context.getUuid());
@@ -176,7 +181,7 @@ public class CatSendProcessor {
 
         String respStr = null;
         try {
-            respStr = factoryDecorator.getCatHttp().doHttp(httpPoint, catLog);
+            respStr = factoryAdapter.getCatHttp().doHttp(httpPoint, catLog);
         } catch ( CatHttpException ex ) {
             catLog.setException(ex);
             throw ex;
@@ -233,21 +238,30 @@ public class CatSendProcessor {
         return valueMap;
     }
 
-
     /**
      * 当前http请求的相关入参
      * 子类可重写增强
      * */
     protected CatHttpPoint newCatHttpPoint(){
-        return new CatHttpPoint();
+        return httpPointSupplier != null ? httpPointSupplier.get() : new CatHttpPoint();
     }
 
     /**
      * 键值对模式下，复杂对象转换
+     * 子类可重写增强
      * */
-    public CatObjectResolver newCatObjectResolver(){
-        return new CatObjectResolver.DefaultResolver();
+    protected CatObjectResolver newCatObjectResolver(){
+        return objectResolverSupplier != null ? objectResolverSupplier.get() : new CatObjectResolver.DefaultResolver();
     }
+
+    public void setHttpPointSupplier(Supplier<CatHttpPoint> httpPointSupplier) {
+        this.httpPointSupplier = httpPointSupplier;
+    }
+
+    public void setObjectResolverSupplier(Supplier<CatObjectResolver> objectResolverSupplier) {
+        this.objectResolverSupplier = objectResolverSupplier;
+    }
+
 
 
     public CatHttpPoint getHttpPoint() {

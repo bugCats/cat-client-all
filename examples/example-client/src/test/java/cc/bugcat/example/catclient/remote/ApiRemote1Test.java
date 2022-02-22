@@ -5,7 +5,7 @@ import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import cc.bugcat.catclient.handler.CatSendProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.tools.PageInfo;

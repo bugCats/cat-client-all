@@ -3,10 +3,8 @@ package cc.bugcat.catclient.spi;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodReturnInfo;
-import cc.bugcat.catclient.handler.CatResultProcessor;
 import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
-import cc.bugcat.catclient.handler.CatSendProcessor;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Constructor;
@@ -27,9 +25,6 @@ public class DefaultResultHandler implements CatResultProcessor {
      * */
     @Override
     public boolean canRetry(CatHttpException exception, CatSendContextHolder context) {
-        if( context.getRetryConfigurer() == null ){
-            return false;
-        }
         CatSendProcessor sendHandler = context.getSendHandler();
         return sendHandler.canRetry(context, exception);
     }
@@ -39,12 +34,14 @@ public class DefaultResultHandler implements CatResultProcessor {
      * 打发生http异常时，默认继续抛出
      * */
     @Override
-    public boolean onHttpError(CatSendContextHolder context) throws Exception {
+    public boolean onHttpError(CatSendContextHolder context) throws Throwable {
         throw context.getException();
     }
 
 
-
+    /**
+     * 字符串转方法返回对象
+     * */
     @Override
     public Object resultToBean(String result, CatSendContextHolder context) {
         if( result == null ){
@@ -52,9 +49,9 @@ public class DefaultResultHandler implements CatResultProcessor {
         }
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatClientInfo catClientInfo = context.getClientInfo();
-        CatJsonResolver resolver = context.getFactoryDecorator().getJsonResolver();
+        CatJsonResolver resolver = context.getFactoryAdapter().getJsonResolver();
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
-        AbstractResponesWrapper wrapperHandler = AbstractResponesWrapper.getResponesWrapper(catClientInfo.getWrapperHandler());
+        AbstractResponesWrapper wrapperHandler = catClientInfo.getWrapperHandler();
 
         Class returnClass = returnInfo.getClazz();
         if( String.class.equals(returnClass) ){
@@ -95,7 +92,7 @@ public class DefaultResultHandler implements CatResultProcessor {
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
 
-        AbstractResponesWrapper wrapperHandler = AbstractResponesWrapper.getResponesWrapper(clientInfo.getWrapperHandler());
+        AbstractResponesWrapper wrapperHandler = clientInfo.getWrapperHandler();
         if ( wrapperHandler == null || resp == null ) {
             return resp;
         }
@@ -166,6 +163,5 @@ public class DefaultResultHandler implements CatResultProcessor {
         }
         return text;
     }
-
 
 }

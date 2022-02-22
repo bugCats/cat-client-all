@@ -2,6 +2,7 @@ package cc.bugcat.catserver.handler;
 
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatVirtualParameterEnhancer;
+import cc.bugcat.catserver.spi.CatParameterResolver;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -14,55 +15,55 @@ import java.util.regex.Pattern;
 /**
  * 精简模式下，把方法上所有的入参，处理成一个虚拟对象的属性
  *
- * CatArgumentResolverStrategy 默认非精简模式
+ * CatParameterResolverStrategy 默认非精简模式
  *
+ * @author bugcat
  * */
-public class CatArgumentResolverStrategy {
+public class CatParameterResolverStrategy {
 
     private final static Pattern trimParameter = Pattern.compile("\\(([^\\)]*)\\)");
 
 
-    public static CatArgumentResolverStrategy createStrategy(boolean isCatface){
-        CatArgumentResolverStrategy strategy = null;
+    /**
+     * 入参处理器策略
+     * */
+    public static CatParameterResolverStrategy createStrategy(boolean isCatface){
+        CatParameterResolverStrategy strategy = null;
         if( isCatface ){
             strategy = new ResolverStrategy();
         } else {
-            strategy = new CatArgumentResolverStrategy();
+            strategy = new CatParameterResolverStrategy();
         }
         return strategy;
     }
 
 
-    public CatArgumentResolver createCatArgumentResolver(){
-        return new CatArgumentResolver.CatDefaultResolver();
-    }
 
-    public CatArgumentResolverStrategy method(Method method){
+
+    public CatParameterResolver createParameterResolver(){
+        return CatServerDefaults.DEFAULT_RESOLVER;
+    }
+    public CatParameterResolverStrategy method(Method method){
         return this;
     }
-
     public String transformDescriptor(String desc) {
         return desc;
     }
     public String transformSignature(String sign){
         return sign;
     }
-
     public boolean hasParameter(){
         return false;
     }
-
-    public CatArgumentResolverStrategy createVirtualParameterClass() {
+    public CatParameterResolverStrategy createVirtualParameterClass() {
         return this;
     }
-
     public String[] getAndResolverDescriptor(){
         return new String[0];
     }
     public String[] getAndResolverSignature() {
         return new String[0];
     }
-
     public String getClassName() {
         return null;
     }
@@ -75,7 +76,7 @@ public class CatArgumentResolverStrategy {
     /**
      * 精简模式
      * */
-    private static final class ResolverStrategy extends CatArgumentResolverStrategy {
+    private static final class ResolverStrategy extends CatParameterResolverStrategy {
 
         /**
          * 原interface方法信息
@@ -112,7 +113,7 @@ public class CatArgumentResolverStrategy {
          * @param method  原interface的方法
          * */
         @Override
-        public CatArgumentResolverStrategy method(Method method) {
+        public CatParameterResolverStrategy method(Method method) {
             this.method = method;
             this.className = method.getDeclaringClass().getName() + "_Virtual_" + method.getName();
             this.classDesc = "L" + className.replace(".", "/") + ";";
@@ -167,7 +168,7 @@ public class CatArgumentResolverStrategy {
          * 如果原interface方法上，存在参数，才创建
          * */
         @Override
-        public CatArgumentResolverStrategy createVirtualParameterClass() {
+        public CatParameterResolverStrategy createVirtualParameterClass() {
             if( hasParameter() ){
                 try { CatVirtualParameterEnhancer.generator(this); } catch ( Exception e ) {}
             }
@@ -181,8 +182,8 @@ public class CatArgumentResolverStrategy {
          * 实际server方法，为参数0~n列表，需要把虚拟入参对象的属性，转换成 Object[]。
          * */
         @Override
-        public CatArgumentResolver createCatArgumentResolver() {
-            return new CatArgumentResolver.CatFaceResolver();
+        public CatParameterResolver createParameterResolver() {
+            return CatServerDefaults.FACE_RESOLVER;
         }
 
 

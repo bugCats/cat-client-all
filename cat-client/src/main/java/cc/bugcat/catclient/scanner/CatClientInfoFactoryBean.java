@@ -1,20 +1,23 @@
 package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.CatClientFactoryDecorator;
+import cc.bugcat.catclient.handler.CatClientDepend;
+import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -29,6 +32,9 @@ import java.util.function.Function;
  * @author: bugcat
  * */
 public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
+
+
+    private final Log log = LogFactory.getLog(CatClientInfoFactoryBean.class);
 
     /**
      * 被{@code @CatClient}标记的interface
@@ -60,9 +66,15 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     protected T createInstance() throws Exception {
-        CatClientDepend clientDepend = CatClientUtil.getBean(CatClientDepend.class);
-        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend, envProp);
-        return createCatClient(interfaceClass, clientInfo, envProp);
+        try {
+            CatClientDepend clientDepend = CatClientUtil.getBean(CatClientDepend.class);
+            CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend, envProp);
+            return createCatClient(interfaceClass, clientInfo, envProp);
+        } catch ( Exception ex ) {
+            log.error(buildMessage(ex));
+            ((ConfigurableApplicationContext) CatClientUtil.getContext()).close();
+            throw new IllegalStateException(ex);
+        }
     }
 
 
@@ -98,7 +110,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             }
             return bean;
         });
-        final CatClientFactoryDecorator factoryDecorator = new CatClientFactoryDecorator(clientFactory);
+        final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientFactory);
 
         CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
@@ -109,8 +121,8 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                 } else {
 
                     /**
-                     * 是否使用了 fallback
-                     * 如果使用了，CallbackHelper.getCallback的入参Method，为fallback类中方法
+                     * 是否使用了 fallback？
+                     * 如果使用了回调模式，入参Method，为fallback类中的方法
                      * 需要切换成interface上的方法
                      * */
                     Method info = methodMap.get(CatToosUtil.signature(method));
@@ -123,7 +135,8 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                     CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
                             .clientInfo(clientInfo)
                             .methodInfo(methodInfo)
-                            .factoryDecorator(factoryDecorator)
+                            .method(method)
+                            .factoryAdapter(factoryAdapter)
                             .methodInterceptor(methodInterceptor)
                             .retryConfigurer(retryConfigurer)
                             .build();
@@ -150,6 +163,16 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     }
 
 
+    private String buildMessage(Exception exception) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(String.format("CatClient-interface creation failed: %s%n", interfaceClass.getName()));
+        builder.append(String.format("%s: %s%n", exception.getClass().getName(), exception.getMessage()));
+        StackTraceElement[] stackTraces = CatToosUtil.filterStackTrace(exception, CatToosUtil.GROUP_ID);
+        for ( StackTraceElement stackTrace : stackTraces ) {
+            builder.append(String.format("    at %s:%n", stackTrace.toString()));
+        }
+        return builder.toString();
+    }
 
     /***************************这些属性通过IOC注入进来，因此get set方法不能少*********************************/
 

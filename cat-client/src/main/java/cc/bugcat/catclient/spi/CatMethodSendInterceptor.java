@@ -3,7 +3,6 @@ package cc.bugcat.catclient.spi;
 
 import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
-import cc.bugcat.catclient.handler.CatSendProcessor;
 
 
 /**

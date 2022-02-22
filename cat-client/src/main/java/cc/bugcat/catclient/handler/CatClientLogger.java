@@ -45,7 +45,7 @@ public class CatClientLogger {
 
 
     /**
-     *
+     * 默认日志输出格式
      * */
     public String toJson(){
 

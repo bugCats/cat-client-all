@@ -6,6 +6,7 @@ import cc.bugcat.catserver.handler.CatInterceptPoint;
 import cc.bugcat.catserver.handler.CatServerContextHolder;
 import cc.bugcat.catserver.spi.CatInterceptor;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,26 +18,28 @@ import java.util.function.Supplier;
  * 拦截器
  * */
 @Component
-public class UserInterceptorConfig extends CatServerConfiguration{
+public class UserInterceptorConfig extends CatServerConfiguration {
+
+    private CatInterceptor globalInterceptor;
+    private List<CatInterceptorGroup> groupList;
+
 
     @Override
-    public Supplier<CatInterceptor> globalInterceptor() {
-        CatInterceptor globalInterceptor = new CatInterceptor() {
+    public void afterPropertiesSet() {
+
+        super.afterPropertiesSet();
+
+        this.globalInterceptor = new CatInterceptor() {
             @Override
-            public Object postHandle(CatServerContextHolder contextHolder) throws Exception {
+            public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                 CatInterceptPoint interceptPoint = contextHolder.getInterceptPoint();
                 System.out.println("全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
                 return contextHolder.executeRequest();
             }
         };
-        return () -> globalInterceptor;
-    }
 
-    @Override
-    public Supplier<List<CatInterceptorGroup>> interceptorGroup() {
-        List<CatInterceptorGroup> groups = new ArrayList<>();
-
-        CatInterceptorGroup group1 = new CatInterceptorGroup(){
+        this.groupList = new ArrayList<>();
+        CatInterceptorGroup group = new CatInterceptorGroup(){
             @Override
             public boolean matcher(CatInterceptPoint interceptPoint) {
                 String uri = interceptPoint.getRequest().getRequestURI();
@@ -47,16 +50,25 @@ public class UserInterceptorConfig extends CatServerConfiguration{
             public List<CatInterceptor> getInterceptors() {
                 return Arrays.asList(new CatInterceptor(){
                     @Override
-                    public Object postHandle(CatServerContextHolder contextHolder) throws Exception {
+                    public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                         System.out.println("运行时拦截器");
                         return contextHolder.executeRequest();
                     }
                 });
             }
         };
+        groupList.add(group);
 
-        groups.add(group1);
+    }
 
-        return () -> groups;
+
+    @Override
+    public CatInterceptor getGlobalInterceptor() {
+        return this.globalInterceptor;
+    }
+
+    @Override
+    public List<CatInterceptorGroup> getInterceptorGroup() {
+        return this.groupList;
     }
 }

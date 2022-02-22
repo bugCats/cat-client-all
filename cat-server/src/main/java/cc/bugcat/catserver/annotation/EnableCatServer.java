@@ -9,7 +9,8 @@ import java.lang.annotation.*;
 
 
 /**
- * 开启CatServer
+ * 启用CatServer组件
+ *
  * @author bugcat
  * */
 @Target({ ElementType.TYPE})
@@ -17,6 +18,7 @@ import java.lang.annotation.*;
 @Documented
 @Import(CatServerScannerRegistrar.class)
 public @interface EnableCatServer {
+
 
     /**
      * 扫描包路径
@@ -28,7 +30,6 @@ public @interface EnableCatServer {
      * 或者指定interface
      * */
     Class[] classes() default {};
-
 
 
     /**

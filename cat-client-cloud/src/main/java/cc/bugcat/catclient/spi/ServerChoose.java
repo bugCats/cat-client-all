@@ -1,17 +1,22 @@
 package cc.bugcat.catclient.spi;
 
-import cc.bugcat.catclient.cloud.CatInstanceEntry;
+import cc.bugcat.catclient.cloud.CatInstanceResolver;
 
-public interface ServerChoose{
+
+/**
+ * 负载均衡、注册中心适配器
+ * @author bugcat
+ * */
+public interface ServerChoose {
 
 
 
 
     /**
      * 根据serviceName获取实例地址
-     * @return ip:port or www.bugcat.cc
+     * @return "ip:port" or "www.bugcat.cc" or "http://bugcat.cc/github"
      * */
-    String hostAddr(CatInstanceEntry instanceEntry);
+    String hostAddr(CatInstanceResolver instanceResolver);
 
 
 
@@ -22,9 +27,9 @@ public interface ServerChoose{
      *
      * 此时，如果有多个实例情况下，应该优先选取其他健康实例
      *
-     * @return ip:port or www.bugcat.cc
+     * @return "ip:port" or "www.bugcat.cc" or "http://bugcat.cc/github"
      * */
-    String retryHostAddr(CatInstanceEntry instanceEntry);
+    String retryHostAddr(CatInstanceResolver instanceResolver);
 
 
 }

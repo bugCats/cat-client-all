@@ -18,7 +18,7 @@ public enum CatLogsMod {
 
     All,    //输入、输出
 
-    None,   //不记录
+    None,   //不记录输入、输出
 
 
     In2,     //如果出现异常，仅输入

@@ -1,9 +1,8 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-import cc.bugcat.catserver.beanInfos.CatMethodInfo;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
-import cc.bugcat.catserver.handler.CatArgumentResolverStrategy;
+import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.*;
 import org.springframework.beans.factory.BeanCreationException;
@@ -25,14 +24,16 @@ import java.util.Stack;
 
 /**
  *
- * {@link AbstractResponesWrapper} 自动添加包装器类实现
  *
- * 被@CatServer标记类的interface，使用cglib代理，动态生成类充当Controller角色
+ * 被@CatServer标记类的interface，使用cglib动态生成实现类，充当Controller角色
  *
  * 在动态代理类中，再调用被标记类的方法
  *
  * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类
  *
+ * {@link AbstractResponesWrapper} 自动添加包装器类实现
+ *
+ * @author bugcat
  * */
 public final class CatInterfaceEnhancer implements Opcodes{
 
@@ -62,9 +63,10 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
 
     /**
-     * 设置动态生成扩展interface的目录
+     * 设置动态生成扩展interface的文件路径
      * */
     private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
+
 
 
     /**
@@ -154,7 +156,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
              * 如果是精简模式，处理器会把方法上的入参，处理成一个虚拟对象。入参为虚拟对象的属性；
              * 如果是普通模式，则忽略
              * */
-            CatArgumentResolverStrategy resolverStrategy = CatArgumentResolverStrategy.createStrategy(serverInfo.isCatface()).method(method);
+            CatParameterResolverStrategy resolverStrategy = CatParameterResolverStrategy.createStrategy(serverInfo.isCatface()).method(method);
 
             // 方法签名处理器
             SignatureHandler signHandler = new SignatureHandler(methodName, method.getReturnType(), wrapDesc);
@@ -175,9 +177,11 @@ public final class CatInterfaceEnhancer implements Opcodes{
             Annotation[] anns = method.getAnnotations();
             CatServerUtil.visitAnnotation(anns, desc -> methodVisitor.visitAnnotation(desc, true));
 
-            // 如果是精简模式
             if( serverInfo.isCatface() ){
-                if ( resolverStrategy.hasParameter() ) { // 原方法上存在有效入参，添加 REQUEST_BODY、VALID 注解
+                // 如果是精简模式
+
+                if ( resolverStrategy.hasParameter() ) {
+                    // 原方法上存在有效入参，添加 REQUEST_BODY、VALID 注解
                     methodVisitor.visitParameterAnnotation(0, REQUEST_BODY, true);
                     if( HAS_VAILD ){
                         methodVisitor.visitParameterAnnotation(0, VALID, true);
@@ -185,6 +189,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
                 }
             } else {
                 // 将原方法入参上的注解，转移到增强方法、或者虚拟入参对象上
+
                 Annotation[][] annArrs = method.getParameterAnnotations();
                 if( annArrs.length > 0 ){
                     for ( int i = 0; i < annArrs.length; i ++ ) {
@@ -198,7 +203,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
             //创建虚拟入参
             resolverStrategy.createVirtualParameterClass();
 
-            CatMethodInfo methodInfo = new CatMethodInfo();
+            CatAsmMethod methodInfo = new CatAsmMethod();
             methodInfo.setResolverStrategy(resolverStrategy);
             methodInfo.setInterfaceSignatureId(signatureId);
             methodInfo.setEnhancerSignatureId(CatServerUtil.signatureId(methodName, signHandler.getDesc()));
@@ -209,9 +214,9 @@ public final class CatInterfaceEnhancer implements Opcodes{
         enhancerInterfaceVisitor.visitEnd();
 
         byte[] newbs = enhancerWriter.toByteArray();
-        Class gen = ReflectUtils.defineClass(enhancerInterfaceName, newbs, classLoader);
-        printClass(gen, newbs);
+        printClass(enhancerInterfaceName, newbs);
 
+        Class gen = ReflectUtils.defineClass(enhancerInterfaceName, newbs, classLoader);
         result.setEnhancerClass(gen);
         return result;
     }
@@ -239,7 +244,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
             String desc = transformReturn(descriptor);
             String sign = transformReturn(signature);
-            AsmClassMethodDescriptor methodDesc = new AsmClassMethodDescriptor(access, desc, sign, exceptions);
+            AsmClassMethodDescriptor methodDesc = new AsmClassMethodDescriptor(ACC_PUBLIC | ACC_ABSTRACT, desc, sign, exceptions);
             this.methodDescriptorMap.put(CatServerUtil.signatureId(name, desc), methodDesc);
             return null;
         }
@@ -323,7 +328,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
          * 如果是精简模式，收集原始参数的签名信息
          * resolverByStrategy 处理策略
          * */
-        public void resolverByStrategy(CatArgumentResolverStrategy strategy) {
+        public void resolverByStrategy(CatParameterResolverStrategy strategy) {
             this.desc = strategy.transformDescriptor(desc);
             this.sign = strategy.transformSignature(sign);
         }
@@ -343,8 +348,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
 
     /**
-     * 如果方法返回参数为void，则修改成Void
-     * 否则不变
+     * 如果方法返回参数为void，则修改成Void，否则不变。
      * */
     public static String transformReturn(String desc){
         if( desc != null && desc.endsWith(")V") ){
@@ -379,9 +383,9 @@ public final class CatInterfaceEnhancer implements Opcodes{
     /**
      * 打印动态生成的interface
      * */
-    public static void printClass(Class enhancerClass, byte[] newbs){
+    public static void printClass(String enhancerClass, byte[] newbs){
         if( debugDir != null ){
-            File dir = new File(debugDir + "/" + enhancerClass.getName().replace(".", "/") + ".class");
+            File dir = new File(debugDir + "/" + enhancerClass.replace(".", "/") + ".class");
             if( !dir.getParentFile().exists() ){
                 dir.getParentFile().mkdirs();
             }

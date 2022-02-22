@@ -9,9 +9,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义精简模式
+ * 精简模式
  *
- * 在feign-interface上添加，表示启用精简模式
+ * 在interface上添加，表示该interface启用精简模式
  *
  *
  *
@@ -63,7 +63,7 @@ import java.lang.annotation.Target;
  *
  * @author bugcat
  * */
-@Target({ ElementType.TYPE, ElementType.METHOD})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Component
@@ -73,7 +73,7 @@ public @interface Catface {
     /**
      * interface类别名，默认是首字母小写。
      *
-     * 最终url => /Catface.namespace()/Catface.value()/method.name
+     * 最终url => /namespace/value/method.name
      * */
     String value() default "";
 

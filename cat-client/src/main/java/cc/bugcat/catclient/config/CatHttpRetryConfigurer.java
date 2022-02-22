@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.config;
 
+import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
@@ -21,7 +22,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
 
     /**
      * 是否开启重连
-     */
+     * */
     @Value("${retry.enable:false}")
     private boolean enable;
 
@@ -31,7 +32,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
      *
      * 注意，重连次数不包含第一次调用！
      * retries=2，实际上最多会调用3次
-     */
+     * */
     @Value("${retry.retrie:2}")
     private int retries;
 
@@ -39,7 +40,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     /**
      * 重连的状态码：多个用逗号隔开；
      * "500,501,401" or "400-410,500-519,419" or "*" or "any"
-     */
+     * */
     @Value("${retry.status:500-520}")
     private String status;
 
@@ -47,7 +48,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     /**
      * 需要重连的请求方式：多个用逗号隔开；
      * "post,get" or "*" or "any"
-     */
+     * */
     @Value("${retry.method:any}")
     private String method;
 
@@ -55,7 +56,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     /**
      * 需要重连的异常、或其子类；多个用逗号隔开；
      * "java.io.IOException" or "*" or "any"
-     */
+     * */
     @Value("${retry.exception:}")
     private String exception;
 
@@ -69,22 +70,26 @@ public class CatHttpRetryConfigurer implements InitializingBean {
 
     /**
      * 其他特殊标记；多个用逗号隔开；
-     * 在@CatMethod中配置
-     * 会匹配方法上@CatNote注解，当retry.note设置的值，在@CatNote value中存在时，触发重连
+     * 在@CatMethod中配置；
+     * 会匹配方法上@CatNote注解，当retry.note设置的值，在@CatNote value中存在时，触发重连。
      *
-     * "some word"
-     */
+     * "some word" 匹配 @CatNote("some word")
+     * 如果@CatNote采用'#{arg.name}'形式，可以实现运行时，根据入参决定是否需要重连
+     * */
     @Value("${retry.note:}")
     private String note;
 
 
     /**
-     * 其他特殊标记匹配；在配置文件中，使用单引号包裹的json字符串
-     * 会匹配方法上@CatNote注解，当retry.note-match设置的键值对，在@CatNote key-value中完全匹配时，触发重连
-     * '{name:"bugcat",age:"17"}'
-     */
+     * 其他特殊标记匹配；在配置文件中，使用单引号包裹的json字符串；
+     * 会匹配方法上{@link CatMethod#notes()}：当retry.note-match设置的键值对，在notes的键值对中完全匹配时，触发重连。
+     *
+     * '{"name":"bugcat","age":"17"}' 匹配 @CatNote(key="name", value="bugcat") + @CatNote(key="age", value="17")
+     * 如果@CatNote采用'#{arg.name}'形式，可以实现运行时，根据入参决定是否需要重连
+     * */
     @Value("${retry.note-match:{}}")
     private String noteMatch;
+
 
 
     //需要重连的状态码
