@@ -4,7 +4,7 @@ import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.*;
 import cc.bugcat.catserver.utils.CatServerUtil;
-import jdk.internal.org.objectweb.asm.Type;
+import org.springframework.asm.Type;
 import org.springframework.cglib.core.Signature;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.cglib.reflect.FastClass;
