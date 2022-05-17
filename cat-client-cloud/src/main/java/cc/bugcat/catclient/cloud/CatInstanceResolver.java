@@ -1,5 +1,7 @@
 package cc.bugcat.catclient.cloud;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,12 +21,18 @@ public final class CatInstanceResolver {
      * */
     private static final Pattern lbNamePattern = Pattern.compile("^(https?://)([^/]+)(/?)");
 
-    private Matcher matcher;
+    /**
+     * 自定义属性
+     * */
+    private final Map<String, Object> attributesMap = new HashMap<>();
+    
+    
+    private final Matcher matcher;
 
     /**
      * 服务名
      * */
-    private String serviceName;     //服务名
+    private final String serviceName;     //服务名
 
     /**
      * ip和端口
@@ -32,49 +40,65 @@ public final class CatInstanceResolver {
     private String ipAddr;
 
     /**
-     * 全部替换好后可以直接使用的实例地址：http://ip:port/ctx/url
+     * 全部替换好后可以直接使用的实例地址：http://ip:port/ctx
      * */
-    private String sendPath;
+    private String realHost;
 
 
 
     /**
-     * @param lbPath 原始的url，包含cloud服务名 http://serviceName/ctx/url
+     * @param lbName 原始的负载均衡表达式，包含cloud服务名 http://serviceName/ctx
      * */
-    public CatInstanceResolver(String lbPath){
-        this.matcher = lbNamePattern.matcher(lbPath);
+    protected CatInstanceResolver(String lbName){
+        this.matcher = lbNamePattern.matcher(lbName);
         if ( matcher.find() ) {
             this.serviceName = matcher.group(2);
         } else {
-            throw new IllegalArgumentException("非法的负载均衡表达式：" + lbPath + "，格式应该为：http[s]://lbname[/ctx/url?k=v]");
+            throw new IllegalArgumentException("非法的负载均衡表达式：" + lbName + "，格式应该为：http[s]://lbname[/ctx]");
         }
     }
 
 
 
     /**
-     * 从注册中心获取的ip+端口，填充到请求地址中
-     * @return "ip:port" or "www.bugcat.cc" or "http://bugcat.cc/github"
+     * 从注册中心获取的ip端口，填充到请求地址中
+     * @param ipAddr 从注册中心中获取的实例ip端口
+     * @return "http://ip:port/ctx" or "http://www.bugcat.cc/ctx" or "https://bugcat.cc/ctx"
      * */
-    public String resolver(String ipAddr){
+    protected String resolver(String ipAddr){
         this.ipAddr = ipAddr;
-        this.sendPath = ipAddr.startsWith("http") ? matcher.replaceAll(ipAddr + "$3") : matcher.replaceAll("$1" + ipAddr + "$3");
-        return sendPath;
+        this.realHost = ipAddr.startsWith("http") ? matcher.replaceAll(ipAddr + "$3") : matcher.replaceAll("$1" + ipAddr + "$3");
+        return realHost;
     }
 
+    protected String getIpAddr() {
+        return ipAddr;
+    }
+    
+    protected String getRealHost() {
+        return realHost;
+    }
 
+    
 
     public String getServiceName() {
         return serviceName;
     }
-    public String getIpAddr() {
-        return ipAddr;
+
+    public CatInstanceResolver putAttributes(String name, Object value){
+        attributesMap.put(name, value);
+        return this;
     }
-    public String getSendPath() {
-        return sendPath;
+    
+    public Object getAttributes(String name){
+        return getAttributes(name, null);
     }
-
-
-
-
+    
+    public Object getAttributes(String name, Object defaultValue){
+        return attributesMap.getOrDefault(name, defaultValue);
+    }
+    
+    public Map<String, Object> getAttributesMap() {
+        return attributesMap;
+    }
 }

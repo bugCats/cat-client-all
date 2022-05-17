@@ -13,7 +13,14 @@ import java.util.function.Supplier;
 
 
 /**
- *
+ * 
+ * 负载均衡版。
+ * 
+ * 默认情况下，整合Ribbon，只需要在RestTemplate添加{@code @LoadBalanced}即可。
+ * 
+ * 如果不是Ribbon、或者不是RestTemplate，就需要手动添加负载均衡器了 {@link ServerChoose}
+ * 
+ * 
  * @author bugcat
  * */
 @Component

@@ -90,7 +90,7 @@ public class CatRestHttp implements CatHttp {
         headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         HttpHeaders httpHeaders = getHeaders(headers);
         HttpEntity<String> request = new HttpEntity<>(jsonStr, httpHeaders);
-        RestTemplate rest = getRestTemplate(ints);
+        RestTemplate rest = createRestTemplate(ints);
         return rest.postForObject(url, request, String.class);
     }
 
@@ -99,14 +99,14 @@ public class CatRestHttp implements CatHttp {
             params = new LinkedMultiValueMap<>();
         }
         HttpHeaders httpHeaders = getHeaders(headers);
-        RestTemplate rest = getRestTemplate(ints);
+        RestTemplate rest = createRestTemplate(ints);
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(params, httpHeaders);
         ResponseEntity<String> result = rest.exchange(url, method, requestEntity, String.class);
         return result.getBody();
     }
 
 
-    private final RestTemplate getRestTemplate(int[] ints){
+    private final RestTemplate createRestTemplate(int[] ints){
         if( ints == null || ints.length != 2 ){
             ints = TIMEOUT;
         }
@@ -114,7 +114,17 @@ public class CatRestHttp implements CatHttp {
         factory.setConnectTimeout(ints[0]);
         factory.setReadTimeout(ints[1]);
         RestTemplate rest = new RestTemplate(factory);
-        rest.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        
+        // 如果有自定义 RestTemplate
+        RestTemplate restTemplate = getRestTemplate();
+        if( restTemplate != null ){
+            rest.setUriTemplateHandler(restTemplate.getUriTemplateHandler());
+            rest.setInterceptors(restTemplate.getInterceptors());
+            rest.setMessageConverters(restTemplate.getMessageConverters());
+            rest.setErrorHandler(restTemplate.getErrorHandler());
+        } else {
+            rest.getMessageConverters().set(1, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        }
         return rest;
     }
 
@@ -128,4 +138,18 @@ public class CatRestHttp implements CatHttp {
     }
 
 
+    /**
+     * 自定义RestTemplate情况：
+     * <pre>
+     *    @Bean
+     *    @LoadBalanced
+     *    public RestTemplate restTemplate() {
+     *        return new RestTemplate();
+     *    }
+     * </pre>
+     * */
+    protected RestTemplate getRestTemplate(){
+        return CatClientUtil.getBean(RestTemplate.class);
+    }
+            
 }
