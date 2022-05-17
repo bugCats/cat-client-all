@@ -18,15 +18,13 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-@ComponentScan
-@EnableCatClient(value = "cc.bugcat.example",  classes = {Config.class})    //开启被CatClient，并且扫描指定包路径
+@EnableCatClient(classes = {Config.class})    //开启被CatClient，并且扫描指定包路径
 @SpringBootApplication
 public class CatClientApplication {
 
@@ -139,7 +137,7 @@ public class CatClientApplication {
         @GetMapping("/demo1/cat6")
         public ResponseEntity<Void> cat6(){
             Demo demo = creart();
-            ResponseEntity<String> token = tokenRemote.token1(demo);
+            ResponseEntity<String> token = tokenRemote.sendDemo1(demo);
             System.out.println("remote.token1=" + token.getData());
             return ResponseEntity.ok(null);
         }

@@ -1,7 +1,7 @@
 package cc.bugcat.catclient.beanInfos;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catclient.annotation.EnableCatClient;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
@@ -12,9 +12,7 @@ import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * interface上的{@link CatClient}注解描述信息
@@ -23,14 +21,14 @@ import java.util.Properties;
  * */
 public final class CatClientInfo {
 
+    
     /**
-     * 全局默认配置类
-     * 可以在{@link EnableCatClient}注解的{@code configuration}属性指定
+     * 组件前置依赖
      * */
     private final CatClientDepend clientDepend;
 
     /**
-     * interface类名
+     * interface类名，默认首字母小写
      * */
     private final String serviceName;
 
@@ -58,7 +56,7 @@ public final class CatClientInfo {
     /**
      * api标签归类
      * */
-    private final String[] tags;
+    private final Map<String, String> tagMap;
 
     /**
      * http发送工厂类
@@ -117,7 +115,20 @@ public final class CatClientInfo {
 
         this.logsMod = CatToosUtil.comparator(CatClientConfiguration.LOGS_MOD, Arrays.asList(client.logsMod(), clientConfig.getLogsMod()), CatLogsMod.All2);
 
-        this.tags = client.tags();
+        // 其他自定义参数、标记
+        Map<String, String> tagMap = new HashMap<>();
+        CatNote[] tags = client.tags();
+        for ( CatNote tag : tags ) {
+            String value = CatToosUtil.defaultIfBlank(tag.value(), "");
+            //如果 key属性为空，默认赋值value
+            String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
+            if ( value.startsWith("${") ) {
+                tagMap.put(key, envProp.getProperty(value));
+            } else {
+                tagMap.put(key, value);
+            }
+        }
+        this.tagMap = Collections.unmodifiableMap(tagMap);
 
         this.factoryClass = CatToosUtil.comparator(CatClientConfiguration.CLIENT_FACTORY, Arrays.asList(client.factory()), clientConfig.getClientFactory());
 
@@ -149,11 +160,11 @@ public final class CatClientInfo {
      * 构建CatClientInfo对象
      *
      * @param interfaceClass    interface
-     * @param catClient         可以为null，不一定是interface上的注解
+     * @param catClient         可以为null，不一定是interface上的注解。也可以是CatClients实例
      * @param depends           默认依赖
      * @param envProp           环境变量
      * */
-    public final static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientDepend depends, Properties envProp) {
+    public static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientDepend depends, Properties envProp) {
         if( catClient == null ){
             catClient = (CatClient) interfaceClass.getAnnotation(CatClient.class);
         }
@@ -183,8 +194,8 @@ public final class CatClientInfo {
     public CatLogsMod getLogsMod() {
         return logsMod;
     }
-    public String[] getTags() {
-        return tags;
+    public Map<String, String> getTagMap() {
+        return tagMap;
     }
     public Class<? extends CatClientFactory> getFactoryClass() {
         return factoryClass;

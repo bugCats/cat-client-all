@@ -1,13 +1,12 @@
 package cc.bugcat.catserver.handler;
 
-import cc.bugcat.catserver.spi.CatInterceptor;
-import cc.bugcat.catserver.spi.CatServerResultHandler;
-
+import cc.bugcat.catserver.spi.CatServerInterceptor;
+import cc.bugcat.catserver.spi.CatResultHandler;
+import cc.bugcat.catserver.handler.CatMethodAopInterceptor.ControllerMethodInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.function.Function;
 
 
 /**
@@ -31,13 +30,31 @@ public class CatServerContextHolder {
         threadLocal.remove();
     }
 
-
+    /**
+     * controller实例、CatServer实例、入参信息等
+     * */
     private final CatInterceptPoint interceptPoint;
-    private final List<? extends CatInterceptor> interceptors;
-    private final CatInterceptor controllerMethod;
+    
+    /**
+     * 有效的拦截器组
+     * */
+    private final List<? extends CatServerInterceptor> interceptors;
+    
+    /**
+     * 执行CatServer类的拦截器
+     * */
+    private final ControllerMethodInterceptor controllerMethod;
+    
+    /**
+     * 方法信息
+     * */
     private final CatMethodInfo methodInfo;
-    private final CatServerResultHandler resultHandler;
-
+    
+    
+    /**
+     * 结果处理器
+     * */
+    private final CatResultHandler resultHandler;
 
     /**
      * 所有的有效拦截器数量
@@ -78,16 +95,16 @@ public class CatServerContextHolder {
     /**
      * 执行
      * */
-    public Object executeRequest() throws Throwable {
+    public Object proceedRequest() throws Throwable {
         if ( interceptorIndex < interceptorCount ){
             try {
-                CatInterceptor interceptor = interceptors.get(interceptorIndex ++ );
+                CatServerInterceptor interceptor = interceptors.get(interceptorIndex ++ );
                 return interceptor.postHandle(this);
             } catch ( Throwable ex ) {
                 throw ex;
             }
         }
-        return controllerMethod.postHandle(this);
+        return controllerMethod.invoke();
     }
 
 
@@ -105,7 +122,6 @@ public class CatServerContextHolder {
     }
 
 
-
     protected static Builder builder(){
         return new Builder();
     }
@@ -114,22 +130,22 @@ public class CatServerContextHolder {
     protected static class Builder {
 
         private CatInterceptPoint interceptPoint;
-        private List<? extends CatInterceptor> interceptors;
-        private CatInterceptor controllerMethod;
+        private List<? extends CatServerInterceptor> interceptors;
+        private ControllerMethodInterceptor controllerMethod;
         private CatMethodInfo methodInfo;
-        private CatServerResultHandler resultHandler;
+        private CatResultHandler resultHandler;
 
         public Builder interceptPoint(CatInterceptPoint interceptPoint) {
             this.interceptPoint = interceptPoint;
             return this;
         }
 
-        public Builder interceptors(List<? extends CatInterceptor> interceptors) {
+        public Builder interceptors(List<? extends CatServerInterceptor> interceptors) {
             this.interceptors = interceptors;
             return this;
         }
 
-        public Builder controllerMethod(CatInterceptor controllerMethod) {
+        public Builder controllerMethod(ControllerMethodInterceptor controllerMethod) {
             this.controllerMethod = controllerMethod;
             return this;
         }
@@ -139,7 +155,7 @@ public class CatServerContextHolder {
             return this;
         }
 
-        public Builder resultHandler(CatServerResultHandler resultHandler) {
+        public Builder resultHandler(CatResultHandler resultHandler) {
             this.resultHandler = resultHandler;
             return this;
         }
@@ -149,10 +165,6 @@ public class CatServerContextHolder {
             threadLocal.set(contextHolder);
             return contextHolder;
         }
-
-
     }
-
-
 
 }

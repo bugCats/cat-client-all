@@ -6,9 +6,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
 
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -19,14 +17,21 @@ import java.util.regex.Pattern;
 public class CatClientUtil implements ApplicationContextAware {
 
 
-    public static final Pattern keyPat1 = Pattern.compile("^\\$\\{(.+)\\}$");
-    public static final Pattern keyPat2 = Pattern.compile("^\\#\\{(.+)\\}$");
-
-
-    private static Map<Class, Object> catClinetMap = new ConcurrentHashMap<>(); //自定义组件容器
+    public static final Pattern PARAM_KEY_PAT = Pattern.compile("^\\#\\{(.+)\\}$");
+    
+    /**
+     * 自定义组件容器
+     * 非spring容器时使用
+     * */
+    private static Map<Class, Object> catClinetMap = new ConcurrentHashMap<>();
+    
+    /**
+     * spring容器
+     * */
     private static ApplicationContext context;
 
 
+    
     @Override
     public synchronized void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         if ( context == null ) {
@@ -71,8 +76,7 @@ public class CatClientUtil implements ApplicationContextAware {
         }
     }
 
-
-
+    
     /**
      * catClinetMap注册bean
      * */
@@ -95,86 +99,8 @@ public class CatClientUtil implements ApplicationContextAware {
     public static ApplicationContext getContext(){
         return context;
     }
-
-    /**
-     * 适配Spring环境变量为Properties
-     * */
-    public static Properties envProperty(Environment environment){
-        return new EnvironmentProperty(environment);
+    public static Environment getEnvironment(){
+        return context != null ? context.getEnvironment() : null;
     }
-
-
-
-    /**
-     * 适配自定义环境变量为Properties
-     * */
-    public static Properties envProperty(Properties properties){
-        return properties instanceof ToosProperty ? properties : new ToosProperty(properties);
-    }
-
-
-
-    /**
-     * 自定义环境参数
-     * */
-    private static class ToosProperty extends Properties {
-
-        private final Properties prop;
-        private ToosProperty(Properties prop) {
-            this.prop = prop;
-        }
-
-        /**
-         * key 类似于 ${demo.remoteApi}
-         * */
-        @Override
-        public String getProperty(String key) {
-            return getProperty(key, null);
-        }
-
-        @Override
-        public String getProperty(String key, String defaultValue) {
-            if( key.startsWith("${") ){
-                Matcher matcher = keyPat1.matcher(key);
-                if ( matcher.find() ) {
-                    String[] keys = matcher.group(1).split(":");    //例如：${value:def}，defaultValue优先度高于def
-                    if( keys.length > 1 && defaultValue == null ){
-                        defaultValue = keys[1];
-                    }
-                    key = keys[0];
-                }
-            }
-            String value = prop.getProperty(key, defaultValue);
-            return value == null ? key : value;
-        }
-    }
-
-
-
-    /**
-     * spring环境参数
-     * */
-    private static class EnvironmentProperty extends Properties {
-
-        private final Environment environment;
-        private EnvironmentProperty(Environment environment) {
-            this.environment = environment;
-        }
-
-        /**
-         * key 类似于 ${demo.remoteApi}
-         * */
-        @Override
-        public String getProperty(String key) {
-            return environment.resolvePlaceholders(key);
-        }
-
-        @Override
-        public String getProperty(String key, String defaultValue) {
-            String value = environment.resolvePlaceholders(key);
-            return defaultValue != null && key.equals(value) ? defaultValue : value;
-        }
-    }
-
 
 }

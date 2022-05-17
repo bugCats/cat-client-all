@@ -5,8 +5,9 @@ import java.util.Map;
 
 
 /**
- * 每次http请求，解析方法上的参数列表后的参数对象
+ * 每次执行客户端方法，发起http请求，都会重新解析方法上的参数，创建新的参数对象实例
  *
+ * @see CatMethodInfo#parseArgs(java.lang.Object[])
  * @author bugcat
  * */
 public class CatParameter {
@@ -14,7 +15,7 @@ public class CatParameter {
     /**
      * 真实url，PathVariable已经处理
      * */
-    private String path;
+    private String realPath;
 
     /**
      * 请求头信息
@@ -36,11 +37,11 @@ public class CatParameter {
 
 
 
-    public String getPath() {
-        return path;
+    public String getRealPath() {
+        return realPath;
     }
-    public void setPath(String path) {
-        this.path = path;
+    public void setRealPath(String realPath) {
+        this.realPath = realPath;
     }
 
     public Object getValue() {

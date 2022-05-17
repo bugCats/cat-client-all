@@ -124,7 +124,7 @@ public class DefaultResultHandler implements CatResultProcessor {
         } else if (Number.class.isAssignableFrom(returnInfo.getClazz())) {
             return getNumberType(text, returnName, returnInfo.getClazz());
         } else if ("BOOLEAN".equals(returnName)) {
-            return Boolean.valueOf(text.toString());
+            return Boolean.valueOf(text);
         } else {
             try {
                 return returnInfo.getClazz().cast(text);

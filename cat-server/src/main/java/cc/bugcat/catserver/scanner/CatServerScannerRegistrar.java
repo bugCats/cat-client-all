@@ -4,8 +4,8 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.annotation.EnableCatServer;
 import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.handler.CatServerDefaults;
-import cc.bugcat.catserver.spi.CatInterceptor;
+import cc.bugcat.catserver.spi.CatResultHandler;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,12 +79,15 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         BeanRegistry beanRegistry = new BeanRegistry(resourceLoader, registry, scanPackages);
 
-        //扫描所有的 CatInterceptor 子类
-        beanRegistry.scannerByClass(CatInterceptor.class, CatInterceptor.Off.class);
-
         // spring容器
         beanRegistry.registerBean(CatServerUtil.class);
+        
+        //扫描所有的 CatInterceptor 子类
+        beanRegistry.scannerByClass(CatServerInterceptor.class, CatServerInterceptor.Off.class, CatServerInterceptor.Group.class);
 
+        //扫描所有 CatResultHandler 子类
+        beanRegistry.scannerByClass(CatResultHandler.class);
+        
         // 全局配置对象
         beanRegistry.registerBean(configClass);
 

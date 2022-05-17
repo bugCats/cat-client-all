@@ -1,7 +1,7 @@
 package cc.bugcat.example.api;
 
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catclient.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.example.api.vo.UserInfo;
 import cc.bugcat.example.tools.ResponseEntityWrapper;

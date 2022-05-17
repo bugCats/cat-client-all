@@ -4,10 +4,9 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.*;
-import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.cglib.core.*;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -51,18 +50,22 @@ import java.util.Map;
  *
  * @author bugcat
  * */
-public class CatVirtualParameterEnhancer {
+public class CatVirtualParameterEnhancer implements Constants {
 
 
     public static Class generator(CatParameterResolverStrategy strategy) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
-
-        InputStream stream = classLoader.getResourceAsStream(NoOp.class.getName().replace(".", "/") + ".class");
-        ClassReader cr = new ClassReader(stream);
-        ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-
         String className = strategy.getClassName();
+
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassVisitor classVisitor = new VirtualParameterClassVisitor(cw, className);
+        ClassEmitter ce = new ClassEmitter(classVisitor);// ClassEmitter 会将泛型信息擦除，需要使用泛型情况下必须使用 ClassVisitor
+        
+        // 开始动态创建虚拟入参class
+        ce.begin_class(V1_8, ACC_PUBLIC + ACC_SUPER, className, TYPE_OBJECT, new Type[]{Type.getType(CatVirtualParameter.class)}, SOURCE_FILE);
+        EmitUtils.null_constructor(ce);
+        
         Method method = strategy.getMethod();
         String[] descs = strategy.getAndResolverDescriptor();   // 方法上所有入参的Type描述信息，转换成字段描述
         String[] signs = strategy.getAndResolverSignature();    // 方法上所有入参的签名信息，转换成字段签名
@@ -70,7 +73,6 @@ public class CatVirtualParameterEnhancer {
         Class[] parameterType = method.getParameterTypes();
         Annotation[][] annotations = method.getParameterAnnotations();
 
-        ClassVisitor visitor = new VirtualParameterClassVisitor(cw, className);
         MethodBuilder methodBuilder = new MethodBuilder(className);
         FieldSignature[] fields = new FieldSignature[parameterType.length];
 
@@ -100,30 +102,28 @@ public class CatVirtualParameterEnhancer {
             // set方法描述信息
             FieldSignature setter = new FieldSignature();
             setter.fieldName = fieldName;
-            setter.methodName = "setException" + alias;
+            setter.methodName = "set" + alias;
             setter.descriptor = "(" + desc + ")V";
             setter.signature = "(" + sign + ")V";
             setter.field = field;
 
             // 尽可能多的将入参上注解，转换到类的属性上
-            FieldVisitor fieldVisitor = visitor.visitField(Opcodes.ACC_PRIVATE, fieldName, field.descriptor, field.signature, null);
+            FieldVisitor fieldVisitor = classVisitor.visitField(Opcodes.ACC_PRIVATE, fieldName, field.descriptor, field.signature, null);
             for( AnnotationResolver resolver : field.annotationResolvers ){
                 AnnotationVisitor anv = fieldVisitor.visitAnnotation(resolver.typeDesc, true);
                 CatServerUtil.visitAnnotation(anv, resolver.attrMap);
                 anv.visitEnd();
             }
-
             fieldVisitor.visitEnd();
-
-            methodBuilder.getMethod(visitor, getter);
-            methodBuilder.setMethod(visitor, setter);
+            
+            methodBuilder.getMethod(classVisitor, getter);
+            methodBuilder.setMethod(classVisitor, setter);
         }
 
         // 将虚拟入参对象属性，转换成入参数组对象
-        methodBuilder.toArrayMethod(visitor, fields);
-        visitor.visitEnd();
-
-        cr.accept(visitor, ClassReader.EXPAND_FRAMES);
+        methodBuilder.toArrayMethod(classVisitor, fields);
+        
+        ce.end_class();
 
         byte[] newbs = cw.toByteArray();
         CatInterfaceEnhancer.printClass(className, newbs);
@@ -144,7 +144,7 @@ public class CatVirtualParameterEnhancer {
 
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            String interType = VirtualParameter.class.getName().replace(".", "/");
+            String interType = CatVirtualParameter.class.getName().replace(".", "/");
             super.visit(version, ACC_PUBLIC, className, signature, superName, new String[]{interType});
         }
 
@@ -321,21 +321,18 @@ public class CatVirtualParameterEnhancer {
 
 
 
-
-    /**
-     * 虚拟入参对象模板
-     * */
-    public static class NoOp {}
-
+    
 
     /**
      * 虚拟入参对象
      * */
-    public static interface VirtualParameter {
-        public Object[] toArray();
+    public static interface CatVirtualParameter {
+
         /**
-         * return new Object[]{arg0, arg1, arg2, ...};
+         * @return new Object[]{arg0, arg1, arg2, ...};
          * */
+        public Object[] toArray();
+        
     }
 
 }

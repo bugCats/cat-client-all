@@ -1,8 +1,7 @@
 package cc.bugcat.catclient.cloud;
 
-import cc.bugcat.catclient.handler.CatSendContextHolder;
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.spi.DefaultResultHandler;
 
 

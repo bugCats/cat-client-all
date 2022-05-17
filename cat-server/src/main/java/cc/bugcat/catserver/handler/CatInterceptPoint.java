@@ -13,8 +13,7 @@ import java.util.Map;
 
 
 /**
- * 拦截器
- * 方法之间的入参
+ * 访问CatServer的拦截器。
  * 对于每次请求为单例
  *
  * @author bugcat
@@ -22,7 +21,7 @@ import java.util.Map;
 public final class CatInterceptPoint {
 
     /**
-     * interface方法上的注解属性
+     * 原interface方法上的注解属性
      * */
     private final Map<Class, Map<String, Object>> annAttrMap = new HashMap<>();
 
@@ -41,12 +40,12 @@ public final class CatInterceptPoint {
     private final CatServerInfo serverInfo;
 
     /**
-     * 调用的方法。为interface上的
+     * url映射调用的方法。为原始interface的方法
      * */
     private final Method method;
 
     /**
-     * 对应的interface的方法
+     * 原interface的方法
      * */
     private final StandardMethodMetadata interMethod;
 
@@ -56,7 +55,7 @@ public final class CatInterceptPoint {
     private final Object target;
 
     /**
-     * 方法入参
+     * 处理后的方法入参
      * */
     private final Object[] arguments;
 
@@ -108,18 +107,20 @@ public final class CatInterceptPoint {
         return attributesMap;
     }
 
+    public Class<?> getServerClass(){
+        return serverInfo.getServerClass();
+    }
+    public Map<String, String> getServerTagMap() {
+        return serverInfo.getTagMap();
+    }
+
     public HttpServletRequest getRequest() {
         return request;
     }
     public HttpServletResponse getResponse() {
         return response;
     }
-    public Class<?> getServerClass(){
-        return serverInfo.getServerClass();
-    }
-    public CatServerInfo getServerInfo() {
-        return serverInfo;
-    }
+
     public Object getTarget() {
         return target;
     }
@@ -131,8 +132,7 @@ public final class CatInterceptPoint {
     }
 
 
-
-
+    
 
     protected static Builder builder(){
         return new Builder();
@@ -147,8 +147,7 @@ public final class CatInterceptPoint {
         private Object target;
         private StandardMethodMetadata interMethod;
         private Object[] arguments;
-
-
+        
         public Builder request(HttpServletRequest request) {
             this.request = request;
             return this;

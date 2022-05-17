@@ -1,15 +1,17 @@
 package cc.bugcat.catserver.beanInfos;
 
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
+import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.config.CatServerConfiguration;
+import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -18,7 +20,6 @@ import java.util.Map;
  * @author bugcat
  * */
 public class CatServerInfo {
-
 
     /**
      * 全局配置
@@ -33,17 +34,22 @@ public class CatServerInfo {
     /**
      * api标签归类
      * */
-    private final String[] tags;
+    private final Map<String, String> tagMap;
 
     /**
      * controller的拦截器
      * */
-    private final Class<? extends CatServerInterceptor>[] interceptors;
-
+    private final Set<Class<? extends CatServerInterceptor>> interceptors;
+    
     /**
      * 响应包装器类处理{@link AbstractResponesWrapper}
      * */
     private final AbstractResponesWrapper wrapperHandler;
+
+    /**
+     * controller响应处理，一般是异常流程
+     * */
+    private final Class<? extends CatResultHandler> resultHandler;
 
     /**
      * 是否启用精简模式
@@ -53,7 +59,7 @@ public class CatServerInfo {
 
 
 
-    private CatServerInfo(Class<?> serverClass, Map<String, Object> interfaceAttributes) {
+    private CatServerInfo(Class<?> serverClass, Map<String, Object> interfaceAttributes, Properties envProp) {
 
         CatServer catServer = serverClass.getAnnotation(CatServer.class);
 
@@ -61,9 +67,31 @@ public class CatServerInfo {
 
         this.serverClass = serverClass;
 
-        this.tags = catServer.tags();
+        // 其他自定义参数、标记
+        Map<String, String> tagMap = new HashMap<>();
+        CatNote[] tags = catServer.tags();
+        for ( CatNote tag : tags ) {
+            String value = CatToosUtil.defaultIfBlank(tag.value(), "");
+            //如果 key属性为空，默认赋值value
+            String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
+            if ( value.startsWith("${") ) {
+                tagMap.put(key, envProp.getProperty(value));
+            } else {
+                tagMap.put(key, value);
+            }
+        }
+        this.tagMap = Collections.unmodifiableMap(tagMap);
 
-        this.interceptors = catServer.interceptors();
+        Set<Class<? extends CatServerInterceptor>> interceptors = new LinkedHashSet<>(catServer.interceptors().length * 2);
+        //默认情况在所有拦截器之前执行
+        interceptors.add(CatServerInterceptor.Group.class); 
+        for ( Class<? extends CatServerInterceptor> interceptor : catServer.interceptors() ) {
+            if( interceptors.contains(interceptor) ){
+                interceptors.remove(interceptor);
+            }
+            interceptors.add(interceptor);
+        }
+        this.interceptors = interceptors;
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
         CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
@@ -74,6 +102,9 @@ public class CatServerInfo {
             this.wrapperHandler = null;
         }
 
+        this.resultHandler = CatToosUtil.comparator(CatServerConfiguration.RESULT_HANDLER, Arrays.asList(catServer.resultHandler()), serverConfig.getResultHandler(wrapperHandler));
+
+
         //是否启用精简模式
         this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
         this.isCatface = catface != null;
@@ -81,28 +112,32 @@ public class CatServerInfo {
     }
 
 
-    public final static CatServerInfo build(Class<?> serverClass, CatServerConfiguration serverConfig) {
+    public final static CatServerInfo build(Class<?> serverClass, CatEnhancerDepend enhancerDepend) {
         Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(serverClass);
-        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, serverConfig);
-        CatServerInfo serverInfo = new CatServerInfo(serverClass, interfaceAttributes);
+        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, enhancerDepend.getServerConfig());
+        CatServerInfo serverInfo = new CatServerInfo(serverClass, interfaceAttributes, enhancerDepend.getEnvProp());
         return serverInfo;
     }
 
 
+    
     public CatServerConfiguration getServerConfig() {
         return serverConfig;
     }
     public Class<?> getServerClass() {
         return serverClass;
     }
-    public String[] getTags() {
-        return tags;
+    public Map<String, String> getTagMap() {
+        return tagMap;
     }
     public AbstractResponesWrapper getWrapperHandler() {
         return wrapperHandler;
     }
-    public Class<? extends CatServerInterceptor>[] getInterceptors() {
+    public Set<Class<? extends CatServerInterceptor>> getInterceptors() {
         return interceptors;
+    }
+    public Class<? extends CatResultHandler> getResultHandler() {
+        return resultHandler;
     }
     public Catface getCatface() {
         return catface;
@@ -110,4 +145,5 @@ public class CatServerInfo {
     public boolean isCatface() {
         return isCatface;
     }
+    
 }

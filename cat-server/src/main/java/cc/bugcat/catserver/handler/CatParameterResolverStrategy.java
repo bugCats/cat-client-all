@@ -13,9 +13,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 精简模式下，把方法上所有的入参，处理成一个虚拟对象的属性
+ * 精简模式下，把方法上所有的入参，处理成一个虚拟对象的属性。
  *
- * CatParameterResolverStrategy 默认非精简模式
+ * CatParameterResolverStrategy 默认非精简模式。
  *
  * @author bugcat
  * */
@@ -30,7 +30,7 @@ public class CatParameterResolverStrategy {
     public static CatParameterResolverStrategy createStrategy(boolean isCatface){
         CatParameterResolverStrategy strategy = null;
         if( isCatface ){
-            strategy = new ResolverStrategy();
+            strategy = new VirtualParameterResolverStrategy();
         } else {
             strategy = new CatParameterResolverStrategy();
         }
@@ -76,7 +76,7 @@ public class CatParameterResolverStrategy {
     /**
      * 精简模式
      * */
-    private static final class ResolverStrategy extends CatParameterResolverStrategy {
+    private static final class VirtualParameterResolverStrategy extends CatParameterResolverStrategy {
 
         /**
          * 原interface方法信息
@@ -170,7 +170,11 @@ public class CatParameterResolverStrategy {
         @Override
         public CatParameterResolverStrategy createVirtualParameterClass() {
             if( hasParameter() ){
-                try { CatVirtualParameterEnhancer.generator(this); } catch ( Exception e ) {}
+                try { 
+                    CatVirtualParameterEnhancer.generator(this); 
+                } catch ( Exception e ) {
+                    e.printStackTrace();
+                }
             }
             return this;
         }
@@ -197,7 +201,7 @@ public class CatParameterResolverStrategy {
 
 
         /**
-         * 获取虚拟入参属性。{@link ResolverStrategy#transformDescriptor(java.lang.String)}
+         * 获取虚拟入参属性。{@link VirtualParameterResolverStrategy#transformDescriptor(java.lang.String)}
          *
          * @return [入参1描述, 入参2描述, 入参3描述]
          * */
@@ -208,7 +212,7 @@ public class CatParameterResolverStrategy {
 
 
         /**
-         * 获取虚拟入参属性。{@link ResolverStrategy#transformSignature(java.lang.String)}
+         * 获取虚拟入参属性。{@link VirtualParameterResolverStrategy#transformSignature(java.lang.String)}
          *
          * @return [入参1签名<泛型;>, 入参2签名<泛型;>, 入参3签名<泛型;>;]
          * */

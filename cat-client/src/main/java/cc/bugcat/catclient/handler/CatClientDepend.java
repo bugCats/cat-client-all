@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
@@ -12,7 +13,7 @@ import org.springframework.cglib.proxy.MethodProxy;
 import java.lang.reflect.Method;
 
 /**
- * CatClientInfoFactoryBean 相关依赖
+ * CatClientInfoFactoryBean 相关依赖，单例。
  *
  * 组件加载依赖管理
  *
@@ -38,13 +39,14 @@ public class CatClientDepend {
 
     /**
      * 全局默认的配置对象
+     * 可以在{@link EnableCatClient}指定
      * */
     private final CatClientConfiguration clientConfig;
 
     /**
-     * 全局Object的默认方法拦截器：toString、hashCode...
+     * Object的默认方法拦截器：toString、hashCode...
      * */
-    private final MethodInterceptor defaultInterceptor;
+    private final MethodInterceptor objectMethodInterceptor;
 
     /**
      * 全局默认的client工厂
@@ -62,9 +64,14 @@ public class CatClientDepend {
     private CatClientDepend(Builder builder) {
         this.retryConfigurer = builder.retryConfigurer;
         this.clientConfig = builder.clientConfig;
-        this.defaultInterceptor = builder.defaultInterceptor;
         this.defaultClientFactory = builder.defaultClientFactory;
         this.defaultSendInterceptor = builder.defaultSendInterceptor;
+        this.objectMethodInterceptor = new MethodInterceptor() {
+            @Override
+            public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+                return methodProxy.invokeSuper(target, args);
+            }
+        };
     }
 
 
@@ -76,8 +83,8 @@ public class CatClientDepend {
         return clientConfig;
     }
 
-    public MethodInterceptor getDefaultInterceptor() {
-        return defaultInterceptor;
+    public MethodInterceptor getObjectMethodInterceptor() {
+        return objectMethodInterceptor;
     }
 
     public CatClientFactory getDefaultClientFactory() {
@@ -97,13 +104,12 @@ public class CatClientDepend {
         return new Builder();
     }
 
+    
     public static class Builder {
 
         private CatHttpRetryConfigurer retryConfigurer;
 
         private CatClientConfiguration clientConfig;
-
-        private MethodInterceptor defaultInterceptor;
 
         private CatClientFactory defaultClientFactory;
 
@@ -139,15 +145,6 @@ public class CatClientDepend {
             if( clientConfig == null ){
                 clientConfig = new CatClientConfiguration();
                 clientConfig.afterPropertiesSet();
-            }
-
-            if( defaultInterceptor == null ){
-                defaultInterceptor = new MethodInterceptor() {
-                    @Override
-                    public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                        return methodProxy.invokeSuper(target, args);
-                    }
-                };
             }
 
             if( defaultSendInterceptor == null ){

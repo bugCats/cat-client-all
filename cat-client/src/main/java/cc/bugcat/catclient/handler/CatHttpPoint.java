@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catclient.beanInfos.CatParameter;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -27,6 +28,12 @@ public class CatHttpPoint {
      * http请求方式
      * */
     private RequestMethod requestType;
+
+    /**
+     * 是否使用post发送字符流
+     * 一般如果请求方式为POST，并且入参上有@RequestBody，就会被视为post+字符流模式。
+     * 但是结合服务端使用，也不排除个别情况
+     * */
     private boolean postString = false;
 
     /**
@@ -36,9 +43,14 @@ public class CatHttpPoint {
     private int socket;
 
     /**
-     * url地址：https://blog.csdn.net/qq_41399429
+     * CatClient 配置的主机：https://blog.csdn.net
      * */
-    private String path;
+    private String host;
+    
+    /**
+     * url地址：/qq_41399429
+     * */
+    private String url;
 
     /**
      * 请求头信息
@@ -46,16 +58,16 @@ public class CatHttpPoint {
     private Map<String, String> headerMap = new HashMap<>();
 
     /**
-     * 方法上参数列表组成的原始对象
+     * 方法上参数列表组成的原始对象。
+     * 每次执行客户端方法，都会创建不同实例
      * */
-    private Object objectParam;
+    private CatParameter parameter;
 
     /**
      * 键值对
      * 当使用post、get方式发送键值对时，有值
      * */
     private MultiValueMap<String, Object> keyValueParam;
-
     /**
      * 请求对象序列化
      * 1、如果是使用post+json方式，则为最终入参。
@@ -63,6 +75,9 @@ public class CatHttpPoint {
      * */
     private String requestBody;
 
+    
+    
+    
     /**
      * http请求原始响应。
      * */
@@ -118,11 +133,18 @@ public class CatHttpPoint {
         this.socket = socket;
     }
 
-    public String getPath() {
-        return path;
+    public String getHost() {
+        return host;
     }
-    public void setPath(String path) {
-        this.path = path;
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public Map<String, String> getHeaderMap() {
@@ -132,11 +154,11 @@ public class CatHttpPoint {
         this.headerMap = headerMap;
     }
 
-    public Object getObjectParam() {
-        return objectParam;
+    public CatParameter getParameter() {
+        return parameter;
     }
-    public void setObjectParam(Object objectParam) {
-        this.objectParam = objectParam;
+    public void setParameter(CatParameter parameter) {
+        this.parameter = parameter;
     }
 
     public MultiValueMap<String, Object> getKeyValueParam() {

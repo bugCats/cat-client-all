@@ -5,7 +5,8 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
-
+import cc.bugcat.catface.utils.CatToosUtil;
+import org.springframework.core.env.Environment;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +72,12 @@ public abstract class CatClientBuilders {
             return builder;
         }
 
+        /**
+         * 环境配置
+         * @see CatToosUtil#envProperty(Environment) 将spring环境变量适配为Properties
+         * 
+         * @param properties 可以是普通Properties，也可以通过CatClientUtil#envProperty(Environment)适配
+         * */
         public CatClientBuilder<T> environment(Properties properties){
             this.properties = properties;
             return this;
@@ -81,6 +88,9 @@ public abstract class CatClientBuilders {
             return this;
         }
 
+        /**
+         * @param catClient 可是通过反射获取的@CatClient注解，也可以是CatClients实例
+         * */
         public CatClientBuilder<T> catClient(CatClient catClient){
             this.catClient = catClient;
             return this;
@@ -114,6 +124,13 @@ public abstract class CatClientBuilders {
             builder.defineClients = defineClients;
             return builder;
         }
+
+        /**
+         * 环境配置
+         * @see CatToosUtil#envProperty(Environment) 将spring环境变量适配为Properties
+         *
+         * @param properties 可以是普通Properties，也可以通过CatClientUtil#envProperty(Environment)适配
+         * */
         public DefineCatClientBuilder environment(Properties properties){
             this.properties = properties;
             return this;
@@ -159,7 +176,7 @@ public abstract class CatClientBuilders {
         if( CatClientUtil.contains(interfaceClass) ){
             return CatClientUtil.getBean(interfaceClass);
         }
-        Properties envProp = CatClientUtil.envProperty(properties);
+        Properties envProp = CatToosUtil.envProperty(properties);
         if( clientDepend == null ){
             clientDepend = CatClientUtil.getBean(CatClientDepend.class);
             if( clientDepend == null ){

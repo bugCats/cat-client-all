@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 /**
  * CatClient工厂类适配器
+ * 此处控制某些组件单例、与多例
  * @author bugcat
  * */
 public class CatClientFactoryAdapter {

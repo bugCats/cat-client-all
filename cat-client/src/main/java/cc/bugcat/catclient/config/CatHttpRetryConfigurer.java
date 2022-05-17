@@ -214,11 +214,11 @@ public class CatHttpRetryConfigurer implements InitializingBean {
         }
         return false;
     }
-    public boolean containsTags(String[] tags){
+    public boolean containsTags(Map<String, String> tagMap){
         if( "*".equals(this.tags) ) {
             return true;
         }
-        for ( String tag : tags ) {
+        for ( String tag : tagMap.keySet() ) {
             if( tagsCode.contains(tag) ){
                 return true;
             }
@@ -254,6 +254,7 @@ public class CatHttpRetryConfigurer implements InitializingBean {
     }
 
 
+    
 
     private static class StatusCode {
         private int start;

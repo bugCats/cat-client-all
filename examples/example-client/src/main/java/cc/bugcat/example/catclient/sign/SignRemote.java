@@ -2,10 +2,11 @@ package cc.bugcat.example.catclient.sign;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catclient.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.example.dto.DemoDTO;
 import cc.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Map;
@@ -36,9 +37,16 @@ public interface SignRemote {
      * */
     @CatMethod(value = "/cat/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
     ResponseEntity<String> demo12(@ModelAttribute("demo") DemoDTO demo);
-    
-    
-    
+
+    /**
+     * 密钥是可变的，通过方法上的参数获取
+     * */
+    @CatMethod(value = "/cat/sign2", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
+    ResponseEntity<String> demo13(@CatNote("demo") @RequestBody DemoDTO demo);
+
+
+
+
     /**
      * 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
      * 不再列举

@@ -21,34 +21,18 @@ public class SignSendProcessor extends CatSendProcessor {
 
         //使用note，标记是否需要添加签名
         String need = notes.getString("needSign");
-
-        MultiValueMap<String, Object> keyValueParam = httpPoint.getKeyValueParam();
-        if( CatToosUtil.isNotBlank(need) && keyValueParam != null && keyValueParam.size() > 0 ){
-
-            Set<String> keys = new TreeSet<>(keyValueParam.keySet());
-            MultiValueMap<String, Object> treeMap = new LinkedMultiValueMap<>();
-
-            StringBuffer sbr = new StringBuffer();
-            keys.forEach(key -> {
-                Object value = keyValueParam.getFirst(key);
-                treeMap.add(key, value);
-                sbr.append("&" + key + "=" + ( value != null ? value : "" ));
-            });
-
+        if( CatToosUtil.isNotBlank(need) ){
             /**
              * 密钥
              * demo11 从环境配置中获取
              * demo12 从入参中获取
+             * demo13 从入参中获取
              * */
             String apikey = notes.getString("apikey"); //
 
-            String md5 = "@md5{" + apikey + "#" + sbr.deleteCharAt(0).toString() + "}"; //没有引入加密工具类，假设已经加密了
-            treeMap.add("sign", md5);
+            String md5 = "@md5{" + apikey + "}"; //没有引入加密工具类，假设已经加密了
 
             System.out.println("sign=>" + md5);
-
-            httpPoint.setKeyValueParam(treeMap);
-
             // 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
         }
     }

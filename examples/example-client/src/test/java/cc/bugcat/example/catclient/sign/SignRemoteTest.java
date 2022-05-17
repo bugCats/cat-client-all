@@ -56,7 +56,10 @@ public class SignRemoteTest {
         DemoDTO demo = new DemoDTO();
         demo.setName("bugcat");
         demo.setMark("猫脸");
-        demo.setUserkey("这是密钥");
+        demo.setUserkey("这是密钥12");
         remote.demo12(demo);// 对比控制台打印的签名sign字段
+        
+        demo.setUserkey("这是密钥13");
+        remote.demo13(demo);// 对比控制台打印的签名sign字段
     }
 }

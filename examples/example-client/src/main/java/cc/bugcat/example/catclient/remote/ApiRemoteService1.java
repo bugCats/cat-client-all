@@ -2,7 +2,7 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catclient.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;

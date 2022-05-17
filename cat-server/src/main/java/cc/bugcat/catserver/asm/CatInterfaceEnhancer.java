@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
+import cc.bugcat.catserver.asm.AsmClassDescriptor.AsmDescriptor;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
@@ -25,17 +26,17 @@ import java.util.Stack;
 /**
  *
  *
- * 被@CatServer标记类的interface，使用cglib动态生成实现类，充当Controller角色
+ * 被@CatServer标记类的interface，使用cglib动态生成实现类，充当Controller角色。
  *
- * 在动态代理类中，再调用被标记类的方法
+ * 在动态代理类中，再调用被标记类的方法。
  *
- * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类
+ * 可以在动态代理类中，执行前后添加方法，实现自动添加包装器类。
  *
  * {@link AbstractResponesWrapper} 自动添加包装器类实现
  *
  * @author bugcat
  * */
-public final class CatInterfaceEnhancer implements Opcodes{
+public final class CatInterfaceEnhancer implements Opcodes {
 
     /**
      * 是否存在Valid验证框架
@@ -59,9 +60,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
      * 为interface添加@ResponseBody注解
      * */
     public final static String RESPONSE_BODY = Type.getDescriptor(ResponseBody.class);
-
-
-
+    
     /**
      * 设置动态生成扩展interface的文件路径
      * */
@@ -70,24 +69,24 @@ public final class CatInterfaceEnhancer implements Opcodes{
 
 
     /**
-     * 增强被@CatServer标记类的 interface
+     * 增强被@CatServer标记类的 interface。
      *
-     * 先遍历这些interface，解析原始的方法、入参、响应签名
-     * 再通过编辑签名，动态生成增强后interface
-     * 最后通过增强后的interface，使用cglib动态生成controller对象
+     * 先遍历这些interface，解析原始的方法、入参、响应签名；
+     * 再通过编辑签名，动态生成增强后interface；
+     * 最后通过增强后的interface，使用cglib动态生成controller对象。
      *
      * @param interfaceClass 被@CatServer标记类的interface
      * @param serverInfo  CatServer注解类
      * */
-    public CatAsmResult enhancer(Class interfaceClass, CatServerInfo serverInfo) throws Exception {
+    public CatAsmResult enhancer(Class interfaceClass, CatServerInfo serverInfo, CatEnhancerDepend enhancerDepend) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
 
         CatAsmResult result = new CatAsmResult();
 
         /**
-         * 多级继承情况下，优先解析最上级interface
-         * 只能单继承，不能一个interface同时继承多个interface
+         * 多级继承情况下，优先解析最上级interface；
+         * 只能单继承，不能一个interface同时继承多个interface；
          * */
         Stack<Class> interfaceParents = new Stack<>();
         Class parent = interfaceClass;
@@ -104,38 +103,49 @@ public final class CatInterfaceEnhancer implements Opcodes{
         }
 
         // 所有的方法签名信息
-        final Map<String, AsmClassMethodDescriptor> methodDescriptorMap = new HashMap<>();
+        final Map<String, AsmDescriptor> methodDescriptorMap = new HashMap<>();
 
-        //最后一个直接父类interface
-        OnlyReaderClassVisitor onlyReader = null;
+        // interfaceClass的直接父类
+        AsmClassDescriptor asmClassDescriptor = null;
+        
+        //从最上级开始解析
         while ( !interfaceParents.empty() ) {
             Class parentInterface = interfaceParents.pop();
 
-            InputStream stream = classLoader.getResourceAsStream(toResourceName(parentInterface));
-            ClassReader classReader = new ClassReader(stream);
-            onlyReader = new OnlyReaderClassVisitor(new ClassWriter(ClassWriter.COMPUTE_MAXS));
-            classReader.accept(onlyReader, ClassReader.EXPAND_FRAMES);
-
-            methodDescriptorMap.putAll(onlyReader.methodDescriptorMap); // 子类会覆盖父类同名方法
+            asmClassDescriptor = enhancerDepend.getClassDescriptorMap(parentInterface);
+            if( asmClassDescriptor == null ){
+                InputStream stream = classLoader.getResourceAsStream(toResourceName(parentInterface));
+                ClassReader classReader = new ClassReader(stream);
+                OnlyReaderClassVisitor onlyReader = new OnlyReaderClassVisitor(new ClassWriter(ClassWriter.COMPUTE_MAXS));
+                classReader.accept(onlyReader, ClassReader.EXPAND_FRAMES);
+                asmClassDescriptor = onlyReader.getClassDescriptor();
+            }
+            
+            // 子类会覆盖父类同名方法
+            methodDescriptorMap.putAll(asmClassDescriptor.getMethodDescriptorMap());
         }
 
-        final int interfaceVersion = onlyReader.version;
-        final AsmClassMethodDescriptor classDescriptor = onlyReader.classDescriptor;
+        final AsmDescriptor classDescriptor = asmClassDescriptor.getClassDescriptor();
 
         // 增强后的interface名称
         String enhancerInterfaceName = enhancerInterfaceName(interfaceClass);
 
         ClassWriter enhancerWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        EnhancerInterfaceClassVisitor enhancerInterfaceVisitor = new EnhancerInterfaceClassVisitor(enhancerWriter);
-        enhancerInterfaceVisitor.visit(interfaceVersion, classDescriptor.access, enhancerInterfaceName.replace(".", "/"), null, classDescriptor.descriptor, new String[0]);
+        EnhancerInterfaceClassVisitor visitor = new EnhancerInterfaceClassVisitor(enhancerWriter);
+        visitor.visit(asmClassDescriptor.getVersion(), 
+                classDescriptor.getAccess(), 
+                enhancerInterfaceName.replace(".", "/"), 
+                null, 
+                classDescriptor.getDescriptor(), 
+                new String[0]);
 
         // 将原interface类上的注解转移到增强类上
         Annotation[] annotations = interfaceClass.getAnnotations();
-        CatServerUtil.visitAnnotation(annotations, desc -> enhancerInterfaceVisitor.visitAnnotation(desc, true));
+        CatServerUtil.visitAnnotation(annotations, desc -> visitor.visitAnnotation(desc, true));
 
         //如果interface上没有@ResponseBody，在增强类上自动添加一个
         if ( AnnotationUtils.findAnnotation(interfaceClass, ResponseBody.class) == null ) {
-            enhancerInterfaceVisitor.visitAnnotation(RESPONSE_BODY, true);
+            visitor.visitAnnotation(RESPONSE_BODY, true);
         }
 
         // 对象包装器类描述
@@ -146,10 +156,10 @@ public final class CatInterfaceEnhancer implements Opcodes{
         for ( Method method : interfaceClass.getMethods() ) {
 
             String methodName = method.getName();
-            String signatureId = CatServerUtil.signatureId(method);
+            String signatureId = CatServerUtil.typeSignatureId(method);
 
             // 得到原interface的方法描述信息
-            AsmClassMethodDescriptor methodDescriptor = methodDescriptorMap.get(signatureId);
+            AsmDescriptor methodDescriptor = methodDescriptorMap.get(signatureId);
 
             /**
              * 增强方法入参处理器
@@ -162,7 +172,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
             SignatureHandler signHandler = new SignatureHandler(methodName, method.getReturnType(), wrapDesc);
 
             //处理响应结果包装器类
-            signHandler.transform(wrapperClass, methodDescriptor.descriptor, methodDescriptor.signature);
+            signHandler.transform(wrapperClass, methodDescriptor.getDescriptor(), methodDescriptor.getSignature());
 
             //处理方法入参的虚拟入参class
             signHandler.resolverByStrategy(resolverStrategy);
@@ -171,7 +181,7 @@ public final class CatInterfaceEnhancer implements Opcodes{
              * 为增强后interface，创建方法
              * 方法名、抛出异常不变，修改了方法的响应对象、入参类型
              * */
-            MethodVisitor methodVisitor = enhancerInterfaceVisitor.visitMethod(methodDescriptor.access, signHandler.getName(), signHandler.getDesc(), signHandler.getSign(), methodDescriptor.exceptions);
+            MethodVisitor methodVisitor = visitor.visitMethod(methodDescriptor.getAccess(), signHandler.getName(), signHandler.getDesc(), signHandler.getSign(), methodDescriptor.getExceptions());
 
             // 将原方法上注解，转移到增强方法上
             Annotation[] anns = method.getAnnotations();
@@ -206,12 +216,12 @@ public final class CatInterfaceEnhancer implements Opcodes{
             CatAsmMethod methodInfo = new CatAsmMethod();
             methodInfo.setResolverStrategy(resolverStrategy);
             methodInfo.setInterfaceSignatureId(signatureId);
-            methodInfo.setEnhancerSignatureId(CatServerUtil.signatureId(methodName, signHandler.getDesc()));
+            methodInfo.setEnhancerSignatureId(CatServerUtil.typeSignatureId(methodName, signHandler.getDesc()));
 
             result.putCatMethodInfo(methodInfo);
         }
 
-        enhancerInterfaceVisitor.visitEnd();
+        visitor.visitEnd();
 
         byte[] newbs = enhancerWriter.toByteArray();
         printClass(enhancerInterfaceName, newbs);
@@ -227,48 +237,34 @@ public final class CatInterfaceEnhancer implements Opcodes{
      * */
     private static class OnlyReaderClassVisitor extends ClassVisitor implements Opcodes {
 
-        private int version;
-        private AsmClassMethodDescriptor classDescriptor;
-        private Map<String, AsmClassMethodDescriptor> methodDescriptorMap = new HashMap<>();
+        private AsmClassDescriptor classDescriptor;
 
         public OnlyReaderClassVisitor(ClassVisitor classVisitor) {
             super(ASM6, classVisitor);
+            this.classDescriptor = new AsmClassDescriptor();
         }
 
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-            this.version = version;
-            this.classDescriptor = new AsmClassMethodDescriptor(access, superName, signature, interfaces);
+            classDescriptor.setVersion(version);
+            classDescriptor.setClassDescriptor(access, superName, signature, interfaces);
         }
 
+        @Override
         public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
             String desc = transformReturn(descriptor);
             String sign = transformReturn(signature);
-            AsmClassMethodDescriptor methodDesc = new AsmClassMethodDescriptor(ACC_PUBLIC | ACC_ABSTRACT, desc, sign, exceptions);
-            this.methodDescriptorMap.put(CatServerUtil.signatureId(name, desc), methodDesc);
+            classDescriptor.putMethodDescriptor(CatServerUtil.typeSignatureId(name, desc), ACC_PUBLIC | ACC_ABSTRACT, desc, sign, exceptions);
             return null;
         }
 
-    }
-
-
-    /**
-     * 类、方法签名信息
-     * */
-    private static class AsmClassMethodDescriptor {
-
-        private final int access;
-        private final String descriptor;
-        private final String signature;
-        private final String[] exceptions;
-
-        public AsmClassMethodDescriptor(int access, String descriptor, String signature, String[] exceptions) {
-            this.access = access;
-            this.descriptor = descriptor;
-            this.signature = signature;
-            this.exceptions = exceptions;
+        public AsmClassDescriptor getClassDescriptor() {
+            return classDescriptor;
         }
     }
+
+
+
 
 
     /**
@@ -344,7 +340,6 @@ public final class CatInterfaceEnhancer implements Opcodes{
         }
 
     }
-
 
 
     /**

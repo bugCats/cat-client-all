@@ -49,7 +49,7 @@ public class ApiRemote4Test {
             }
 
             @Override
-            public CatJsonResolver jsonResolver() {
+            public CatJsonResolver getJsonResolver() {
                 return new CatJacksonResolver();
             }
         };

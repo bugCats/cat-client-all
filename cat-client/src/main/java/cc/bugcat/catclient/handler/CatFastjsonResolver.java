@@ -29,15 +29,8 @@ public class CatFastjsonResolver implements CatJsonResolver{
 
 
     @Override
-    public String toJsonString(Object object) {
+    public String toSendString(Object object) {
         return JSONObject.toJSONString(object);
     }
-
-
-    @Override
-    public String toXmlString(Object object) {
-        return null;
-    }
-
-
+    
 }

@@ -4,8 +4,10 @@ import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.*;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -15,14 +17,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 
 /**
  *
  * @author bugcat
  * */
-public class CatToosUtil{
+public class CatToosUtil {
+
 
     public final static String GROUP_ID = "cc.bugcat";
 
@@ -31,8 +33,8 @@ public class CatToosUtil{
 
     public final static String INTERFACE_ATTRIBUTES_SERVICE_NAME = "serviceName";
     public final static String INTERFACE_ATTRIBUTES_DEPENDS = "interfaceDepend";
-
-
+    
+    
     /**
      * spring EL表达式：#{arg.name}
      * 使用方法入参，计算表达式
@@ -80,9 +82,7 @@ public class CatToosUtil{
     public static void removeException(){
         threadLocal.remove();
     }
-
-
-
+    
     /**
      * 得到原始异常
      * */
@@ -95,20 +95,31 @@ public class CatToosUtil{
     }
 
 
+    
     /**
      * 获取扫描包路径，默认为启动类所在包路径
      * */
-    public static String[] scanPackages(AnnotationMetadata metadata, AnnotationAttributes annoAttrs) {
+    public static String[] scanPackages(AnnotationMetadata annotationMetadata, AnnotationAttributes annoAttrs) {
         String[] pkgs = annoAttrs.getStringArray("value");
-        if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0]) ) {//如果没有设置扫描包路径，取启动类路径
-            StandardAnnotationMetadata annotationMetadata = (StandardAnnotationMetadata) metadata;
-            Class startClass = annotationMetadata.getIntrospectedClass();    //启动类class
+        if ( pkgs.length == 1 && CatToosUtil.isBlank(pkgs[0] ) ) {//如果没有设置扫描包路径，取启动类路径
+            Class startClass = null;
+            if ( annotationMetadata instanceof AnnotationMetadataReadingVisitor ){ //非启动类，在一般spring组件上
+                AnnotationMetadataReadingVisitor metadata = (AnnotationMetadataReadingVisitor) annotationMetadata;
+                try { startClass = metadata.getClass().getClassLoader().loadClass(metadata.getClassName()); } catch ( Exception ex ) { }
+            } else { //在启动类上
+                StandardAnnotationMetadata metadata = (StandardAnnotationMetadata) annotationMetadata;
+                startClass = metadata.getIntrospectedClass();    //启动类class
+            }
             String basePackage = startClass.getPackage().getName();
             pkgs = new String[]{basePackage};  //获取启动类所在包路径
         }
-        return pkgs;
+        String[] scan = new String[pkgs.length + 1];
+        scan[0] = GROUP_ID;
+        System.arraycopy(pkgs, 0, scan, 1, pkgs.length);
+        return scan;
     }
 
+    
     /**
      * 按顺序，获取第一个存在的注解的value值
      * */
@@ -138,15 +149,12 @@ public class CatToosUtil{
         }
         return true;
     }
-
     public static boolean isNotBlank(String str) {
         return !isBlank(str);
     }
-
     public static String defaultIfBlank(String str, String def) {
         return isNotBlank(str) ? str : def;
     }
-
     public static String toStringIfBlank(Object str, String def) {
         return str != null ? str.toString() : def;
     }
@@ -169,7 +177,6 @@ public class CatToosUtil{
     public static String uncapitalize(final String str) {
         return capitalize(str, String::toLowerCase);
     }
-
     /**
      * 首字母大写
      * */
@@ -230,7 +237,7 @@ public class CatToosUtil{
             }
             sbr.deleteCharAt(0);
         }
-        return method.getName() + "([" + sbr.toString() + "])";
+        return method.getName() + "([" + sbr + "])";
     }
 
 
@@ -289,5 +296,51 @@ public class CatToosUtil{
         return defaultValue;
     }
 
+    
+    /**
+     * 适配Spring环境变量为Properties
+     * */
+    public static Properties envProperty(Environment environment){
+        return new EnvironmentProperty(environment);
+    }
+    /**
+     * 适配自定义环境变量为Properties
+     * */
+    public static Properties envProperty(Properties properties){
+        if( properties instanceof EnvironmentProperty){
+            return properties;
+        } else {
+            PropertiesPropertySource property = new PropertiesPropertySource("toosProperty", properties);
+            MutablePropertySources sources = new MutablePropertySources();
+            sources.addLast(property);
+            PropertySourcesPropertyResolver source = new PropertySourcesPropertyResolver(sources);
+            return new EnvironmentProperty(source);
+        }
+    }
 
+
+    /**
+     * 环境变量适配
+     * */    
+    private static class EnvironmentProperty extends Properties {
+
+        private final PropertyResolver property;
+        private EnvironmentProperty(PropertyResolver property) {
+            this.property = property;
+        }
+
+        /**
+         * key 类似于 ${demo.remoteApi}
+         * */
+        @Override
+        public String getProperty(String key) {
+            return getProperty(key, null);
+        }
+
+        @Override
+        public String getProperty(String key, String defaultValue) {
+            String value = property.resolvePlaceholders(key);
+            return defaultValue != null && key.equals(value) ? defaultValue : value;
+        }
+    }
 }

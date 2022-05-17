@@ -4,9 +4,8 @@ package cc.bugcat.example.catserver.serverApi;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.handler.CatInterceptPoint;
 import cc.bugcat.catserver.handler.CatServerContextHolder;
-import cc.bugcat.catserver.spi.CatInterceptor;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
-import org.springframework.beans.factory.InitializingBean;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import java.util.function.Supplier;
 @Component
 public class UserInterceptorConfig extends CatServerConfiguration {
 
-    private CatInterceptor globalInterceptor;
+    private CatServerInterceptor globalInterceptor;
     private List<CatInterceptorGroup> groupList;
 
 
@@ -29,12 +28,12 @@ public class UserInterceptorConfig extends CatServerConfiguration {
 
         super.afterPropertiesSet();
 
-        this.globalInterceptor = new CatInterceptor() {
+        this.globalInterceptor = new CatServerInterceptor() {
             @Override
             public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                 CatInterceptPoint interceptPoint = contextHolder.getInterceptPoint();
                 System.out.println("全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
-                return contextHolder.executeRequest();
+                return contextHolder.proceedRequest();
             }
         };
 
@@ -47,23 +46,23 @@ public class UserInterceptorConfig extends CatServerConfiguration {
             }
 
             @Override
-            public List<CatInterceptor> getInterceptors() {
-                return Arrays.asList(new CatInterceptor(){
+            public Supplier<List<CatServerInterceptor>> getInterceptorFactory() {
+                return () -> Arrays.asList(new CatServerInterceptor(){
                     @Override
                     public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                         System.out.println("运行时拦截器");
-                        return contextHolder.executeRequest();
+                        return contextHolder.proceedRequest();
                     }
                 });
             }
         };
         groupList.add(group);
-
     }
 
+    
 
     @Override
-    public CatInterceptor getGlobalInterceptor() {
+    public CatServerInterceptor getGlobalInterceptor() {
         return this.globalInterceptor;
     }
 
@@ -71,4 +70,5 @@ public class UserInterceptorConfig extends CatServerConfiguration {
     public List<CatInterceptorGroup> getInterceptorGroup() {
         return this.groupList;
     }
+    
 }

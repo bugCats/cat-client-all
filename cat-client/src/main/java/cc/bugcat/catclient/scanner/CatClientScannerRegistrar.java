@@ -51,7 +51,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
     @Override
     public void setEnvironment(Environment environment) {
-        this.envProp = CatClientUtil.envProperty(environment);
+        this.envProp = CatToosUtil.envProperty(environment);
     }
 
 

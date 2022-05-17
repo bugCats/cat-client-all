@@ -12,13 +12,15 @@ import java.util.Map;
 
 
 /**
- * http请求日志类
+ * http请求日志类，多例。
+ * 每次调用http，都会重新生成一个新对象
  * */
 public class CatClientLogger {
 
 
     /**
-     * @see cc.bugcat.catclient.handler.CatSendContextHolder#uuid
+     * 如果有重连机制，那么调用一次方法，可能会执行多次http请求，会创建多个CatClientLogger对象，但是uuid是相同的
+     * @see CatSendContextHolder#getUuid()
      * */
     private String uuid;
 
@@ -43,6 +45,9 @@ public class CatClientLogger {
 
     private List<String> infos = new LinkedList<>();
 
+    public CatClientLogger() {
+        
+    }
 
     /**
      * 默认日志输出格式
@@ -119,8 +124,7 @@ public class CatClientLogger {
     public void setExecuteTime(long executeTime) {
         this.executeTime = executeTime;
     }
-
-
+    
     public String getErrorMessge() {
         return errorMessge;
     }

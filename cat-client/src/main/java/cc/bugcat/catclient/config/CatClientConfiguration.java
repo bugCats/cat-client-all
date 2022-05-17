@@ -123,7 +123,7 @@ public class CatClientConfiguration implements InitializingBean {
      * 默认序列化对象
      * 建议为单例
      * */
-    public CatJsonResolver jsonResolver(){
+    public CatJsonResolver getJsonResolver(){
         return defaultJsonResolver;
     }
 
@@ -132,7 +132,7 @@ public class CatClientConfiguration implements InitializingBean {
      * 默认日志打印
      * 建议为单例
      * */
-    public CatLoggerProcessor loggerProcessor(){
+    public CatLoggerProcessor getLoggerProcessor(){
         return defaultLoggerProcessor;
     }
 

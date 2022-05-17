@@ -1,18 +1,15 @@
 package cc.bugcat.catface.spi;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
-
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * http响应包装器类处理
+ * http响应包装器类处理。
  *
  * 部分框架，服务端的响应，为统一对象，具体的业务数据，是统一对象通过泛型确认的属性。
  *
- * 比喻{@link ResponseEntity<>} {@link HttpEntity<>}，{@code ResponesDTO<User>}，具体响应是通过泛型 T 确认的一个属性
+ * 比喻{@code ResponseEntity&lt;User&gt;} {@code HttpEntity&lt;User&gt;}，{@code ResponesDTO&lt;User&gt;}，具体响应是通过泛型 T 确认的一个属性。
  *
  * 可以称这类ResponseEntity、HttpEntity、ResponesDTO为响应包装器类
  *
@@ -65,7 +62,7 @@ public abstract class AbstractResponesWrapper<T> {
 
 
     /**
-     * 获取json转对象泛型：new CatTypeReference<ResponseEntity<T>>(type){};
+     * 获取json转对象泛型：new CatTypeReference&lt;ResponseEntity&lt;T&gt;&gt;(type){};
      * @see CatTypeReference
      *
      * @param type 业务类型的Type。其中，ResponseEntity 为包装器类
@@ -119,7 +116,7 @@ public abstract class AbstractResponesWrapper<T> {
         }
         @Override
         public Object createEntryOnSuccess(Object value, Type returnType) {
-            return null;
+            return value;
         }
         @Override
         public Object createEntryOnException(Throwable throwable, Type returnType) {

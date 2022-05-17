@@ -5,7 +5,10 @@ import cc.bugcat.example.api.vi.UserPageVi;
 import cc.bugcat.example.catclient.serverApi.Config;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Date;
@@ -18,17 +21,15 @@ public class FaceDemoServiceTest{
     private static FaceDemoService faceDemoService;
 
     static {
-//
+
+        ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
 
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
 
-        Map<Class, Object> configMap = CatClientBuilders.builder(Config.class, FaceDemoService.class)
+        faceDemoService = CatClientBuilders.builder(Config.class, FaceDemoService.class)
                 .environment(prop)
                 .build();
-
-        faceDemoService = (FaceDemoService) configMap.get(FaceDemoService.class);
-
     }
 
 

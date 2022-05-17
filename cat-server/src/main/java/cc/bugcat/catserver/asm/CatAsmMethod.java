@@ -3,7 +3,7 @@ package cc.bugcat.catserver.asm;
 import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 
 /**
- * 增强后interface的方法描述信息
+ * 增强后interface的method描述信息
  *
  * @author bugcat
  * */

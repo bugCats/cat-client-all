@@ -87,10 +87,10 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 .build();
 
         //设置参数
-        sendHandler.sendConfigurationResolver(context, parameter);
-
+        context.executeConfigurationResolver(parameter);
+        
         //处理额外参数
-        context.executeVariable();
+        context.executeVariableResolver();
 
         //原始响应字符串
         String respStr = null;
@@ -128,7 +128,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                     // 具体回调类的方法
 
                     try {
-                        respObj =  methodProxy.invokeSuper(target, args);
+                        respObj = methodProxy.invokeSuper(target, args);
                         return respObj;
                     } catch ( Throwable ex ) {
                         // 回调类中继续抛出异常，不处理
@@ -152,9 +152,10 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                     } else {
                         respObj = result;
                     }
-
+                    
                 } else {
                     // 返回false，则直接执行doFinally
+                    
                     respObj = result;
                 }
             }

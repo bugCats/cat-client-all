@@ -2,6 +2,7 @@ package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
+import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.spi.CatResultProcessor;
@@ -32,8 +33,7 @@ public final class CatSendContextHolder {
     public static CatSendContextHolder getContextHolder() {
         return threadLocal.get();
     }
-
-
+    
     protected void remove() {
         threadLocal.remove();
         CatToosUtil.removeException();
@@ -96,16 +96,22 @@ public final class CatSendContextHolder {
     }
 
 
-
     /**
-     * http参数处理切入点
+     * 1、设置参数
      * */
-    protected void executeVariable(){
-        interceptor.executeVariable(this, sendHandler);
+    protected void executeConfigurationResolver(CatParameter parameter) {
+        interceptor.executeConfigurationResolver(this, parameter);
     }
-
+    
     /**
-     * http请求切入点
+     * 2、http参数处理切入点
+     * */
+    protected void executeVariableResolver(){
+        interceptor.executeVariableResolver(this);
+    }
+    
+    /**
+     * 3、http请求切入点
      * */
     protected String executeRequest() throws CatHttpException {
         this.responseBody = interceptor.executeHttpSend(sendHandler);
@@ -151,6 +157,7 @@ public final class CatSendContextHolder {
     protected static CatSendContextHolderBuilder builder(){
         return new CatSendContextHolderBuilder();
     }
+
 
     protected static class CatSendContextHolderBuilder {
         private CatClientInfo clientInfo;

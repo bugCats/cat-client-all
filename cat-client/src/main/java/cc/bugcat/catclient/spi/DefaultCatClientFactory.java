@@ -39,7 +39,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * */
     @Override
     public CatJsonResolver getJsonResolver() {
-        return configuration.jsonResolver();
+        return configuration.getJsonResolver();
     }
 
     /**
@@ -47,7 +47,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * */
     @Override
     public CatLoggerProcessor getLoggerProcessor() {
-        return configuration.loggerProcessor();
+        return configuration.getLoggerProcessor();
     }
 
 

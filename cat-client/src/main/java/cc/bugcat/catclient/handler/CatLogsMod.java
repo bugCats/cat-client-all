@@ -8,24 +8,32 @@ package cc.bugcat.catclient.handler;
  * */
 public enum CatLogsMod {
 
-    Off,    //关闭
+    Off(false, false),    //关闭
 
-    Def,    //默认，跟随全局配置
+    Def(true, true),    //默认，跟随全局配置
 
-    In,     //仅输入
+    In(true, false),     //仅输入
 
-    Out,    //仅输出
+    Out(false, true),    //仅输出
 
-    All,    //输入、输出
+    All(true, true),    //输入、输出
 
-    None,   //不记录输入、输出
+    None(false, true),   //不记录输入、输出
 
 
-    In2,     //如果出现异常，仅输入
+    In2(true, false),     //如果出现异常，仅输入
 
-    Out2,    //如果出现异常，仅输出
+    Out2(false, true),    //如果出现异常，仅输出
 
-    All2,    //如果出现异常，输入、输出
+    All2(true, true);    //如果出现异常，输入、输出
 
+    
+    public final boolean printIn;
+    public final boolean printOut;
+
+    CatLogsMod(boolean printIn, boolean printOut) {
+        this.printIn = printIn;
+        this.printOut = printOut;
+    }
 }
 

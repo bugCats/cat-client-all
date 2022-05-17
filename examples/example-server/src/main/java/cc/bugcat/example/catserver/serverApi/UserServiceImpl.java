@@ -1,7 +1,6 @@
 package cc.bugcat.example.catserver.serverApi;
 
 
-import cc.bugcat.catserver.spi.CatInterceptor;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.example.api.UserService;
 import cc.bugcat.example.api.vi.UserPageVi;
@@ -11,7 +10,6 @@ import com.alibaba.fastjson.JSONObject;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Arrays;
 

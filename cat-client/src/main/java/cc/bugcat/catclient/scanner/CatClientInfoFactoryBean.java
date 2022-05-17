@@ -102,7 +102,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             return bean;
         });
 
-        final MethodInterceptor defaultInterceptor = clientDepend.getDefaultInterceptor();
+        final MethodInterceptor objectMethodInterceptor = clientDepend.getObjectMethodInterceptor();
         final CatHttpRetryConfigurer retryConfigurer = clientDepend.getRetryConfigurer();
         final CatMethodSendInterceptor methodInterceptor = getAndExectue((Class<CatMethodSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
             if( bean == null ){
@@ -117,7 +117,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             @Override
             protected Object getCallback (Method method) {
                 if( CatToosUtil.isObjectMethod(method) ){//默认方法
-                    return defaultInterceptor;
+                    return objectMethodInterceptor;
                 } else {
 
                     /**

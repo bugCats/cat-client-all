@@ -7,6 +7,7 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catface.annotation.CatNote;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
@@ -43,9 +44,9 @@ public @interface CatClient {
 
     /**
      * 远程服务器地址：
-     * 1、字面量：https://www.bugcat.cc
-     * 2、读取配置文件值：${xxx.xxx}
-     * 3、服务名，配合注册中心：http://myservername/ctx
+     * 1、字面量："https://www.bugcat.cc"；
+     * 2、读取配置文件值："${xxx.xxx}"；
+     * 3、服务名，配合注册中心："http://myservername/ctx"；
      * */
     String host();
 
@@ -72,7 +73,7 @@ public @interface CatClient {
      * 2、Void.class：关闭回调模式
      * 3、其他class值，必须实现该interface。当发生异常后，执行实现类的对应方法。
      *
-     * 如果在回调方法中，继续抛出异常，或者关闭回调模式，会执行{@link CatResultProcessor#onHttpError}进行处理
+     * 如果在回调方法中，继续抛出异常，或者关闭回调模式，会执行{@link CatResultProcessor#onHttpError}进行处理。
      *
      * CatResultProcessor可以通过扩展后的CatClientFactory进行增强
      *
@@ -101,11 +102,12 @@ public @interface CatClient {
 
 
     /**
-     * 分组标记，字面量
-     *
-     * 用于配置重连分组、日志、自定义标签等。
+     * 分组标记，
+     * {@code @CatNote(key="name", value="bugcat")}：直接字符串；
+     * {@code @CatNote(key="host", value="${host}")}：从环境变量中获取；
+     * {@code @CatNote("bugcat")}：省略key，最终key与value值相同；
      * */
-    String[] tags() default "";
+    CatNote[] tags() default {};
 
 
 }

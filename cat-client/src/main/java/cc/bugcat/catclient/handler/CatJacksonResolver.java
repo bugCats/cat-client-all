@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
 
 /**
  * jackson 序列化与反序列化
- * 默认序列化工具，可在{@link CatClientConfiguration#jsonResolver()}指定
+ * 默认序列化工具，可在{@link CatClientConfiguration#getJsonResolver()}指定
  *
  * @author bugcat
  * */
@@ -66,17 +66,12 @@ public class CatJacksonResolver implements CatJsonResolver{
 
 
     @Override
-    public String toJsonString(Object object) {
+    public String toSendString(Object object) {
         try {
             return mapper.writeValueAsString(object);
         } catch ( Exception ex ) {
             throw new RuntimeException("对象序列化异常", ex);
         }
-    }
-
-    @Override
-    public String toXmlString(Object object) {
-        return null;
     }
 
 }

@@ -5,12 +5,13 @@ import cc.bugcat.example.catserver.serverApi.UserInterceptorConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cglib.core.DebuggingClassWriter;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 @EnableCatServer(configuration = UserInterceptorConfig.class)
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "cc.bugcat")
 public class CatServerApplication {
 
 	public static void main(String[] args) {
@@ -31,4 +32,7 @@ public class CatServerApplication {
             return new ModelAndView("redirect:swagger-ui.html");
         }
     }
+    
+    
+    
 }

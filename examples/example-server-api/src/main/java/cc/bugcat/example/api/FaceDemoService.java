@@ -2,6 +2,7 @@ package cc.bugcat.example.api;
 
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.api.vi.UserPageVi;
 import cc.bugcat.example.api.vo.UserInfo;
 import cc.bugcat.example.tools.PageInfo;
@@ -52,12 +53,16 @@ public interface FaceDemoService{
                     @ApiParam("参数status") @NotNull(message = "status 不能为空") Integer status,
                     @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
 
-    UserInfo param9(@ApiParam("参数map") Map<String, Object> map, 
+    default UserInfo param9(@ApiParam("参数map") Map<String, Object> map, 
                     @ApiParam("参数vi1") @Validated UserPageVi vi1,
                     @ApiParam("参数date") Date date,
                     @ApiParam("参数status") Integer status,
                     @ApiParam("参数decimal") BigDecimal decimal,
-                    @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
+                    @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3) {
+        Throwable exception = CatToosUtil.getException();
+        System.out.println("异常：" + exception.getMessage());
+        return null;
+    }
     
 
 }

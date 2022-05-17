@@ -1,39 +1,48 @@
 package cc.bugcat.catserver.config;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.handler.CatServerDefaults;
-import cc.bugcat.catserver.handler.CatServerDefaults.*;
-import cc.bugcat.catserver.spi.*;
+import cc.bugcat.catserver.spi.CatInterceptorGroup;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
+import cc.bugcat.catserver.spi.CatResultHandler;
+import cc.bugcat.catserver.spi.DefaultWrapperResultHandler;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 全局默认值
- *
  *
  * @author bugcat
  * */
 public class CatServerConfiguration implements InitializingBean {
 
 
+    /**
+     * 包装器类
+     * */
     public static final Class<? extends AbstractResponesWrapper> WRAPPER = AbstractResponesWrapper.Default.class;
 
+    /**
+     * 响应处理器
+     * */
+    public static final Class<? extends CatResultHandler> RESULT_HANDLER = CatResultHandler.class;
+    
+    /**
+     * 全局拦截器
+     * */
+    protected CatServerInterceptor defaultGlobalInterceptor;
 
-    protected ConcurrentMap<Class, CatServerResultHandler> resultHandlerMap = new ConcurrentHashMap<>();
-
-    protected CatServerResultHandler defaultResultHandler;
-    protected CatInterceptor defaultGlobalInterceptor;
+    /**
+     * 运行时拦截器组
+     * */
     protected List<CatInterceptorGroup> interceptorGroups;
 
 
 
     @Override
     public void afterPropertiesSet() {
-        this.defaultResultHandler = new CatServerResultHandler(){};
         this.defaultGlobalInterceptor = CatServerDefaults.DEFAULT_INTERCEPTOR;
         this.interceptorGroups = new ArrayList<>(0);
     }
@@ -46,38 +55,33 @@ public class CatServerConfiguration implements InitializingBean {
         return WRAPPER;
     }
 
-
-
     /**
-     * CatServer类响应处理
+     * 默认的响应处理
      * */
-    public CatServerResultHandler getResultHandler(AbstractResponesWrapper wrapperHandler) {
-        CatServerResultHandler resultHandler = null;
-        if ( wrapperHandler != null ) {
-            resultHandler = resultHandlerMap.get(wrapperHandler.getWrapperClass());
-            if ( resultHandler == null ) {
-                resultHandler = CatServerDefaults.newResultHandler(wrapperHandler);
-                resultHandlerMap.putIfAbsent(wrapperHandler.getWrapperClass(), resultHandler);
-            }
-        } else {
-            resultHandler = defaultResultHandler;
-        }
-        return resultHandler;
+    public Class<? extends CatResultHandler> getResultHandler(AbstractResponesWrapper wrapperHandler){
+        return wrapperHandler != null ? DefaultWrapperResultHandler.class : CatResultHandler.Default.class;
     }
+    
 
 
     /**
-     * 所有CatServer类共享的拦截器
-     * 一般用于记录日志
+     * 全局默认的拦截器，用于替换@CatServer#interceptors()默认拦截器对象，一般用于记录日志。
+     * 后续配置@CatServer拦截器时，defaultGlobalInterceptor会替换CatServerInterceptor.class的位置。
+     *
+     * @CatServer(interceptors = {CatServerInterceptor.class, UserInterceptor.class})
+     *
+     * 实际会执行 defaultGlobalInterceptor -> userInterceptor 2个拦截器。
+     * 
+     * CatServerInterceptor.Off 关闭所有拦截器，包括运行时拦截器。
      * */
-    public CatInterceptor getGlobalInterceptor(){
+    public CatServerInterceptor getGlobalInterceptor(){
         return defaultGlobalInterceptor;
     }
 
 
     /**
-     * 其他拦截器组
-     * 会替换{@link CatServer#interceptors()}此处配置的默认拦截
+     * 全局拦截器组，在运行时匹配。
+     * 默认在自定义拦截之前执行，也可以使用 CatServerInterceptor.GROUP.class 手动调整拦截器位置。
      * */
     public List<CatInterceptorGroup> getInterceptorGroup(){
         return interceptorGroups;

@@ -33,8 +33,7 @@ public @interface EnableCatServer {
 
 
     /**
-     * 默认值、以及配置项。
-     * 作用于全局
+     * 默认值、以及配置项，作用于全局
      * */
     Class<? extends CatServerConfiguration> configuration() default CatServerConfiguration.class;
 

@@ -2,7 +2,7 @@ package cc.bugcat.catclient.beanInfos;
 
 
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catclient.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
@@ -64,7 +64,7 @@ public class CatMethodInfo {
     /**
      * 日志记录方案
      * */
-    private CatLogsMod logsMod;
+    private final CatLogsMod logsMod;
 
     /**
      * http请求读写超时
@@ -142,14 +142,14 @@ public class CatMethodInfo {
         CatParameter param = new CatParameter();
 
         //处理url上的参数 =>  /api/{uid}
-        String path = this.path;
+        String realPath = this.path;
         if ( pathParamIndexMap.size() > 0 ) {//填充 url 上的参数
             for ( Map.Entry<String, CatMethodParamInfo> entry : pathParamIndexMap.entrySet() ) {
-                path = path.replace("{" + entry.getKey() + "}", CatToosUtil.toStringIfBlank(args[entry.getValue().getIndex()], ""));
+                realPath = realPath.replace("{" + entry.getKey() + "}", CatToosUtil.toStringIfBlank(args[entry.getValue().getIndex()], ""));
             }
-            path = path.replaceAll("/+", "/");
+            realPath = realPath.replaceAll("/+", "/");
         }
-        param.setPath(path);
+        param.setRealPath(realPath);
 
 
         // 处理header参数
@@ -451,7 +451,7 @@ public class CatMethodInfo {
                 if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2、argX...命名
                     pname = "arg" + idx;
                 } else {
-                    pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, RequestHeader.class, CatNote.class);
+                    pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
                     if ( CatToosUtil.isBlank(pname) ) {
                         pname = parameter.getName();
                     }

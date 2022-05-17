@@ -1,4 +1,4 @@
-package cc.bugcat.catclient.annotation;
+package cc.bugcat.catface.annotation;
 
 
 import java.lang.annotation.*;

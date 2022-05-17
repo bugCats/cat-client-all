@@ -5,9 +5,6 @@ import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.*;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatJsonResolver;
-import cc.bugcat.catclient.spi.CatObjectResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.handler.Stringable;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -15,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.expression.Expression;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +26,7 @@ import java.util.regex.Matcher;
  *
  * 可通过{@link CatClientFactory#newSendHandler()}自动创建，也支持手动创建
  *
+ * @see CatMethodAopInterceptor
  * @author bugcat
  * */
 public class CatSendProcessor {
@@ -36,39 +35,45 @@ public class CatSendProcessor {
      * http异常重试次数
      * */
     private int retryCount = 0;
-
+    
     private Supplier<CatHttpPoint> httpPointSupplier;
     private Supplier<CatObjectResolver> objectResolverSupplier;
 
     private CatSendContextHolder context;
     private CatHttpPoint httpPoint;
 
-    protected JSONObject notes;    //其他自定义参数、标记
+    /**
+     * 其他自定义参数、标记
+     * */
+    protected JSONObject notes;
 
+    
     /**
      * 1、初始化http相关配置，每次调用interface的方法，仅执行一次
      * */
-    public final void sendConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
+    public void postConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
+        CatMethodInfo methodInfo = context.getMethodInfo();
+        
         this.context = context;
         this.retryCount = context.getRetryConfigurer().isEnable() ? context.getRetryConfigurer().getRetries() : 0;
 
-        CatMethodInfo methodInfo = context.getMethodInfo();
-
         httpPoint = newCatHttpPoint();
-        httpPoint.setPostString(methodInfo.isPostString());
+        httpPoint.setPostString(methodInfo.isPostString()); //是否使用post发送字符流
         httpPoint.setRequestType(methodInfo.getRequestType());
         httpPoint.setConnect(methodInfo.getConnect());
         httpPoint.setSocket(methodInfo.getSocket());
 
-        httpPoint.setPath(methodInfo.getHost() + parameter.getPath());
+        httpPoint.setHost(methodInfo.getHost());
+        httpPoint.setUrl(parameter.getRealPath());
         httpPoint.setHeaderMap(parameter.getHeaderMap());
-
+        httpPoint.setParameter(parameter);
+        
         this.notes = new JSONObject();
         for ( Map.Entry<String, Object> entry : methodInfo.getNotes().entrySet() ) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if ( value != null && value instanceof String ) {
-                Matcher matcher = CatClientUtil.keyPat2.matcher((String) value);
+                Matcher matcher = CatClientUtil.PARAM_KEY_PAT.matcher((String) value);
                 if( matcher.find()  ){
                     String argsTmpl = matcher.group(1);
                     int start = argsTmpl.indexOf(".");
@@ -87,10 +92,39 @@ public class CatSendProcessor {
             }
             notes.put(key, value);
         }
+    }
 
+
+    /**
+     * 2、参数预处理
+     * 仅会执行一次
+     * */
+    public void preVariableResolver(CatSendContextHolder context){
+        CatMethodInfo methodInfo = context.getMethodInfo();
+        CatParameter parameter = httpPoint.getParameter();
         Object value = parameter.getValue();
+        CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+        if( methodInfo.isCatface() ){ // 精简模式，全部默认使用post+字符流模式
+            if( value instanceof Map ){ // 如果方法上入参是键值对，转换成json字符串
+                value = jsonResolver.toSendString(value);
+            } else { // 如果方法上仅有一个入参，虚拟一个json属性arg0
+                Map<String, Object> map = new HashMap<>();
+                map.put("arg0", value);
+                value = jsonResolver.toSendString(map);
+            }
+        }
+        
         MultiValueMap<String, Object> keyValueParam = null;
-        if( !methodInfo.isPostString() ){ //非post发送json
+        String requestBody = null;
+        if( httpPoint.isPostString() ){ // 使用post发送字符串
+            if ( value instanceof String ){
+                requestBody = CatToosUtil.toStringIfBlank(value, "");
+            } else if ( value instanceof Stringable ){
+                requestBody = ((Stringable) value).serialization();
+            } else {
+                requestBody = jsonResolver.toSendString(value);
+            }
+        } else { // 使用表单方式
             if( value instanceof String ){
                 keyValueParam = toMultiValueMap(parameter.getArgMap());
             } else if ( value instanceof Map ) {// 传入了一个对象，转换成键值对
@@ -99,73 +133,35 @@ public class CatSendProcessor {
                 CatObjectResolver objectResolver = newCatObjectResolver();
                 keyValueParam = objectResolver.resolver(value);
             }
-        }
-        httpPoint.setObjectParam(value);
-        httpPoint.setKeyValueParam(keyValueParam);
-    }
 
-
-    /**
-     * 2、如果在调用远程API，需要额外处理参数、添加签名等，可在此步骤添加
-     * */
-    public void postVariableResolver(CatSendContextHolder context){
-
-    }
-
-    /**
-     * 3、对参数额外处理
-     * 将实际入参，转成字符串
-     * */
-    public void afterVariableResolver(CatSendContextHolder context){
-
-        CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
-        CatMethodInfo methodInfo = context.getMethodInfo();
-
-        Object value = httpPoint.getObjectParam();
-        MultiValueMap<String, Object> keyValueParam = httpPoint.getKeyValueParam();
-
-        if( methodInfo.isCatface() ){
-            if( value instanceof Map ){
-                value = jsonResolver.toJsonString(value);
-            } else {
-                Map<String, Object> map = new HashMap<>();
-                map.put("arg0", value);
-                value = jsonResolver.toJsonString(map);
-            }
-        }
-
-        String requestBody = null;
-
-        // 使用post发送字符串
-        if( methodInfo.isPostString() ){
-            if ( value instanceof String ){
-                requestBody = CatToosUtil.toStringIfBlank(value, "");
-            } else if ( value instanceof Stringable ){
-                requestBody = ((Stringable) value).serialization();
-            } else {
-                requestBody = jsonResolver.toJsonString(value);
-            }
-        } else {
             // 请求入参转换成String，方便记录日志
             CatLogsMod logsMod = methodInfo.getLogsMod();
-            if( CatLogsMod.All == logsMod || CatLogsMod.All2 == logsMod || CatLogsMod.In == logsMod || CatLogsMod.In2 == logsMod ){
-                requestBody = jsonResolver.toJsonString(keyValueParam);
+            if( logsMod.printIn ){
+                requestBody = jsonResolver.toSendString(keyValueParam);
             }
         }
 
-        httpPoint.setObjectParam(value);
         httpPoint.setRequestBody(requestBody);
         httpPoint.setKeyValueParam(keyValueParam);
+
     }
 
-
-
-
     /**
-     * 5、发送http
-     * 由于有重连机制，每次调用interface的方法，httpSend可能执行多次
+     * 3、如果在调用远程API，需要额外处理参数、添加签名等：
+     *   a、继承CatSendProcessor，重写afterVariableResolver方法；
+     *   b、通过{@link CatMethodSendInterceptor}，在preVariableResolver前后修改；
+     * 仅会执行一次
      * */
-    public final String postHttpSend() throws CatHttpException {
+    public void postVariableResolver(CatSendContextHolder context) {
+        
+    }
+
+    
+    /**
+     * 4、发送http
+     * 由于有重连机制，每次调用interface的方法，postHttpSend可能会执行多次
+     * */
+    public String postHttpSend() throws CatHttpException {
 
         long start = System.currentTimeMillis();
 
@@ -176,7 +172,7 @@ public class CatSendProcessor {
         catLog.setUuid(context.getUuid());
         catLog.setLogsMod(methodInfo.getLogsMod());
         catLog.setApiName(methodInfo.getMethodName());
-        catLog.setApiUrl(httpPoint.getPath());
+        catLog.setApiUrl(httpPoint.getHost() + httpPoint.getUrl());
         catLog.setRequest(httpPoint.getRequestBody());
 
         String respStr = null;
@@ -194,9 +190,10 @@ public class CatSendProcessor {
         return respStr;
     }
 
+    
 
     /**
-     * 如果发生http异常，判断是否满足重连
+     * 5、如果发生http异常，判断是否满足重连
      * */
     public boolean canRetry(CatSendContextHolder context, CatHttpException exception) {
         CatHttpRetryConfigurer retryConfigurer = context.getRetryConfigurer();
@@ -204,7 +201,7 @@ public class CatSendProcessor {
         CatMethodInfo methodInfo = context.getMethodInfo();
         if ( retryConfigurer.isEnable() && retryCount > 0) {
             boolean note = retryConfigurer.containsNote(notes);
-            boolean tags = retryConfigurer.containsTags(clientInfo.getTags());
+            boolean tags = retryConfigurer.containsTags(clientInfo.getTagMap());
             boolean method = retryConfigurer.containsMethod(methodInfo.getMethodName());
             boolean status = retryConfigurer.containsStatus(exception.getStatusCode());
             boolean ex = retryConfigurer.containsException(exception.getIntrospectedClass());
@@ -216,8 +213,12 @@ public class CatSendProcessor {
         return false;
     }
 
-
-    private MultiValueMap<String, Object> toMultiValueMap(Map<String, Object> map){
+    
+    
+    /**
+     * 一般Map转MultiValueMap
+     * */
+    protected MultiValueMap<String, Object> toMultiValueMap(Map<String, Object> map){
         if( map == null || map.size() == 0 ){
             return new LinkedMultiValueMap<>();
         }
@@ -238,8 +239,11 @@ public class CatSendProcessor {
         return valueMap;
     }
 
+    
+    
+    
     /**
-     * 当前http请求的相关入参
+     * 当前http请求的相切入点参数
      * 子类可重写增强
      * */
     protected CatHttpPoint newCatHttpPoint(){
@@ -254,19 +258,33 @@ public class CatSendProcessor {
         return objectResolverSupplier != null ? objectResolverSupplier.get() : new CatObjectResolver.DefaultResolver();
     }
 
+    
+    
+    /**
+     * 修改切入点参数类型
+     * */
     public void setHttpPointSupplier(Supplier<CatHttpPoint> httpPointSupplier) {
         this.httpPointSupplier = httpPointSupplier;
     }
 
+    
+    /**
+     * 修改对象转换成表单的处理器 
+     * */
     public void setObjectResolverSupplier(Supplier<CatObjectResolver> objectResolverSupplier) {
         this.objectResolverSupplier = objectResolverSupplier;
     }
-
-
-
+    
+    /**
+     * 切入点参数
+     * */
     public CatHttpPoint getHttpPoint() {
         return httpPoint;
     }
+    
+    /**
+     * 方法上添加的标记
+     * */
     public JSONObject getNotes() {
         return notes;
     }

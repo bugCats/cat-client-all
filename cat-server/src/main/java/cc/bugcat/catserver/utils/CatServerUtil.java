@@ -8,6 +8,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
@@ -33,11 +34,12 @@ public class CatServerUtil implements ApplicationContextAware{
      * 通过cglib动态生成的类名、方法名后缀
      * */
     public static final String BRIDGE_NAME = "_byBugcat";
-
+    
     /**
      * interface方法上包含的注解
      * */
     public static final String REQUEST_MAPPING = RequestMapping.class.getName();
+
 
 
     /**
@@ -86,7 +88,13 @@ public class CatServerUtil implements ApplicationContextAware{
         return context.getClassLoader();
     }
 
+    public static Environment getEnvironment(){
+        return context.getEnvironment();
+    }
+    
 
+    
+    
     /**
      * 检测 className 是否存在，存在则执行consumer
      * */
@@ -104,10 +112,10 @@ public class CatServerUtil implements ApplicationContextAware{
     /**
      * 获取方法签名id
      * */
-    public static String signatureId(Method method){
+    public static String typeSignatureId(Method method){
         return method.getName() + "@" + CatInterfaceEnhancer.transformReturn(Type.getMethodDescriptor(method));
     }
-    public static String signatureId(String methodName, String descriptor){
+    public static String typeSignatureId(String methodName, String descriptor){
         return methodName + "@" + CatInterfaceEnhancer.transformReturn(descriptor);
     }
 

@@ -36,16 +36,17 @@ public class CatRestHttp implements CatHttp {
     @Override
     public String doHttp(CatHttpPoint httpPoint, CatClientLogger catLog) throws CatHttpException {
         try {
+            String path = httpPoint.getHost() + httpPoint.getUrl();
             String respStr = null;
             switch ( httpPoint.getRequestType() ) {
                 case GET:
-                    respStr = doGet(httpPoint.getPath(), httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
+                    respStr = doGet(path, httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
                     break;
                 case POST:
                     if( httpPoint.isPostString() ){
-                        respStr = jsonPost(httpPoint.getPath(), httpPoint.getRequestBody(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
+                        respStr = jsonPost(path, httpPoint.getRequestBody(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
                     } else {
-                        respStr = doPost(httpPoint.getPath(), httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
+                        respStr = doPost(path, httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
                     }
                     break;
                 default:

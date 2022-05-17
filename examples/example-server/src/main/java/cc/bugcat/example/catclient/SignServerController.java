@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import cc.bugcat.example.tools.ResponseEntity;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,4 +40,13 @@ public class SignServerController {
         return ResponseEntity.ok("");
     }
 
+    @PostMapping(value = "/cat/sign2")
+    public ResponseEntity<String> demo12(@RequestBody JSONObject param){
+        TreeMap<String, String> treeMap = new TreeMap<>();
+        param.forEach((key, value) -> {
+            treeMap.put(key, value != null ? value.toString() : null);
+        });
+        System.out.println("sign2 >>> req: " + JSONObject.toJSONString(treeMap));
+        return ResponseEntity.ok("");
+    }
 }

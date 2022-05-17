@@ -2,13 +2,11 @@ package cc.bugcat.catserver.scanner;
 
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
-import cc.bugcat.catserver.asm.CatAsmResult;
+import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cglib.proxy.MethodInterceptor;
-import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -20,8 +18,7 @@ import java.util.function.IntFunction;
 
 /**
  * 将动态生成的interface实现类，注册成Controller
- *
- *
+ * 
  * @author: bugcat
  * */
 public class CatServerFactoryBean implements InitializingBean {
@@ -31,37 +28,26 @@ public class CatServerFactoryBean implements InitializingBean {
      * */
     private Set<Class> serverClassSet;
 
+    /**
+     * 全局配置项
+     * */
     private Class<? extends CatServerConfiguration> configClass;
 
-
-
+            
     @Override
     public void afterPropertiesSet() throws Exception {
         if( serverClassSet == null ){
             return;
         }
-
-        final MethodInterceptor defaults = new MethodInterceptor() {
-            @Override
-            public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                return methodProxy.invokeSuper(target, args);
-            }
-        };
-
-        Map<Class, CatAsmResult> controllerCache = new HashMap<>(serverClassSet.size() * 2);
+        
+        CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(configClass, serverClassSet.size());
         List<CatControllerFactoryBean> controllerFactoryBeans = new ArrayList<>(serverClassSet.size());
-
-        CatServerConfiguration serverConfig = CatServerUtil.getBean(configClass);
-
+        
         for(Class serverClass : serverClassSet){
-
-            CatControllerFactoryBean info = CatControllerFactoryBean.builder()
-                    .defaultInterceptor(defaults)
-                    .controllerCache(controllerCache)
+            CatControllerFactoryBean info = CatControllerFactoryBean.newFactory()
                     .serverClass(serverClass)
-                    .serverConfig(serverConfig)
-                    .build();
-
+                    .enhancerDepend(enhancerDepend)
+                    .createBean();
             controllerFactoryBeans.add(info);
         }
 
@@ -71,12 +57,20 @@ public class CatServerFactoryBean implements InitializingBean {
          * */
         controllerFactoryBeans.sort(CatControllerFactoryBean::compareTo);
 
+        registerController(controllerFactoryBeans);
+
+        serverClassSet = null;
+    }
+
+
+    
+    /**
+     * 手动注册controller对象
+     * */
+    private void registerController(List<CatControllerFactoryBean> controllerFactoryBeans){
+        
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
-
-        /**
-         * 手动注册controller对象
-         * */
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
 
         for( CatControllerFactoryBean factory : controllerFactoryBeans ){
@@ -112,11 +106,9 @@ public class CatServerFactoryBean implements InitializingBean {
                 mapper.registerMapping(mappingInfo, factory.getController(), method); // 注册映射处理
             }
         }
-
-        serverClassSet = null;
     }
-
-
+    
+    
 
     private final <T> T[] getValue(Map<String, Object> map, String key, IntFunction<T[]> func){
         Object value = map.get(key);
