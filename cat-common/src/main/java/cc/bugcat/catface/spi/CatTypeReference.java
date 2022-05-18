@@ -1,10 +1,9 @@
 package cc.bugcat.catface.spi;
 
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -55,7 +54,7 @@ public abstract class CatTypeReference<T> {
                 }
             }
         }
-        Type key = ParameterizedTypeImpl.make((Class)rawType, argTypes, thisClass);
+        Type key = new CatParameterizedTypeImpl(argTypes, thisClass, rawType);
         Type cachedType = classTypeCache.get(key);
         if (cachedType == null) {
             classTypeCache.putIfAbsent(key, key);
@@ -72,4 +71,55 @@ public abstract class CatTypeReference<T> {
         return this.type;
     }
 
+    
+    private static class CatParameterizedTypeImpl implements ParameterizedType {
+
+        private final Type[] argTypes;
+        private final Type ownerType;
+        private final Type rawType;
+
+        public CatParameterizedTypeImpl(Type[] argTypes, Type ownerType, Type rawType){
+            this.argTypes = argTypes;
+            this.ownerType = ownerType;
+            this.rawType = rawType;
+        }
+
+        public Type[] getActualTypeArguments() {
+            return argTypes;
+        }
+
+        public Type getOwnerType() {
+            return ownerType;
+        }
+
+        public Type getRawType() {
+            return rawType;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (this == other ) {
+                return true;
+            }
+            if ( other == null || getClass() != other.getClass()) {
+                return false;
+            }
+            CatParameterizedTypeImpl that = (CatParameterizedTypeImpl) other;
+            if (!Arrays.equals(argTypes, that.argTypes)) {
+                return false;
+            }
+            if (ownerType != null ? !ownerType.equals(that.ownerType) : that.ownerType != null) {
+                return false;
+            }
+            return rawType != null ? rawType.equals(that.rawType) : that.rawType == null;
+        }
+        
+        @Override
+        public int hashCode() {
+            int result = argTypes != null ? Arrays.hashCode(argTypes) : 0;
+            result = 31 * result + (ownerType != null ? ownerType.hashCode() : 0);
+            result = 31 * result + (rawType != null ? rawType.hashCode() : 0);
+            return result;
+        }
+    }
 }
