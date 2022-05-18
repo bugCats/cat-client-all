@@ -27,14 +27,14 @@ import java.util.function.Supplier;
 public class CatClientCloudFactory extends DefaultCatClientFactory implements InitializingBean {
 
     private CatResultProcessor resultHandler;
-    private ServerChoose chooser;
+    private ServerChoose serverChoose;
 
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.resultHandler = new CloudResultHandler();
-        this.chooser = CatClientUtil.getBean(ServerChoose.class);
-        if( chooser == null ){
+        this.serverChoose = CatClientUtil.getBean(ServerChoose.class);
+        if( serverChoose == null ){
             throw new RuntimeException("未找到负载均衡对象 ServerChoose，或者有存在多个！");
         }
     }
@@ -43,7 +43,7 @@ public class CatClientCloudFactory extends DefaultCatClientFactory implements In
 
     @Override
     public Supplier<CatSendProcessor> newSendHandler() {
-        return () -> new CloudSendHandler(chooser);
+        return () -> new CloudSendHandler(serverChoose);
     }
 
 
@@ -52,4 +52,11 @@ public class CatClientCloudFactory extends DefaultCatClientFactory implements In
         return resultHandler;
     }
 
+
+    public ServerChoose getServerChoose() {
+        return serverChoose;
+    }
+    public void setServerChoose(ServerChoose chooser) {
+        this.serverChoose = chooser;
+    }
 }

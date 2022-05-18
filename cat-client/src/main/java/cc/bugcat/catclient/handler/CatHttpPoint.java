@@ -1,6 +1,7 @@
 package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.beanInfos.CatParameter;
+import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -166,6 +167,9 @@ public class CatHttpPoint {
     }
     public void setKeyValueParam(MultiValueMap<String, Object> keyValueParam) {
         this.keyValueParam = keyValueParam;
+    }
+    public void setKeyValueParam(Map<String, Object> keyValueParam) {
+        this.keyValueParam = CatToosUtil.toMultiValueMap(keyValueParam);
     }
 
     public String getRequestBody() {

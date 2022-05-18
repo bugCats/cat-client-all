@@ -80,11 +80,7 @@ public class CatClientUtil implements ApplicationContextAware {
     /**
      * catClinetMap注册bean
      * */
-    public void registerBean(Object bean){
-        catClinetMap.putIfAbsent(bean.getClass(), bean);
-    }
-
-    protected static void registerBean(Class type, Object bean){
+    public static void registerBean(Class type, Object bean){
         catClinetMap.putIfAbsent(type, bean);
     }
 

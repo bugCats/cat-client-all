@@ -10,6 +10,8 @@ import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -25,7 +27,6 @@ import java.util.function.Function;
  * */
 public class CatToosUtil {
 
-
     public final static String GROUP_ID = "cc.bugcat";
 
     public final static String INTERFACE_ATTRIBUTES_CATFACE = "catface";
@@ -40,7 +41,6 @@ public class CatToosUtil {
      * 使用方法入参，计算表达式
      * */
     public static ExpressionParser parser = new SpelExpressionParser();
-
 
     /**
      * Object.class中的方法
@@ -61,13 +61,13 @@ public class CatToosUtil {
      * */
     private static ThreadLocal<Throwable> threadLocal = new ThreadLocal<>();
 
+    
     /**
      * 在异常回调流程中获取异常信息
      * */
     public static Throwable getException(){
         return threadLocal.get();
     }
-
     /**
      * 在异常回调流程中再次抛出
      * */
@@ -75,7 +75,6 @@ public class CatToosUtil {
         Throwable throwable = threadLocal.get();
         throw new RuntimeException(throwable);
     }
-
     public static void setException(Throwable throwable){
         threadLocal.set(throwable);
     }
@@ -95,7 +94,6 @@ public class CatToosUtil {
     }
 
 
-    
     /**
      * 获取扫描包路径，默认为启动类所在包路径
      * */
@@ -120,6 +118,7 @@ public class CatToosUtil {
     }
 
     
+    
     /**
      * 按顺序，获取第一个存在的注解的value值
      * */
@@ -137,6 +136,7 @@ public class CatToosUtil {
     }
 
 
+    
     public static boolean isBlank(String str) {
         int strLen = 0;
         if (str == null || (strLen = str.length()) == 0) {
@@ -158,18 +158,6 @@ public class CatToosUtil {
     public static String toStringIfBlank(Object str, String def) {
         return str != null ? str.toString() : def;
     }
-
-
-    /**
-     * 是否为object内置方法
-     */
-    public static boolean isObjectMethod(Method method) {
-        return isObjectMethod(signature(method));
-    }
-    public static boolean isObjectMethod(String sign) {
-        return objectDefaultMethod.contains(sign);
-    }
-
 
     /**
      * 首字母小写
@@ -242,6 +230,17 @@ public class CatToosUtil {
 
 
     /**
+     * 是否为object内置方法
+     */
+    public static boolean isObjectMethod(Method method) {
+        return isObjectMethod(signature(method));
+    }
+    public static boolean isObjectMethod(String sign) {
+        return objectDefaultMethod.contains(sign);
+    }
+
+
+    /**
      * 从interface上获取注解
      * */
     public static Map<String, Object> getAttributes(Class inter) {
@@ -253,6 +252,7 @@ public class CatToosUtil {
         return paramMap;
     }
 
+    
     /**
      * 递归遍历interface、以及父类，获取第一次出现的annotationType注解
      * */
@@ -296,6 +296,29 @@ public class CatToosUtil {
         return defaultValue;
     }
 
+    /**
+     * 一般Map转MultiValueMap
+     * */
+    public static MultiValueMap<String, Object> toMultiValueMap(Map<String, Object> map){
+        if( map == null || map.size() == 0 ){
+            return new LinkedMultiValueMap<>();
+        }
+        MultiValueMap<String, Object> valueMap = new LinkedMultiValueMap<>(map.size() * 2);
+        map.forEach((key, value) -> {
+            if( value == null ){
+                valueMap.add(key, "");
+            } else {
+                if( value instanceof List ){
+                    for(Object val : (List<Object>) value){
+                        valueMap.add(key, val == null ? null : val.toString());
+                    }
+                } else {
+                    valueMap.add(key, value == null ? null : value.toString());
+                }
+            }
+        });
+        return valueMap;
+    }
     
     /**
      * 适配Spring环境变量为Properties

@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.cloud;
 
+import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.handler.CatHttpPoint;
@@ -13,23 +14,25 @@ import cc.bugcat.catclient.spi.ServerChoose;
  * */
 public class CloudSendHandler extends CatSendProcessor {
 
-    private ServerChoose chooser;
+    private ServerChoose serverChoose;
 
     private CatInstanceResolver instanceEntry;
 
-    public CloudSendHandler(ServerChoose chooser) {
-        this.chooser = chooser;
+    public CloudSendHandler(ServerChoose serverChoose) {
+        this.serverChoose = serverChoose;
     }
 
-
-    /**
-     * 将服务名修改成实际的ip+端口
-     * */
+    
     @Override
-    public void postVariableResolver(CatSendContextHolder context){
+    public void postConfigurationResolver(CatSendContextHolder context, CatParameter parameter) {
+        super.postConfigurationResolver(context, parameter);
+
+        /**
+         * 将服务名修改成实际的ip+端口
+         * */
         CatHttpPoint httpPoint = super.getHttpPoint();
-        instanceEntry = new CatInstanceResolver(httpPoint.getHost());
-        String ipAddr = chooser.hostAddr(instanceEntry);
+        this.instanceEntry = new CatInstanceResolver(httpPoint.getHost());
+        String ipAddr = serverChoose.hostAddr(instanceEntry);
         String sendHost = instanceEntry.resolver(ipAddr);
         httpPoint.setHost(sendHost);
     }
@@ -39,7 +42,7 @@ public class CloudSendHandler extends CatSendProcessor {
      * 重新选择另外一个实例
      * */
     public void chooseOtherHost(){
-        String ipAddr = chooser.retryHostAddr(instanceEntry);
+        String ipAddr = serverChoose.retryHostAddr(instanceEntry);
         String sendHost = instanceEntry.resolver(ipAddr);
         super.getHttpPoint().setHost(sendHost);
     }

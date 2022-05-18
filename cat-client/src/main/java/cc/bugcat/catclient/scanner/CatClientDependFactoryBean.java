@@ -60,7 +60,7 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
                 .retryConfigurer(retryConfigurer)
                 .clientConfig(clientConfig)
                 .build();
-        catClient.registerBean(this);
+        catClient.registerBean(this.getClass(), this);
         return clientDepend;
     }
 }

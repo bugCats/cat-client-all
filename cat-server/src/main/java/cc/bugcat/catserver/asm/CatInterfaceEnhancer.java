@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.AsmClassDescriptor.AsmDescriptor;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
@@ -315,7 +316,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
             } else {
 
                 this.desc = descriptor;
-                this.sign = signature;
+                this.sign = CatToosUtil.defaultIfBlank(signature, descriptor);
 
             }
         }

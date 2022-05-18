@@ -71,20 +71,20 @@ public final class CatInstanceResolver {
         return realHost;
     }
 
-    protected String getIpAddr() {
-        return ipAddr;
-    }
-    
+
     protected String getRealHost() {
         return realHost;
     }
 
-    
 
+    public String getIpAddr() {
+        return ipAddr;
+    }
     public String getServiceName() {
         return serviceName;
     }
 
+    
     public CatInstanceResolver putAttributes(String name, Object value){
         attributesMap.put(name, value);
         return this;

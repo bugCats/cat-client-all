@@ -126,9 +126,9 @@ public class CatSendProcessor {
             }
         } else { // 使用表单方式
             if( value instanceof String ){
-                keyValueParam = toMultiValueMap(parameter.getArgMap());
+                keyValueParam = CatToosUtil.toMultiValueMap(parameter.getArgMap());
             } else if ( value instanceof Map ) {// 传入了一个对象，转换成键值对
-                keyValueParam = toMultiValueMap((Map<String, Object>) value);
+                keyValueParam = CatToosUtil.toMultiValueMap((Map<String, Object>) value);
             } else {// 传入了一个对象，转换成键值对
                 CatObjectResolver objectResolver = newCatObjectResolver();
                 keyValueParam = objectResolver.resolver(value);
@@ -215,29 +215,7 @@ public class CatSendProcessor {
 
     
     
-    /**
-     * 一般Map转MultiValueMap
-     * */
-    protected MultiValueMap<String, Object> toMultiValueMap(Map<String, Object> map){
-        if( map == null || map.size() == 0 ){
-            return new LinkedMultiValueMap<>();
-        }
-        MultiValueMap<String, Object> valueMap = new LinkedMultiValueMap<>(map.size() * 2);
-        map.forEach((key, value) -> {
-            if( value == null ){
-                valueMap.add(key, "");
-            } else {
-                if( value instanceof List ){
-                    for(Object val : (List<Object>) value){
-                        valueMap.add(key, val == null ? null : val.toString());
-                    }
-                } else {
-                    valueMap.add(key, value == null ? null : value.toString());
-                }
-            }
-        });
-        return valueMap;
-    }
+
 
     
     

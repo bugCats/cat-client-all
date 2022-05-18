@@ -4,6 +4,7 @@ import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.*;
+import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catclient.utils.CatRestHttp;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import org.springframework.beans.factory.InitializingBean;
@@ -49,17 +50,21 @@ public class CatClientConfiguration implements InitializingBean {
     public static final int SOCKET = 0;
     public static final int CONNECT = 0;
 
-
-
+    
     protected CatHttp defaultCatHttp;
     protected CatJsonResolver defaultJsonResolver;
     protected CatLoggerProcessor defaultLoggerProcessor;
 
     @Override
     public void afterPropertiesSet() {
-        this.defaultCatHttp = new CatRestHttp();
-        this.defaultJsonResolver = new CatJacksonResolver();
-        this.defaultLoggerProcessor = new CatLoggerProcessor(){};
+        CatHttp catHttp = CatClientUtil.getBean(CatHttp.class);
+        this.defaultCatHttp = catHttp == null ? new CatRestHttp() : catHttp;
+
+        CatJsonResolver jsonResolver = CatClientUtil.getBean(CatJsonResolver.class);
+        this.defaultJsonResolver = jsonResolver == null ? new CatJacksonResolver() : jsonResolver;
+
+        CatLoggerProcessor loggerProcessor = CatClientUtil.getBean(CatLoggerProcessor.class);
+        this.defaultLoggerProcessor = loggerProcessor == null ? new CatLoggerProcessor(){} : loggerProcessor;
     }
 
 

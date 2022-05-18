@@ -73,7 +73,7 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                     Class realInterClass = swaggerHandler.getMethodFrom(method);
                     
                     // asm增强后的Interface
-                    Class ctrlInterClass = swaggerHandler.getCtrlInterface(realInterClass);
+                    Class ctrlInterClass = swaggerHandler.getCtrlInterface();
 
                     ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(realInterClass), realInterClass, 0);
 
@@ -150,14 +150,15 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
         private Map<String, Class> infoMap;
         
         // ctrl对象的Interface
-        private Map<String, Class> ctrlInterfaceMap; 
+        private Class ctrlInterface; 
         
         /**
          * @param serverClass 原始的被@CatServer注解类的class
          * */
         private void parseClassFrom(Class ctrlClass, Class serverClass){
-            this.infoMap = new HashMap<>(72);
-            Stack<Class> serverInters = getInterfaces(serverClass);
+            this.infoMap = new HashMap<>();
+            Stack<Class> serverInters = new Stack<>();
+            getInterfaces(serverClass, serverInters);
             for( Class inter : serverInters ){
                 boolean isCatface = inter.getAnnotation(Catface.class) != null; //如果是精简模式，直接存方法名
                 for ( Method im : inter.getMethods() ) {
@@ -166,23 +167,38 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                 }
             }
 
-            this.ctrlInterfaceMap = new HashMap<>();
-            Stack<Class> ctrlInters = getInterfaces(ctrlClass);
-            for( Class inter : ctrlInters ){
-                ctrlInterfaceMap.put(inter.getName(), inter);
+            for ( Class ctrlInter : ctrlClass.getInterfaces() ) {
+                if( ctrlInter.getSimpleName().contains(CatServerUtil.BRIDGE_NAME) ){
+                    this.ctrlInterface = ctrlInter;
+                    break;
+                }
             }
         }
 
-        private Stack<Class> getInterfaces(Class clazz){
-            Stack<Class> inters = new Stack<>();
-            Class superClass = clazz;
-            while ( superClass != Object.class ) {
-                for ( Class inter : superClass.getInterfaces() ) {
-                    inters.add(inter);
-                }
-                superClass = superClass.getSuperclass();
+        private static void getInterfaces(Class clazz, Stack<Class> inters){
+            if( clazz == null ){
+                return;
             }
-            return inters;
+            if( clazz.isInterface() ){
+                Class[] interfaces = clazz.getInterfaces();
+                if( interfaces.length == 0 ){
+                    inters.add(clazz);
+                    return;
+                }
+                for(Class inter : interfaces){
+                    getInterfaces(inter, inters);
+                }
+                inters.add(clazz);
+            } else {
+                Class superClass = clazz;
+                while ( superClass != null && superClass != Object.class ) {
+                    Class[] interfaces = superClass.getInterfaces();
+                    for ( Class sinter : interfaces ) {
+                        getInterfaces(sinter, inters);
+                    }
+                    superClass = superClass.getSuperclass();
+                }
+            }
         }
 
         
@@ -197,8 +213,8 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
         /**
          * 通过feign-interface获取增强后的Interface
          * */
-        private Class getCtrlInterface(Class realInterClass){
-            return ctrlInterfaceMap.get(realInterClass.getName() + CatServerUtil.BRIDGE_NAME);
+        private Class getCtrlInterface(){
+            return ctrlInterface;
         }
 
     }

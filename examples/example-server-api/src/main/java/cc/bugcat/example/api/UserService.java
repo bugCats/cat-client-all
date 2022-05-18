@@ -3,6 +3,7 @@ package cc.bugcat.example.api;
 import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
+import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.example.api.vo.UserInfo;
 import cc.bugcat.example.tools.ResponseEntityWrapper;
 import cc.bugcat.example.api.vi.UserPageVi;
@@ -46,8 +47,8 @@ import org.springframework.web.bind.annotation.*;
  * */
 
 
-//@FeignClient
-@Component
+
+@Component // 可以省略
 @Api(tags = "用户操作api")
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface UserService {
