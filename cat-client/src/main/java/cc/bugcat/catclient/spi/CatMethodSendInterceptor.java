@@ -20,7 +20,7 @@ public interface CatMethodSendInterceptor {
      * 每次调用interface的方法，仅执行一次
      * */
     default void executeConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
-        context.getSendHandler().postConfigurationResolver(context, parameter);
+        context.getSendHandler().doConfigurationResolver(context, parameter);
     }
     
 
@@ -30,7 +30,7 @@ public interface CatMethodSendInterceptor {
      * */
     default void executeVariableResolver(CatSendContextHolder context) {
         CatSendProcessor sendHandler = context.getSendHandler();
-        sendHandler.preVariableResolver(context);
+        sendHandler.doVariableResolver(context);
         sendHandler.postVariableResolver(context);
     }
 

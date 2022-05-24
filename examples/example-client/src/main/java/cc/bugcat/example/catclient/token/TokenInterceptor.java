@@ -1,6 +1,5 @@
 package cc.bugcat.example.catclient.token;
 
-import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.spi.CatSendProcessor;
@@ -36,7 +35,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
             System.out.println(token);
         }
         // 执行默认参数处理
-        sendHandler.preVariableResolver(context); 
+        sendHandler.doVariableResolver(context); 
         sendHandler.postVariableResolver(context);
     }
 

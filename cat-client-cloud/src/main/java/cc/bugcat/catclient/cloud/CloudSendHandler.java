@@ -24,8 +24,8 @@ public class CloudSendHandler extends CatSendProcessor {
 
     
     @Override
-    public void postConfigurationResolver(CatSendContextHolder context, CatParameter parameter) {
-        super.postConfigurationResolver(context, parameter);
+    public void doConfigurationResolver(CatSendContextHolder context, CatParameter parameter) {
+        super.doConfigurationResolver(context, parameter);
 
         /**
          * 将服务名修改成实际的ip+端口

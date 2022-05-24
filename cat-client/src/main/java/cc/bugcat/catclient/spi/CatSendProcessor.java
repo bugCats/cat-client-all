@@ -10,11 +10,9 @@ import cc.bugcat.catface.handler.Stringable;
 import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.expression.Expression;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -51,7 +49,7 @@ public class CatSendProcessor {
     /**
      * 1、初始化http相关配置，每次调用interface的方法，仅执行一次
      * */
-    public void postConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
+    public void doConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
         CatMethodInfo methodInfo = context.getMethodInfo();
         
         this.context = context;
@@ -96,54 +94,45 @@ public class CatSendProcessor {
 
 
     /**
-     * 2、参数预处理
+     * 2、参数处理。如果要修改请求方式、参数转换，在这步操作。
      * 仅会执行一次
      * */
-    public void preVariableResolver(CatSendContextHolder context){
+    public void doVariableResolver(CatSendContextHolder context){
+        
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatParameter parameter = httpPoint.getParameter();
-        Object value = parameter.getValue();
-        CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+        
         if( methodInfo.isCatface() ){ // 精简模式，全部默认使用post+字符流模式
+            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            Object value = parameter.getValue();
             if( value instanceof Map ){ // 如果方法上入参是键值对，转换成json字符串
-                value = jsonResolver.toSendString(value);
+                parameter.setValue(jsonResolver.toSendString(value));
             } else { // 如果方法上仅有一个入参，虚拟一个json属性arg0
                 Map<String, Object> map = new HashMap<>();
                 map.put("arg0", value);
-                value = jsonResolver.toSendString(map);
+                parameter.setValue(jsonResolver.toSendString(map));
             }
         }
         
         MultiValueMap<String, Object> keyValueParam = null;
         String requestBody = null;
-        if( httpPoint.isPostString() ){ // 使用post发送字符串
-            if ( value instanceof String ){
-                requestBody = CatToosUtil.toStringIfBlank(value, "");
-            } else if ( value instanceof Stringable ){
-                requestBody = ((Stringable) value).serialization();
-            } else {
-                requestBody = jsonResolver.toSendString(value);
-            }
-        } else { // 使用表单方式
-            if( value instanceof String ){
-                keyValueParam = CatToosUtil.toMultiValueMap(parameter.getArgMap());
-            } else if ( value instanceof Map ) {// 传入了一个对象，转换成键值对
-                keyValueParam = CatToosUtil.toMultiValueMap((Map<String, Object>) value);
-            } else {// 传入了一个对象，转换成键值对
-                CatObjectResolver objectResolver = newCatObjectResolver();
-                keyValueParam = objectResolver.resolver(value);
-            }
-
+        if( httpPoint.isPostString() ){ 
+            
+            // 使用post发送字符串
+            requestBody = parameterToString(httpPoint);
+            
+        } else {
+            
+            // 使用表单方式
+            keyValueParam = parameterToMap(httpPoint);
+            
             // 请求入参转换成String，方便记录日志
-            CatLogsMod logsMod = methodInfo.getLogsMod();
-            if( logsMod.printIn ){
-                requestBody = jsonResolver.toSendString(keyValueParam);
-            }
+            requestBody = mapToString(keyValueParam);
         }
 
         httpPoint.setRequestBody(requestBody);
         httpPoint.setKeyValueParam(keyValueParam);
-
+        
     }
 
     /**
@@ -236,6 +225,61 @@ public class CatSendProcessor {
         return objectResolverSupplier != null ? objectResolverSupplier.get() : new CatObjectResolver.DefaultResolver();
     }
 
+    
+    /**
+     * 入参Map转字符串
+     * */
+    protected final String mapToString(Map<String, ?> requestMap){
+        if( !httpPoint.isPostString() ){
+            CatMethodInfo methodInfo = context.getMethodInfo();
+            // 请求入参转换成String，方便记录日志
+            CatLogsMod logsMod = methodInfo.getLogsMod();
+            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            if( logsMod.printIn ){
+                return jsonResolver.toSendString(requestMap);
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 入参对象转Map
+     * */
+    protected final MultiValueMap<String, Object> parameterToMap(CatHttpPoint httpPoint){
+        CatParameter parameter = httpPoint.getParameter();
+        Object value = parameter.getValue();
+
+        MultiValueMap<String, Object> keyValueParam = null;
+        if( value instanceof String ){
+            keyValueParam = CatToosUtil.toMultiValueMap(parameter.getArgMap());
+        } else if ( value instanceof Map ) {// 传入了一个对象，转换成键值对
+            keyValueParam = CatToosUtil.toMultiValueMap((Map<String, Object>) value);
+        } else {// 传入了一个对象，转换成键值对
+            CatObjectResolver objectResolver = newCatObjectResolver();
+            keyValueParam = objectResolver.resolver(value);
+        }
+        return keyValueParam;
+    }
+
+    /**
+     * 入参对象转字符串
+     * */
+    protected final String parameterToString(CatHttpPoint httpPoint){
+        CatParameter parameter = httpPoint.getParameter();
+        Object value = parameter.getValue();
+        String requestBody = null;
+        if ( value instanceof String ){
+            requestBody = CatToosUtil.toStringIfBlank(value, "");
+        } else if ( value instanceof Stringable ){
+            requestBody = ((Stringable) value).serialization();
+        } else {
+            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            requestBody = jsonResolver.toSendString(value);
+        }
+        return requestBody;
+    }
+    
+    
     
     
     /**
