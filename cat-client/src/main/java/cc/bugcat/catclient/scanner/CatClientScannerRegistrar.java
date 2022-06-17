@@ -2,10 +2,10 @@ package cc.bugcat.catclient.scanner;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
-import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -106,6 +106,9 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         // spring 容器
         beanRegistry.registerBean(CatClientUtil.class);
 
+        /**
+         * 客户端前置依赖项
+         * */
         beanRegistry.registerBean(CatClientDependFactoryBean.BEAN_NAME, CatClientDependFactoryBean.class);
     }
 

@@ -7,6 +7,7 @@ import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.spi.DefaultCatClientFactory;
+import cc.bugcat.catclient.spi.DefaultCatSendInterceptor;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -148,7 +149,7 @@ public class CatClientDepend {
             }
 
             if( defaultSendInterceptor == null ){
-                defaultSendInterceptor = new CatMethodSendInterceptor(){};
+                defaultSendInterceptor = new DefaultCatSendInterceptor();
             }
 
             if( defaultClientFactory == null ){
