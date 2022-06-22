@@ -54,7 +54,9 @@ public class DefaultResultHandler implements CatResultProcessor {
         AbstractResponesWrapper wrapperHandler = catClientInfo.getWrapperHandler();
 
         Class returnClass = returnInfo.getClazz();
-        if( String.class.equals(returnClass) ){
+        
+        // 如果响应类型是object，那么直接返回原始的字符串
+        if( Object.class.equals(returnClass) ){
             return result;
         }
 
