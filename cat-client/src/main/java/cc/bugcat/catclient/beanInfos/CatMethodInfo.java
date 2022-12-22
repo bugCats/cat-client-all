@@ -335,10 +335,10 @@ public class CatMethodInfo {
         private AnnotationAttributes getAttributes(Method method) {
             StandardMethodMetadata metadata = new StandardMethodMetadata(method);
             Map<String, Object> methodAttributes = metadata.getAnnotationAttributes(CatMethod.class.getName());
+            
             Catface catface = clientInfo.getCatface();
-
             if ( catface != null ) {
-                //精简模式
+                //是精简模式
 
                 if ( methodAttributes == null ) {
                     //使用interface上的注解

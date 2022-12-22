@@ -35,8 +35,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
             System.out.println(token);
         }
         // 执行默认参数处理
-        sendHandler.doVariableResolver(context); 
-        sendHandler.postVariableResolver(context);
+        CatMethodSendInterceptor.super.executeVariableResolver(context);
     }
 
     /**

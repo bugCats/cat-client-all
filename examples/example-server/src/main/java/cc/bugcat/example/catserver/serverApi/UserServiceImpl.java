@@ -33,7 +33,7 @@ import java.util.Arrays;
  * @CatServer 也可以当作普通的Controller，在swagger上调用
  *
  * */
-@CatServer(interceptors = {UserInterceptor2.class, CatServerInterceptor.class, UserInterceptor3.class, UserInterceptor.class,})
+@CatServer(interceptors = {UserInterceptor2.class,  UserInterceptor.class,})
 public class UserServiceImpl implements UserService{
 
 

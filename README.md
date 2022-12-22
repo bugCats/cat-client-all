@@ -779,11 +779,10 @@ public class UserServiceImpl implements UserService {
 + `resultHandler`：结果处理类。针对不同服务端，可以有不同的包装器类、异常处理流程；
 + `interceptors`：拦截器。用于控制CatServer类的访问权限、打印日志等；
   1. CatServerInterceptor.class 表示启用全局的默认拦截器配置，最终该位置会被全局配置的拦截器替换；
-  2. CatServerInterceptor.Group.class 表示运行时匹配的拦截器，最终该位置会被拦截器组替换。如果没有匹配上，则什么都不执行；
   3. CatServerInterceptor.Off.class 表示关闭所有拦截器。
 
-> `@CatServer`：启用默认拦截器，默认拦截器在CatServerConfiguration#getGlobalInterceptor()指定；<br>
-`@CatServer(interceptors = CatServerInterceptor.class)`：启用默认拦截器，具体是哪个类，由CatServerConfiguration#getGlobalInterceptor()指定；<br>
+> `@CatServer`：启用默认拦截器，默认拦截器在CatServerConfiguration#getDefaultInterceptor()指定；<br>
+`@CatServer(interceptors = CatServerInterceptor.class)`：启用默认拦截器，具体是哪个类，由CatServerConfiguration#getDefaultInterceptor()指定；<br>
 `@CatServer(interceptors = {CatServerInterceptor.class, UserInterceptor.class})`：启用默认拦截器和自定义拦截器；<br>
 `@CatServer(interceptors = UserInterceptor.class)`：仅启用自定义拦截器；<br>
 
@@ -823,10 +822,9 @@ CatServer类方法上自定义的入参处理器。配合`@CatBefore`使用；
 
 ##### CatServerInterceptor
 
-拦截器配置：用于控制访问权限、记录日志打印。默认拦截器在CatServerConfiguration#getGlobalInterceptor()指定。也可以为单个服务端配置、或者关闭。
+拦截器配置：用于控制访问权限、记录日志打印。默认拦截器在CatServerConfiguration#getDefaultInterceptor()指定。也可以为单个服务端配置、或者关闭。
 
 1. CatServerInterceptor.class 表示启用全局的默认拦截器配置，最终该位置会被全局配置的拦截器替换；
-2. CatServerInterceptor.Group.class 表示运行时匹配的拦截器，最终该位置会被拦截器组替换。如果没有匹配上，则什么都不执行；
 3. CatServerInterceptor.Off.class 表示关闭所有拦截器。
 
 
@@ -834,7 +832,7 @@ CatServer类方法上自定义的入参处理器。配合`@CatBefore`使用；
 
 ##### CatInterceptorGroup
 
-拦截器组：在运行时动态匹配。默认在所有拦截器之前执行。可以在`@CatServer`注解中，通过CatServerInterceptor.Group.class占位修改顺序；
+拦截器组：在运行时动态匹配。不会被自定义拦截器覆盖，只能被CatServerInterceptor.Off.class关闭
 
 
 <br><br>

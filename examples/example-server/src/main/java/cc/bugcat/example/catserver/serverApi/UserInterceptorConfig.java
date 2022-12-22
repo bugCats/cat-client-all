@@ -6,7 +6,8 @@ import cc.bugcat.catserver.handler.CatInterceptPoint;
 import cc.bugcat.catserver.handler.CatServerContextHolder;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,59 +17,67 @@ import java.util.function.Supplier;
 /**
  * 拦截器
  * */
-@Component
+@Configuration
 public class UserInterceptorConfig extends CatServerConfiguration {
 
-    private CatServerInterceptor globalInterceptor;
-    private List<CatInterceptorGroup> groupList;
+    private CatServerInterceptor userDefualtInterceptor;
 
 
     @Override
     public void afterPropertiesSet() {
-
         super.afterPropertiesSet();
-
-        this.globalInterceptor = new CatServerInterceptor() {
+        this.userDefualtInterceptor = new CatServerInterceptor() {
             @Override
             public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                 CatInterceptPoint interceptPoint = contextHolder.getInterceptPoint();
-                System.out.println("全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
+                System.out.println("默认拦截器，可以被自定义拦截器覆盖 => " + interceptPoint.getRequest().getRequestURI());
                 return contextHolder.proceedRequest();
             }
         };
-
-        this.groupList = new ArrayList<>();
-        CatInterceptorGroup group = new CatInterceptorGroup(){
-            @Override
-            public boolean matcher(CatInterceptPoint interceptPoint) {
-                String uri = interceptPoint.getRequest().getRequestURI();
-                return uri.contains("111");
-            }
-
-            @Override
-            public Supplier<List<CatServerInterceptor>> getInterceptorFactory() {
-                return () -> Arrays.asList(new CatServerInterceptor(){
-                    @Override
-                    public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
-                        System.out.println("运行时拦截器");
-                        return contextHolder.proceedRequest();
-                    }
-                });
-            }
-        };
-        groupList.add(group);
     }
 
     
 
     @Override
-    public CatServerInterceptor getGlobalInterceptor() {
-        return this.globalInterceptor;
+    public CatServerInterceptor getDefaultInterceptor() {
+        return this.userDefualtInterceptor;
     }
 
-    @Override
-    public List<CatInterceptorGroup> getInterceptorGroup() {
-        return this.groupList;
+
+    
+    
+    /**
+     * 另外一种方式定义
+     * */
+    @Bean
+    public CatInterceptorGroup interceptorGroup(){
+        return new CatInterceptorGroup() {
+            /**
+             * 匹配分组
+             */
+            @Override
+            public boolean matcher(CatInterceptPoint interceptPoint) {
+                return true; //匹配所有CatServer类
+            }
+
+            /**
+             * 如果匹配上，则执行这些拦截器
+             */
+            @Override
+            public Supplier<List<CatServerInterceptor>> getInterceptorFactory() {
+                return () -> Arrays.asList(new CatServerInterceptor(){
+                    /**
+                     * 执行拦截器
+                     */
+                    @Override
+                    public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
+                        System.out.println("全局拦截器，不可以被覆盖，只能使用CatServerInterceptor.Off.class关闭");
+                        return contextHolder.proceedRequest();
+                    }
+                });
+            }
+        };
     }
+    
     
 }

@@ -20,7 +20,8 @@ public interface CatMethodSendInterceptor {
      * 每次调用interface的方法，仅执行一次
      * */
     default void executeConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
-        context.getSendHandler().doConfigurationResolver(context, parameter);
+        CatSendProcessor sendHandler = context.getSendHandler();
+        sendHandler.doConfigurationResolver(context, parameter);
     }
     
 
@@ -39,8 +40,8 @@ public interface CatMethodSendInterceptor {
      * 3、执行发送http请求
      * 如果启用重连，会执行多次
      * */
-    default String executeHttpSend(CatSendProcessor sendProcessor) throws CatHttpException {
-        return sendProcessor.postHttpSend();
+    default String executeHttpSend(CatSendProcessor sendHandler) throws CatHttpException {
+        return sendHandler.postHttpSend();
     }
 
 

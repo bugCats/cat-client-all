@@ -17,7 +17,7 @@ public class ApiRemoteParameterResolver implements CatParameterResolver {
     public Object[] resolveArguments(CatMethodInfo methodInfo, Object[] args) throws Exception {
         Method serverMethod = methodInfo.getServerMethod();
         Class<?> serverClass = serverMethod.getDeclaringClass();
-        System.out.println("ApiRemoteParameterResolver:" + serverClass.getSimpleName()  + "." + serverMethod.getName() + ":" + JSONObject.toJSONString(args));
+        System.out.println("参数预处理:" + serverClass.getSimpleName()  + "." + serverMethod.getName() + ":" + JSONObject.toJSONString(args));
         return args;
     }
 }
