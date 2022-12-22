@@ -12,21 +12,10 @@ public class CatServerDefaults {
 
 
     /**
-     * 默认拦截器组
+     * 默认拦截器
      * */
     public static final CatServerInterceptor DEFAULT_INTERCEPTOR = new CatServerInterceptor() {};
-    /**
-     * 关闭拦截器
-     * */
-    public static final CatServerInterceptor OFF_INTERCEPTOR = new CatServerInterceptor.Off();
-    /**
-     * 拦截器组
-     * */
-    public static final CatServerInterceptor GROUP_INTERCEPTOR = new CatServerInterceptor.Group();
     
-    
-
-
     /**
      * 默认方法入参预处理
      * */

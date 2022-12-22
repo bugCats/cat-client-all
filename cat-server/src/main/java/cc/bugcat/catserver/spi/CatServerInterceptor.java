@@ -23,6 +23,14 @@ import cc.bugcat.catserver.handler.CatServerContextHolder;
  * */
 public interface CatServerInterceptor {
 
+    /**
+     * 关闭所有拦截器，包括运行时匹配情况
+     * */
+    public static final class Off implements CatServerInterceptor {
+
+    }
+    
+    
 
     /**
      * 是否需要执行拦截器。
@@ -44,22 +52,5 @@ public interface CatServerInterceptor {
     default Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
         return contextHolder.proceedRequest();
     }
-
-
-    /**
-     * 运行时拦截器组，默认情况在所有自定义拦截器之前执行。
-     * 支持可以手动调整顺序
-     * */
-    public static final class Group implements CatServerInterceptor {
-
-    }
-    
-    /**
-     * 关闭所有拦截器，包括运行时匹配情况
-     * */
-    public static final class Off implements CatServerInterceptor {
-
-    }
-
 
 }

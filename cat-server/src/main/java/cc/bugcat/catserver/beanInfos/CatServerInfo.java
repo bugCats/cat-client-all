@@ -83,8 +83,6 @@ public class CatServerInfo {
         this.tagMap = Collections.unmodifiableMap(tagMap);
 
         Set<Class<? extends CatServerInterceptor>> interceptors = new LinkedHashSet<>(catServer.interceptors().length * 2);
-        //默认情况在所有拦截器之前执行
-        interceptors.add(CatServerInterceptor.Group.class); 
         for ( Class<? extends CatServerInterceptor> interceptor : catServer.interceptors() ) {
             if( interceptors.contains(interceptor) ){
                 interceptors.remove(interceptor);

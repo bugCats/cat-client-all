@@ -14,6 +14,7 @@ import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -80,32 +81,30 @@ public final class CatMethodInfoBuilder {
     private void parseInterceptor(CatServerInfo serverInfo) {
 
         CatServerConfiguration serverConfig = serverInfo.getServerConfig();
+        List<CatInterceptorGroup> interceptorGroup = serverConfig.getInterceptorGroup();
         Set<Class<? extends CatServerInterceptor>> interceptors = serverInfo.getInterceptors();
         
         List<CatServerInterceptor> handers = new ArrayList<>(interceptors.size());
         for ( Class<? extends CatServerInterceptor> clazz : interceptors ) {
-            if (CatServerInterceptor.class.equals(clazz) ) {
-                // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
-                handers.add(serverConfig.getGlobalInterceptor());
-
-            } else if ( CatServerInterceptor.Group.class.equals(clazz) ) {
-                // 拦截器组占位
-                handers.add(CatServerDefaults.GROUP_INTERCEPTOR);
-
-            } else if ( CatServerInterceptor.Off.class.equals(clazz) ) {
+            if ( CatServerInterceptor.Off.class.equals(clazz) ) {
                 // 关闭所有拦截器
                 handers.clear();
-                handers.add(CatServerDefaults.OFF_INTERCEPTOR);
                 break;
-                
+
+            } else if (CatServerInterceptor.class.equals(clazz) ) {
+                // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
+                handers.add(serverConfig.getDefaultInterceptor());
+
             } else {
                 // CatServer上自定义拦截器
                 handers.add(CatServerUtil.getBean(clazz));
             }
         }
         
+        Collections.sort(interceptorGroup, (i1, i2) -> i1.getOrder() < i2.getOrder() ? 1 : -1);
+        
         this.interceptors = handers;
-        this.interceptorGroups = serverConfig.getInterceptorGroup();
+        this.interceptorGroups = interceptorGroup;
     }
 
     

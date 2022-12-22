@@ -92,34 +92,23 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
                     .build();
             
             
-
             // 激活的拦截器
             List<CatServerInterceptor> actives = new ArrayList<>();
-
-            for ( CatServerInterceptor interceptor : methodInfo.getInterceptors() ) {
-
-                // 拦截器组占位，替换成匹配全局拦截器组
-                if ( CatServerDefaults.GROUP_INTERCEPTOR == interceptor ) { 
-                    for ( CatInterceptorGroup group : methodInfo.getInterceptorGroups() ) {
-                        if ( group.matcher(interceptPoint) ) {
-                            List<CatServerInterceptor> interceptors = group.getInterceptorFactory().get();
-                            if( interceptors != null ){
-                                for ( CatServerInterceptor groupInterceptor : interceptors ) {
-                                    if ( groupInterceptor.preHandle(interceptPoint) ) {
-                                        actives.add(groupInterceptor);
-                                    }
+            if ( methodInfo.getInterceptors().size() > 0 ) { //没有关闭拦截器
+                //拦截器组，在自定义拦截器之前执行
+                for ( CatInterceptorGroup group : methodInfo.getInterceptorGroups() ) {
+                    if ( group.matcher(interceptPoint) ) {
+                        List<CatServerInterceptor> interceptors = group.getInterceptorFactory().get();
+                        if( interceptors != null ){
+                            for ( CatServerInterceptor groupInterceptor : interceptors ) {
+                                if ( groupInterceptor.preHandle(interceptPoint) ) {
+                                    actives.add(groupInterceptor);
                                 }
                             }
-                            break; // 只匹配一个拦截器组
                         }
                     }
-                    
-                } else if ( CatServerDefaults.OFF_INTERCEPTOR == interceptor ) {
-                    // 关闭所有拦截器，包含全局拦截器组
-                    actives.clear();
-                    break;
-                    
-                } else { 
+                }
+                for ( CatServerInterceptor interceptor : methodInfo.getInterceptors() ) {
                     // CatServer上自定义拦截器，如果满足，则放入拦截器链中
                     if ( interceptor.preHandle(interceptPoint) ) {
                         actives.add(interceptor);
@@ -129,7 +118,6 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
 
             // 实际调用CatServer方法
             ControllerMethodInterceptor controllerMethod = new ControllerMethodInterceptor(serverBean, methodInfo.getServiceMethodProxy(), args);
-
             CatServerContextHolder contextHolder = CatServerContextHolder.builder()
                     .interceptPoint(interceptPoint)
                     .interceptors(actives)

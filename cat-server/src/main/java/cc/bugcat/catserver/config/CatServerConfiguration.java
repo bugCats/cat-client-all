@@ -7,6 +7,8 @@ import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.DefaultWrapperResultHandler;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,22 +31,30 @@ public class CatServerConfiguration implements InitializingBean {
      * */
     public static final Class<? extends CatResultHandler> RESULT_HANDLER = CatResultHandler.class;
     
+    
     /**
      * 全局拦截器
      * */
-    protected CatServerInterceptor defaultGlobalInterceptor;
+    @Autowired(required = false)
+    @Qualifier("defaultInterceptor")
+    protected CatServerInterceptor defaultInterceptor;
 
     /**
      * 运行时拦截器组
      * */
+    @Autowired(required = false)
     protected List<CatInterceptorGroup> interceptorGroups;
 
 
 
     @Override
     public void afterPropertiesSet() {
-        this.defaultGlobalInterceptor = CatServerDefaults.DEFAULT_INTERCEPTOR;
-        this.interceptorGroups = new ArrayList<>(0);
+        if( defaultInterceptor == null ){
+            this.defaultInterceptor = CatServerDefaults.DEFAULT_INTERCEPTOR;
+        }
+        if( interceptorGroups == null ){
+            this.interceptorGroups = new ArrayList<>(0);
+        }
     }
 
 
@@ -65,23 +75,21 @@ public class CatServerConfiguration implements InitializingBean {
 
 
     /**
-     * 全局默认的拦截器，用于替换@CatServer#interceptors()默认拦截器对象，一般用于记录日志。
-     * 后续配置@CatServer拦截器时，defaultGlobalInterceptor会替换CatServerInterceptor.class的位置。
-     *
-     * @CatServer(interceptors = {CatServerInterceptor.class, UserInterceptor.class})
-     *
-     * 实际会执行 defaultGlobalInterceptor -> userInterceptor 2个拦截器。
+     * 全局默认的拦截器，用于替换@CatServer#interceptors()默认的拦截器对象。
+     * 
+     * 当@CatServer配置了自定义拦截器时，自定义拦截器会覆盖默认值。
+     * 除非手动在加上默认拦截器：@CatServer(interceptors = {UserInterceptor.class, CatServerInterceptor.class})
+     * 其中CatServerInterceptor.class具体实例，由此方法返回。
      * 
      * CatServerInterceptor.Off 关闭所有拦截器，包括运行时拦截器。
      * */
-    public CatServerInterceptor getGlobalInterceptor(){
-        return defaultGlobalInterceptor;
+    public CatServerInterceptor getDefaultInterceptor(){
+        return defaultInterceptor;
     }
 
 
     /**
      * 全局拦截器组，在运行时匹配。
-     * 默认在自定义拦截之前执行，也可以使用 CatServerInterceptor.GROUP.class 手动调整拦截器位置。
      * */
     public List<CatInterceptorGroup> getInterceptorGroup(){
         return interceptorGroups;

@@ -4,7 +4,6 @@ import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.handler.CatInterceptPoint;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -36,6 +35,14 @@ public interface CatInterceptorGroup {
     default Supplier<List<CatServerInterceptor>> getInterceptorFactory(){
         return () -> null;
     }
-    
 
+
+
+    /**
+     * 排序，越小越先执行
+     * */
+    default int getOrder(){
+        return 0;
+    }
+    
 }
