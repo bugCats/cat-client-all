@@ -58,15 +58,12 @@ public class CatClientConfiguration implements InitializingBean {
 
 
     @Autowired(required = false)
-    @Qualifier("defaultCatHttp")
     protected CatHttp defaultCatHttp;
     
     @Autowired(required = false)
-    @Qualifier("defaultJsonResolver")
     protected CatJsonResolver defaultJsonResolver;
     
     @Autowired(required = false)
-    @Qualifier("defaultLoggerProcessor")
     protected CatLoggerProcessor defaultLoggerProcessor;
 
     
