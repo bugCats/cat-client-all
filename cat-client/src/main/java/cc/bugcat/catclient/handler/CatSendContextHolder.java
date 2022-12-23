@@ -34,9 +34,9 @@ public final class CatSendContextHolder {
         return threadLocal.get();
     }
     
+    
     protected void remove() {
         threadLocal.remove();
-        CatToosUtil.removeException();
     }
 
 
@@ -51,18 +51,14 @@ public final class CatSendContextHolder {
      * */
     private Object result;
 
+    /**
+     * 进入异常流程时，存储异常信息
+     * */
+    private Throwable throwable;
 
 
     public String getResponseBody() {
         return responseBody;
-    }
-
-    public Throwable getException() {
-        return CatToosUtil.getException();
-    }
-
-    public void setException(Throwable error) {
-        CatToosUtil.setException(CatToosUtil.getCause(error));
     }
 
     public Object getResult() {
@@ -72,7 +68,13 @@ public final class CatSendContextHolder {
         this.result = result;
     }
 
-
+    
+    public Throwable getException() {
+        return this.throwable;
+    }
+    public void setException(Throwable error) {
+        this.throwable = CatToosUtil.getCause(error);
+    }
 
     /**
      * 唯一标识

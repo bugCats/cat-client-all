@@ -61,6 +61,7 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
 
     @Override
     public ResponseEntity createEntryOnException(Throwable throwable, Type returnType) {
+        throwable.printStackTrace();
         return ResponseEntity.fail("-1", throwable.getMessage() == null ? "NullPointerException" : throwable.getMessage());
     }
 

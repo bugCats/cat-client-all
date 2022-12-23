@@ -2,6 +2,7 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
+import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -39,14 +40,16 @@ public interface ApiRemoteService2 {
 
     @CatMethod(value = "/cat/demo21", method = RequestMethod.POST)
     default ResponseEntity<Demo> demo1(@CatNote("req") @RequestBody Demo req){
-        Throwable exception = CatToosUtil.getException();
+        CatSendContextHolder contextHolder = CatSendContextHolder.getContextHolder();
+        Throwable exception = contextHolder.getException();
         return ResponseEntity.fail("-1", exception.getMessage());
     }
 
 
     @CatMethod(value = "/cat/demo22", method = RequestMethod.POST)
     default String demo2(CatSendProcessor send, Demo req){
-        Throwable exception = CatToosUtil.getException();
+        CatSendContextHolder contextHolder = CatSendContextHolder.getContextHolder();
+        Throwable exception = contextHolder.getException();
         return "ApiRemoteService2.demo2默认方法 > " + exception.getMessage();
     }
 

@@ -120,6 +120,7 @@ public abstract class AbstractResponesWrapper<T> {
         }
         @Override
         public Object createEntryOnException(Throwable throwable, Type returnType) {
+            throwable.printStackTrace();
             return null;
         }
     }

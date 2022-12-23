@@ -43,10 +43,8 @@ public interface ApiRemoteService1 {
          * */
 
         CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
-        Throwable ex = holder.getException();
+        Throwable exception = holder.getException();
 
-
-        Throwable exception = CatToosUtil.getException();
         return ResponseEntity.fail("-1", exception.getMessage());
     }
 
@@ -65,9 +63,8 @@ public interface ApiRemoteService1 {
          * 当发生异常时执行
          * */
         CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
-        Throwable ex = holder.getException();
+        Throwable exception = holder.getException();
 
-        Throwable exception = CatToosUtil.getException();
         return "-1@" + exception.getMessage();
     }
 
@@ -87,9 +84,8 @@ public interface ApiRemoteService1 {
          * 当发生异常时执行
          * */
         CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
-        Throwable ex = holder.getException();
+        Throwable exception = holder.getException();
 
-        Throwable exception = CatToosUtil.getException();
         return ResponseEntity.fail("-1", exception.getMessage());
     }
 
@@ -102,7 +98,8 @@ public interface ApiRemoteService1 {
      * */
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     default ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark){
-        Throwable exception = CatToosUtil.getException();
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable exception = holder.getException();
         return ResponseEntity.fail("-1", exception.getMessage());
     }
 
@@ -119,7 +116,8 @@ public interface ApiRemoteService1 {
          * 不做任何处理，继续抛出
          * */
 
-        CatToosUtil.throwException();
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable exception = holder.getException();
         return null;
     }
 
@@ -140,7 +138,8 @@ public interface ApiRemoteService1 {
          * 不做任何处理，继续抛出
          * */
 
-        CatToosUtil.throwException();
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable exception = holder.getException();
         return null;
     }
 
@@ -158,8 +157,8 @@ public interface ApiRemoteService1 {
         /**
          * 不做任何处理，继续抛出
          * */
-
-        CatToosUtil.throwException();
+        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        Throwable exception = holder.getException();
         return null;
     }
 

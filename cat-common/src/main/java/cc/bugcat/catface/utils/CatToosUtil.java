@@ -55,32 +55,6 @@ public class CatToosUtil {
     }
 
 
-
-    /**
-     * 进入异常流程时，存储异常信息
-     * */
-    private static ThreadLocal<Throwable> threadLocal = new ThreadLocal<>();
-
-    
-    /**
-     * 在异常回调流程中获取异常信息
-     * */
-    public static Throwable getException(){
-        return threadLocal.get();
-    }
-    /**
-     * 在异常回调流程中再次抛出
-     * */
-    public static void throwException(){
-        Throwable throwable = threadLocal.get();
-        throw new RuntimeException(throwable);
-    }
-    public static void setException(Throwable throwable){
-        threadLocal.set(throwable);
-    }
-    public static void removeException(){
-        threadLocal.remove();
-    }
     
     /**
      * 得到原始异常
