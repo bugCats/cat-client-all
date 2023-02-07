@@ -4,7 +4,7 @@ import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -98,7 +98,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         beanRegistry.scannerByClass(CatClientFactory.class);
 
         //扫描所有 CatMethodInterceptor 子类
-        beanRegistry.scannerByClass(CatMethodSendInterceptor.class);
+        beanRegistry.scannerByClass(CatSendInterceptors.class);
 
         // CatClientConfiguration全局默认配置
         beanRegistry.registerBean(annoAttrs.getClass("configuration"));

@@ -95,7 +95,7 @@ package cc.bugcat.catclient;
  *
  *  6、执行CatSendProcessor#httpSend()方法发送http请求
  *
- *  7、执行CatMethodSendInterceptor拦截器，拦截器中执行发送http请求
+ *  7、执行CatSendInterceptors拦截器，拦截器中执行发送http请求
  *
  *  8、使用DefaultResultHandler#resultToBean(..)解析响应字符串
  *

@@ -14,6 +14,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
@@ -37,9 +38,13 @@ public class CatSendProcessor {
     private Supplier<CatHttpPoint> httpPointSupplier;
     private Supplier<CatObjectResolver> objectResolverSupplier;
 
-    private CatSendContextHolder context;
+    private CatClientContextHolder context;
     private CatHttpPoint httpPoint;
 
+    /**
+     * 日志追踪id
+     * */
+    protected String tracerId = UUID.randomUUID().toString();
     /**
      * 其他自定义参数、标记
      * */
@@ -49,7 +54,7 @@ public class CatSendProcessor {
     /**
      * 1、初始化http相关配置，每次调用interface的方法，仅执行一次
      * */
-    public void doConfigurationResolver(CatSendContextHolder context, CatParameter parameter){
+    public void doConfigurationResolver(CatClientContextHolder context, CatParameter parameter){
         CatMethodInfo methodInfo = context.getMethodInfo();
         
         this.context = context;
@@ -97,7 +102,7 @@ public class CatSendProcessor {
      * 2、参数处理。如果要修改请求方式、参数转换，在这步操作。
      * 仅会执行一次
      * */
-    public void doVariableResolver(CatSendContextHolder context){
+    public void doVariableResolver(CatClientContextHolder context){
         
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatParameter parameter = httpPoint.getParameter();
@@ -138,10 +143,10 @@ public class CatSendProcessor {
     /**
      * 3、如果在调用远程API，需要额外处理参数、添加签名等：
      *   a、继承CatSendProcessor，重写afterVariableResolver方法；
-     *   b、通过{@link CatMethodSendInterceptor}，在preVariableResolver前后修改；
+     *   b、通过{@link CatSendInterceptors}，在preVariableResolver前后修改；
      * 仅会执行一次
      * */
-    public void postVariableResolver(CatSendContextHolder context) {
+    public void postVariableResolver(CatClientContextHolder context) {
         
     }
 
@@ -158,7 +163,7 @@ public class CatSendProcessor {
         CatClientFactoryAdapter factoryAdapter = context.getFactoryAdapter();
 
         CatClientLogger catLog = new CatClientLogger();
-        catLog.setUuid(context.getUuid());
+        catLog.setTracerId(this.getTracerId());
         catLog.setLogsMod(methodInfo.getLogsMod());
         catLog.setApiName(methodInfo.getMethodName());
         catLog.setApiUrl(httpPoint.getHost() + httpPoint.getUrl());
@@ -184,7 +189,7 @@ public class CatSendProcessor {
     /**
      * 5、如果发生http异常，判断是否满足重连
      * */
-    public boolean canRetry(CatSendContextHolder context, CatHttpException exception) {
+    public boolean canRetry(CatClientContextHolder context, CatHttpException exception) {
         CatHttpRetryConfigurer retryConfigurer = context.getRetryConfigurer();
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
@@ -202,11 +207,6 @@ public class CatSendProcessor {
         return false;
     }
 
-    
-    
-
-
-    
     
     
     /**
@@ -297,11 +297,20 @@ public class CatSendProcessor {
         this.objectResolverSupplier = objectResolverSupplier;
     }
     
+    
     /**
      * 切入点参数
      * */
     public CatHttpPoint getHttpPoint() {
         return httpPoint;
+    }
+
+
+    public String getTracerId() {
+        return tracerId;
+    }
+    public void setTracerId(String tracerId) {
+        this.tracerId = tracerId;
     }
     
     /**

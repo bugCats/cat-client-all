@@ -4,10 +4,7 @@ import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
-import cc.bugcat.catclient.spi.DefaultCatClientFactory;
-import cc.bugcat.catclient.spi.DefaultCatSendInterceptor;
+import cc.bugcat.catclient.spi.*;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -57,7 +54,7 @@ public class CatClientDepend {
     /**
      * 全局默认的http方法拦截器
      * */
-    private final CatMethodSendInterceptor defaultSendInterceptor;
+    private final CatSendInterceptors defaultSendInterceptor;
 
 
 
@@ -92,7 +89,7 @@ public class CatClientDepend {
         return defaultClientFactory;
     }
 
-    public CatMethodSendInterceptor getDefaultSendInterceptor() {
+    public CatSendInterceptors getDefaultSendInterceptor() {
         return defaultSendInterceptor;
     }
 
@@ -114,7 +111,7 @@ public class CatClientDepend {
 
         private CatClientFactory defaultClientFactory;
 
-        private CatMethodSendInterceptor defaultSendInterceptor;
+        private CatSendInterceptors defaultSendInterceptor;
 
 
         public Builder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
@@ -132,7 +129,7 @@ public class CatClientDepend {
             return this;
         }
 
-        public Builder defaultSendInterceptor(CatMethodSendInterceptor defaultSendInterceptor) {
+        public Builder defaultSendInterceptor(CatSendInterceptors defaultSendInterceptor) {
             this.defaultSendInterceptor = defaultSendInterceptor;
             return this;
         }

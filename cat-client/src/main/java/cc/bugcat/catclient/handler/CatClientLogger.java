@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
@@ -19,10 +20,10 @@ public class CatClientLogger {
 
 
     /**
-     * 如果有重连机制，那么调用一次方法，可能会执行多次http请求，会创建多个CatClientLogger对象，但是uuid是相同的
-     * @see CatSendContextHolder#getUuid()
+     * 如果有重连机制，那么调用一次方法，可能会执行多次http请求，会创建多个CatClientLogger对象，但是tracerId是相同的
+     * @see CatSendProcessor#getTracerId()
      * */
-    private String uuid;
+    private String tracerId;
 
     /**
      * 日志记录方案
@@ -55,7 +56,7 @@ public class CatClientLogger {
     public String toJson(){
 
         Map<String, Object> logInfo = new LinkedHashMap<>();
-        logInfo.put("@uuid", uuid);
+        logInfo.put("@tracerId", tracerId);
         logInfo.put("@name", apiName);
         logInfo.put("@url", apiUrl);
         logInfo.put("@in", "#{in}");
@@ -104,11 +105,11 @@ public class CatClientLogger {
     }
 
 
-    public String getUuid() {
-        return uuid;
+    public String getTracerId() {
+        return tracerId;
     }
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public void setTracerId(String tracerId) {
+        this.tracerId = tracerId;
     }
 
     public CatLogsMod getLogsMod() {

@@ -1,7 +1,7 @@
 package cc.bugcat.example.tools;
 
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatClientLogger;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
 
@@ -38,7 +38,7 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
         if( ResponseEntity.succ.equals(wrapper.getErrCode())){
             //正常
         } else {
-            CatSendContextHolder contextHolder = CatSendContextHolder.getContextHolder();
+            CatClientContextHolder contextHolder = CatClientContextHolder.getContextHolder();
             CatClientLogger lastCatLog = contextHolder.getSendHandler().getHttpPoint().getLastCatLog();
             lastCatLog.setErrorMessge("[" + wrapper.getErrCode() + "]" + wrapper.getErrMsg());
 

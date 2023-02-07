@@ -1,9 +1,9 @@
 package cc.bugcat.example.catclient.token;
 
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatHttpPoint;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.spi.CatSendProcessor;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.tools.ResponseEntity;
@@ -16,17 +16,17 @@ import org.springframework.util.MultiValueMap;
  * http拦截器
  * */
 @Component
-public class TokenInterceptor implements CatMethodSendInterceptor {
+public class TokenInterceptor implements CatSendInterceptors {
 
     /**
      * 使用拦截器修改参数
      * */
     @Override
-    public void executeVariableResolver(CatSendContextHolder context) {
+    public void executeVariableResolver(CatClientContextHolder context, Intercepting intercepting) {
         CatSendProcessor sendHandler = context.getSendHandler();
+        sendHandler.setTracerId(String.valueOf(System.currentTimeMillis()));
         JSONObject notes = sendHandler.getNotes();
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
-
         //使用note，标记是否需要添加签名
         String need = notes.getString("needToken");
         if( CatToosUtil.isNotBlank(need)){
@@ -35,7 +35,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
             System.out.println(token);
         }
         // 执行默认参数处理
-        CatMethodSendInterceptor.super.executeVariableResolver(context);
+        intercepting.executeInternal();
     }
 
     /**
@@ -72,7 +72,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
          * 使用继承CatSendProcessor形式修改参数
          * */
         @Override
-        public void postVariableResolver(CatSendContextHolder context){
+        public void postVariableResolver(CatClientContextHolder context){
             /**
              * notes 已经在postConfigurationResolver方法中解析完毕
              * 此处可以直接使用

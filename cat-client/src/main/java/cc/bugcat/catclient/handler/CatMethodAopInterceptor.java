@@ -4,8 +4,8 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -28,7 +28,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
 
-    private final CatMethodSendInterceptor methodInterceptor;
+    private final CatSendInterceptors methodInterceptor;
     private final CatHttpRetryConfigurer retryConfigurer;
     private final CatClientFactoryAdapter factoryAdapter;
 
@@ -70,27 +70,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             sendHandler = factoryAdapter.newSendHandler();
         }
 
-        // 响应处理类
-        CatResultProcessor resultHandler = factoryAdapter.getResultHandler();
 
-        //处理参数列表，如果存在PathVariable参数，将参数映射到url上
-        CatParameter parameter = methodInfo.parseArgs(args);
-
-        // 将部分参数，存入ThreadLocal中，在fallback中，可以通过 CatSendContextHolder.getContextHolder 得到这些数据
-        CatSendContextHolder context = CatSendContextHolder.builder()
-                .sendHandler(sendHandler)
-                .clientInfo(clientInfo)
-                .methodInfo(methodInfo)
-                .interceptor(methodInterceptor)
-                .factoryAdapter(factoryAdapter)
-                .retryConfigurer(retryConfigurer)
-                .build();
-
-        //设置参数
-        context.executeConfigurationResolver(parameter);
-        
-        //处理额外参数
-        context.executeVariableResolver();
 
         //原始响应字符串
         String respStr = null;
@@ -98,7 +78,30 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         //响应对象
         Object respObj = null;
 
+        // 响应处理类
+        CatResultProcessor resultHandler = factoryAdapter.getResultHandler();
+
+        //处理参数列表，如果存在PathVariable参数，将参数映射到url上
+        CatParameter parameter = methodInfo.parseArgs(args);
+
+        // 将部分参数，存入ThreadLocal中，在fallback中，可以通过 CatClientContextHolder.getContextHolder 得到这些数据
+        CatClientContextHolder context = CatClientContextHolder.builder()
+                .sendHandler(sendHandler)
+                .clientInfo(clientInfo)
+                .methodInfo(methodInfo)
+                .interceptor(methodInterceptor)
+                .factoryAdapter(factoryAdapter)
+                .retryConfigurer(retryConfigurer)
+                .build();
+        
         try {
+
+            //设置参数
+            context.executeConfigurationResolver(parameter);
+
+            //处理额外参数
+            context.executeVariableResolver();
+            
 
             //执行发送http请求
             respStr = doRequest(context, resultHandler);
@@ -174,7 +177,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
 
             } finally {
 
-                // 在最后的最后，打印日志，移除CatSendContextHolder对象
+                // 在最后的最后，打印日志，移除CatClientContextHolder对象
                 context.printLog();
                 context.remove();
 
@@ -189,7 +192,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
      * 执行http请求，如果开启了重连、并且满足重连设置，此处会循环调用，直至成功、或者重试次数耗尽
      * 重连次数，不包含第一次调用！
      * */
-    private String doRequest(CatSendContextHolder context, CatResultProcessor resultHandler) throws Throwable {
+    private String doRequest(CatClientContextHolder context, CatResultProcessor resultHandler) throws Throwable {
         try {
             String respStr = context.executeRequest();
             return respStr;
@@ -235,7 +238,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         private CatClientInfo clientInfo;
         private CatMethodInfo methodInfo;
         private Method method;
-        private CatMethodSendInterceptor methodInterceptor;
+        private CatSendInterceptors methodInterceptor;
         private CatHttpRetryConfigurer retryConfigurer;
         private CatClientFactoryAdapter factoryAdapter;
 
@@ -247,7 +250,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             this.methodInfo = methodInfo;
             return this;
         }
-        public Builder methodInterceptor(CatMethodSendInterceptor methodInterceptor) {
+        public Builder methodInterceptor(CatSendInterceptors methodInterceptor) {
             this.methodInterceptor = methodInterceptor;
             return this;
         }

@@ -5,7 +5,7 @@ import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
@@ -66,7 +66,7 @@ public final class CatClientInfo {
     /**
      * http拦截器
      * */
-    private final Class<? extends CatMethodSendInterceptor> interceptorClass;
+    private final Class<? extends CatSendInterceptors> interceptorClass;
 
     /**
      * 是否启用了fallback模式
@@ -200,7 +200,7 @@ public final class CatClientInfo {
     public Class<? extends CatClientFactory> getFactoryClass() {
         return factoryClass;
     }
-    public Class<? extends CatMethodSendInterceptor> getInterceptorClass() {
+    public Class<? extends CatSendInterceptors> getInterceptorClass() {
         return interceptorClass;
     }
     public boolean isFallbackMod() {

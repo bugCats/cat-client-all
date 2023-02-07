@@ -5,7 +5,7 @@ import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 
 import java.lang.annotation.Annotation;
@@ -31,8 +31,8 @@ public abstract class CatClients implements CatClient {
     }
 
     @Override
-    public Class<? extends CatMethodSendInterceptor> interceptor() {
-        return CatMethodSendInterceptor.class;
+    public Class<? extends CatSendInterceptors> interceptor() {
+        return CatSendInterceptors.class;
     }
 
     @Override

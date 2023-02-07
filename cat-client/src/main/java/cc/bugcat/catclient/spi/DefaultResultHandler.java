@@ -4,7 +4,7 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import cc.bugcat.catclient.handler.CatHttpException;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Constructor;
@@ -24,7 +24,7 @@ public class DefaultResultHandler implements CatResultProcessor {
      * 是否可以重试
      * */
     @Override
-    public boolean canRetry(CatHttpException exception, CatSendContextHolder context) {
+    public boolean canRetry(CatHttpException exception, CatClientContextHolder context) {
         CatSendProcessor sendHandler = context.getSendHandler();
         return sendHandler.canRetry(context, exception);
     }
@@ -34,7 +34,7 @@ public class DefaultResultHandler implements CatResultProcessor {
      * 打发生http异常时，默认继续抛出
      * */
     @Override
-    public boolean onHttpError(CatSendContextHolder context) throws Throwable {
+    public boolean onHttpError(CatClientContextHolder context) throws Throwable {
         throw context.getException();
     }
 
@@ -43,7 +43,7 @@ public class DefaultResultHandler implements CatResultProcessor {
      * 字符串转方法返回对象
      * */
     @Override
-    public Object resultToBean(String result, CatSendContextHolder context) {
+    public Object resultToBean(String result, CatClientContextHolder context) {
         if( result == null ){
             return null;
         }
@@ -90,7 +90,7 @@ public class DefaultResultHandler implements CatResultProcessor {
 
 
     @Override
-    public Object doFinally(Object resp, CatSendContextHolder context) throws Exception {
+    public Object doFinally(Object resp, CatClientContextHolder context) throws Exception {
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
 

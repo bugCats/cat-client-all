@@ -1,12 +1,9 @@
 package cc.bugcat.catclient.annotation;
 
-import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.*;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.spi.DefineCatClients;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catface.annotation.CatNote;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
@@ -61,7 +58,7 @@ public @interface CatClient {
      * http发送拦截器
      * 可以添加日志、修改入参签名、token等处理
      * */
-    Class<? extends CatMethodSendInterceptor> interceptor() default CatMethodSendInterceptor.class;
+    Class<? extends CatSendInterceptors> interceptor() default CatSendInterceptors.class;
 
 
     /**
@@ -70,7 +67,7 @@ public @interface CatClient {
      * 类似FeignClient的fallback。
      *
      * 1、Object.class：尝试使用interface默认方法，如果interface没有默认实现，再执行{@link CatResultProcessor#onHttpError}
-     * 2、Void.class：关闭回调模式
+     * 2、Void.class：关闭回调模式，直接执行{@link CatResultProcessor#onHttpError}
      * 3、其他class值，必须实现该interface。当发生异常后，执行实现类的对应方法。
      *
      * 如果在回调方法中，继续抛出异常，或者关闭回调模式，会执行{@link CatResultProcessor#onHttpError}进行处理。

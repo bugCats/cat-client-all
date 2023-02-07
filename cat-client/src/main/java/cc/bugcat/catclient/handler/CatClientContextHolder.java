@@ -4,41 +4,36 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * http调用环境对象
  *
- * 在同一个线程中，可以通过{@link CatSendContextHolder#getContextHolder()}获取到当前环境参数
+ * 在同一个线程中，可以通过{@link CatClientContextHolder#getContextHolder()}获取到当前环境参数
  *
  * 一般用于异常回调模式中，获取原始http异常信息
  *
- * 或者使用{@link CatToosUtil#getException()}获取原始http异常
- *
  * @author bugcat
  * */
-public final class CatSendContextHolder {
+public class CatClientContextHolder {
 
-    private static ThreadLocal<CatSendContextHolder> threadLocal = new ThreadLocal<>();
+    private static ThreadLocal<CatClientContextHolder> threadLocal = new ThreadLocal<>();
 
     /**
      * 在同一个线程中可以获取
      * */
-    public static CatSendContextHolder getContextHolder() {
+    public static CatClientContextHolder getContextHolder() {
         return threadLocal.get();
     }
-    
     
     protected void remove() {
         threadLocal.remove();
     }
-
 
     /**
      * http原始响应内容，不一定有值
@@ -46,8 +41,9 @@ public final class CatSendContextHolder {
     private String responseBody;
 
     /**
-     * 如果发生异常，可以在异常回调模式中，返回默认结果
-     * 或者在{@link CatResultProcessor#onHttpError(CatSendContextHolder)}方法中赋默认值
+     * 最终方法返回的对象
+     * 如果发生异常，可以在异常回调模式中，返回默认结果；
+     * 或者在{@link CatResultProcessor#onHttpError(CatClientContextHolder)}方法中赋默认值；
      * */
     private Object result;
 
@@ -57,6 +53,7 @@ public final class CatSendContextHolder {
     private Throwable throwable;
 
 
+    
     public String getResponseBody() {
         return responseBody;
     }
@@ -68,7 +65,6 @@ public final class CatSendContextHolder {
         this.result = result;
     }
 
-    
     public Throwable getException() {
         return this.throwable;
     }
@@ -76,25 +72,23 @@ public final class CatSendContextHolder {
         this.throwable = CatToosUtil.getCause(error);
     }
 
-    /**
-     * 唯一标识
-     * */
-    private final String uuid;
+    
+    
     private final CatSendProcessor sendHandler;
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
     private final CatClientFactoryAdapter factoryAdapter;
     private final CatHttpRetryConfigurer retryConfigurer;
-    private final CatMethodSendInterceptor interceptor;
-
-    private CatSendContextHolder(CatSendContextHolderBuilder builder) {
-        this.uuid = UUID.randomUUID().toString();
+    private final CatSendInterceptors interceptor;
+    
+    protected CatClientContextHolder(CatClientContextHolderBuilder builder) {
         this.sendHandler = builder.sendHandler;
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
         this.interceptor = builder.interceptor;
         this.factoryAdapter = builder.factoryAdapter;
         this.retryConfigurer = builder.retryConfigurer;
+        threadLocal.set(this);
     }
 
 
@@ -102,21 +96,28 @@ public final class CatSendContextHolder {
      * 1、设置参数
      * */
     protected void executeConfigurationResolver(CatParameter parameter) {
-        interceptor.executeConfigurationResolver(this, parameter);
+        interceptor.executeConfigurationResolver(this, parameter, () -> {
+            CatSendProcessor sendHandler = this.getSendHandler();
+            sendHandler.doConfigurationResolver(this, parameter);
+        });
     }
     
     /**
      * 2、http参数处理切入点
      * */
     protected void executeVariableResolver(){
-        interceptor.executeVariableResolver(this);
+        interceptor.executeVariableResolver(this, () -> {
+            CatSendProcessor sendHandler = this.getSendHandler();
+            sendHandler.doVariableResolver(this);
+            sendHandler.postVariableResolver(this);
+        });
     }
     
     /**
      * 3、http请求切入点
      * */
     protected String executeRequest() throws CatHttpException {
-        this.responseBody = interceptor.executeHttpSend(sendHandler);
+        this.responseBody = interceptor.executeHttpSend(sendHandler, () -> sendHandler.postHttpSend());
         return responseBody;
     }
 
@@ -130,12 +131,6 @@ public final class CatSendContextHolder {
         catLogs.forEach(catLog -> factoryAdapter.getLoggerProcessor().printLog(catLog));
     }
 
-
-
-
-    public String getUuid() {
-        return uuid;
-    }
     public CatSendProcessor getSendHandler() {
         return sendHandler;
     }
@@ -156,52 +151,51 @@ public final class CatSendContextHolder {
 
     /****************************************************************************************************************/
 
-    protected static CatSendContextHolderBuilder builder(){
-        return new CatSendContextHolderBuilder();
+    protected static CatClientContextHolderBuilder builder(){
+        return new CatClientContextHolderBuilder();
     }
 
 
-    protected static class CatSendContextHolderBuilder {
+    protected static class CatClientContextHolderBuilder {
         private CatClientInfo clientInfo;
         private CatMethodInfo methodInfo;
-        private CatMethodSendInterceptor interceptor;
+        private CatSendInterceptors interceptor;
         private CatSendProcessor sendHandler;
         private CatClientFactoryAdapter factoryAdapter;
         private CatHttpRetryConfigurer retryConfigurer;
 
-        public CatSendContextHolderBuilder clientInfo(CatClientInfo clientInfo) {
+        public CatClientContextHolderBuilder clientInfo(CatClientInfo clientInfo) {
             this.clientInfo = clientInfo;
             return this;
         }
 
-        public CatSendContextHolderBuilder methodInfo(CatMethodInfo methodInfo) {
+        public CatClientContextHolderBuilder methodInfo(CatMethodInfo methodInfo) {
             this.methodInfo = methodInfo;
             return this;
         }
 
-        public CatSendContextHolderBuilder interceptor(CatMethodSendInterceptor interceptor) {
+        public CatClientContextHolderBuilder interceptor(CatSendInterceptors interceptor) {
             this.interceptor = interceptor;
             return this;
         }
 
-        public CatSendContextHolderBuilder sendHandler(CatSendProcessor sendHandler) {
+        public CatClientContextHolderBuilder sendHandler(CatSendProcessor sendHandler) {
             this.sendHandler = sendHandler;
             return this;
         }
 
-        public CatSendContextHolderBuilder factoryAdapter(CatClientFactoryAdapter factoryAdapter) {
+        public CatClientContextHolderBuilder factoryAdapter(CatClientFactoryAdapter factoryAdapter) {
             this.factoryAdapter = factoryAdapter;
             return this;
         }
 
-        public CatSendContextHolderBuilder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
+        public CatClientContextHolderBuilder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
             this.retryConfigurer = retryConfigurer;
             return this;
         }
 
-        public CatSendContextHolder build(){
-            CatSendContextHolder holder = new CatSendContextHolder(this);
-            threadLocal.set(holder);
+        public CatClientContextHolder build(){
+            CatClientContextHolder holder = new CatClientContextHolder(this);
             return holder;
         }
     }

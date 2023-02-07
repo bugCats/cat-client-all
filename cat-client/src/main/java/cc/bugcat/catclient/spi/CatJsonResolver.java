@@ -1,9 +1,9 @@
 package cc.bugcat.catclient.spi;
 
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatFastjsonResolver;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
 
 import java.lang.reflect.Type;
 
@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
  * 
  * @see CatFastjsonResolver
  * @see CatJacksonResolver
- * @see CatSendProcessor#postVariableResolver(CatSendContextHolder)
+ * @see CatSendProcessor#postVariableResolver(CatClientContextHolder)
  * @author bugcat
  * */
 public interface CatJsonResolver {

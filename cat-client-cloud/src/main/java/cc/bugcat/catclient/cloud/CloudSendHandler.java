@@ -1,7 +1,7 @@
 package cc.bugcat.catclient.cloud;
 
 import cc.bugcat.catclient.beanInfos.CatParameter;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.spi.ServerChoose;
@@ -24,7 +24,7 @@ public class CloudSendHandler extends CatSendProcessor {
 
     
     @Override
-    public void doConfigurationResolver(CatSendContextHolder context, CatParameter parameter) {
+    public void doConfigurationResolver(CatClientContextHolder context, CatParameter parameter) {
         super.doConfigurationResolver(context, parameter);
 
         /**

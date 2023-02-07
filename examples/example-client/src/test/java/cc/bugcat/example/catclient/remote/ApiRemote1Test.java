@@ -4,7 +4,6 @@ import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

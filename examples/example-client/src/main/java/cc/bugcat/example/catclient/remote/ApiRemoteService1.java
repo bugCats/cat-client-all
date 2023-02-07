@@ -2,10 +2,9 @@ package cc.bugcat.example.catclient.remote;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
+import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catface.annotation.CatNote;
-import cc.bugcat.catclient.handler.CatSendContextHolder;
 import cc.bugcat.catclient.spi.CatSendProcessor;
-import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.dto.DemoEntity;
 import cc.bugcat.example.tools.PageInfo;
@@ -42,7 +41,7 @@ public interface ApiRemoteService1 {
          * 当发生异常时执行
          * */
 
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
 
         return ResponseEntity.fail("-1", exception.getMessage());
@@ -62,7 +61,7 @@ public interface ApiRemoteService1 {
         /**
          * 当发生异常时执行
          * */
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
 
         return "-1@" + exception.getMessage();
@@ -83,7 +82,7 @@ public interface ApiRemoteService1 {
         /**
          * 当发生异常时执行
          * */
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
 
         return ResponseEntity.fail("-1", exception.getMessage());
@@ -98,7 +97,7 @@ public interface ApiRemoteService1 {
      * */
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     default ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark){
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
         return ResponseEntity.fail("-1", exception.getMessage());
     }
@@ -116,7 +115,7 @@ public interface ApiRemoteService1 {
          * 不做任何处理，继续抛出
          * */
 
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
         return null;
     }
@@ -138,7 +137,7 @@ public interface ApiRemoteService1 {
          * 不做任何处理，继续抛出
          * */
 
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
         return null;
     }
@@ -157,7 +156,7 @@ public interface ApiRemoteService1 {
         /**
          * 不做任何处理，继续抛出
          * */
-        CatSendContextHolder holder = CatSendContextHolder.getContextHolder();
+        CatClientContextHolder holder = CatClientContextHolder.getContextHolder();
         Throwable exception = holder.getException();
         return null;
     }

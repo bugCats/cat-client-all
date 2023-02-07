@@ -8,7 +8,7 @@ import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatMethodSendInterceptor;
+import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.apache.commons.logging.Log;
@@ -104,7 +104,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         final MethodInterceptor objectMethodInterceptor = clientDepend.getObjectMethodInterceptor();
         final CatHttpRetryConfigurer retryConfigurer = clientDepend.getRetryConfigurer();
-        final CatMethodSendInterceptor methodInterceptor = getAndExectue((Class<CatMethodSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
+        final CatSendInterceptors methodInterceptor = getAndExectue((Class<CatSendInterceptors>) clientInfo.getInterceptorClass(), bean -> {
             if( bean == null ){
                 bean = clientDepend.getDefaultSendInterceptor();
             }

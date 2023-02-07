@@ -38,7 +38,7 @@ public class CatClientConfiguration implements InitializingBean {
     /**
      * 默认http拦截器类
      * */
-    public static final Class<? extends CatMethodSendInterceptor> METHOD_INTERCEPTOR = CatMethodSendInterceptor.class;
+    public static final Class<? extends CatSendInterceptors> METHOD_INTERCEPTOR = CatSendInterceptors.class;
 
     /**
      * 默认打印日志方案
@@ -125,7 +125,7 @@ public class CatClientConfiguration implements InitializingBean {
     /**
      * 默认的http发送拦截器
      * */
-    public Class<? extends CatMethodSendInterceptor> getMethodInterceptor(){
+    public Class<? extends CatSendInterceptors> getMethodInterceptor(){
         return METHOD_INTERCEPTOR;
     }
 

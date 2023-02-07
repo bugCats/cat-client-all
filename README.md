@@ -268,7 +268,7 @@ remote.userInfo(666L, "1");
 + `interceptor`：http发送拦截器，可以用来修改输入输出日志、修改参数签名、添加token等处理；默认值受`CatClientConfiguration`控制；
 + `fallback`：异常处理类，当接口发生http异常（40x、50x），执行的回调方法。类似FeignClient的fallback：
     1. `Object.class`：尝试执行interface的默认方法，如果没有默认实现，再执行全局默认异常处理；
-    2. `Void.class`：关闭回调模式，异常直接抛出；
+    2. `Void.class`：关闭回调模式，执行全局默认异常处理；
     3. `其他class值`：必须实现该interface。当发生异常后，执行实现类的对应方法；
 + `socket`：http读值超时毫秒；-1 代表不限制；默认值受`CatClientConfiguration`控制；
 + `connect`：http链接超时毫秒；-1 代表不限制；默认值受`CatClientConfiguration`控制；
@@ -354,9 +354,10 @@ Void saveUser(@CatNote("req") @RequestBody UserInfo user);
 
 ##### CatHttp
 
-http请求工具类，默认使用RestTemplate；可以在`CatClientConfiguration#getCatHttp()`指定为全局。
+http请求工具类，默认使用RestTemplate；优选从Srping容器中获取RestTemplate；
 
-实现`cc.bugcat.catclient.spi.CatHttp`接口，可以自行修改成其他http包；
+也可以自定义其他http组件：需要实现`cc.bugcat.catclient.spi.CatHttp`接口，在`CatClientConfiguration#getCatHttp()`指定为全局。
+
 
 
 <br><br>
@@ -383,11 +384,11 @@ http请求工具类，默认使用RestTemplate；可以在`CatClientConfiguratio
 
 <br><br>
 
-##### CatMethodSendInterceptor
+##### CatSendInterceptors
 
 http请求拦截器，可以用于修改http请求配置、http请求入参、已经http响应。
 
-实现`cc.bugcat.catclient.spi.CatMethodSendInterceptor`接口。
+实现`cc.bugcat.catclient.spi.CatSendInterceptors`接口。
 
 `executeConfigurationResolver`方法，可以对`CatSendProcessor#postConfigurationResolver()`进行环绕增强。<br>
 可以修改与http环境相关的配置，例如：请求地址、请求头、读取超时、日志方案等；
@@ -406,7 +407,7 @@ http请求参数处理器，必须为多例。主要控制和存储http相关数
 
 可以通过`CatClientFactory#newSendHandler()`自动创建。也可以在调用客户端方法时，作为参数显示传入。
 
-一般修改参数、签名、token等，优先使用`CatMethodSendInterceptor`。<br>
+一般修改参数、签名、token等，优先使用`CatSendInterceptors`。<br>
 如果需要对流程有非常大修改，才考虑扩展`CatSendProcessor`，如：需要接入注册中心等。
 
 <br><br>
@@ -428,7 +429,7 @@ http请求参数处理器，必须为多例。主要控制和存储http相关数
 当noteMatch设置键值对，在notes的键值对中完全匹配时，触发重连：<br>
 `note-match='{"name":"bugcat","age":"17"}'`，会匹配`notes={@CatNote(key="name", value="bugcat"), @CatNote(key="age", value="17")}`<br>
 如果`@CatNote`采用`#{req.userId}`形式，可以实现运行时，根据入参决定是否需要重连：<br>
-当设置`note=save` `notes={@CatNote("#{req.methodName}"}`，或者`note-match='{"method":"save"}'` `notes={@CatNote(key="method", value="#{req.methodName}")}`时，如果请求入参req的methodName=save，会触发重连；
+当设置`note=save`、`notes={@CatNote("#{req.methodName}"}`，或者`note-match='{"method":"save"}'`、`notes={@CatNote(key="method", value="#{req.methodName}")}`时，如果请求入参req的methodName=save，会触发重连；
 
 
 <br><br>
@@ -518,17 +519,17 @@ public interface TokenRemote {
  * http拦截器
  * */
 @Component
-public class TokenInterceptor implements CatMethodSendInterceptor {
+public class TokenInterceptor implements CatSendInterceptors {
 
     /**
      * 使用拦截器修改参数，可以添加token、计算签名等
      * */
     @Override
-    public void executeVariableResolver(CatSendContextHolder context) {
+    public void executeVariableResolver(CatClientContextHolder context, Intercepting intercepting) {
         CatSendProcessor sendHandler = context.getSendHandler();
+        sendHandler.setTracerId(String.valueOf(System.currentTimeMillis()));
         JSONObject notes = sendHandler.getNotes();
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
-
         //使用note，标记是否需要添加签名
         String need = notes.getString("needToken");
         if( CatToosUtil.isNotBlank(need)){
@@ -537,8 +538,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
             System.out.println(token);
         }
         // 执行默认参数处理
-        sendHandler.preVariableResolver(context); 
-        sendHandler.postVariableResolver(context);
+        intercepting.executeInternal();
     }
 
     /**
@@ -575,7 +575,7 @@ public class TokenInterceptor implements CatMethodSendInterceptor {
          * 使用继承CatSendProcessor形式修改参数
          * */
         @Override
-        public void postVariableResolver(CatSendContextHolder context){
+        public void postVariableResolver(CatClientContextHolder context){
             /**
              * notes 已经在postConfigurationResolver方法中解析完毕
              * 此处可以直接使用
@@ -660,21 +660,21 @@ public class TokenRemoteTest {
 <br>
 
 ```markdown
-  ①FeignClient-Interface ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
+  1. FeignClient-Interface ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
             ↑                                ┆ 
-            │                                ┆ ③asm增强interface
+            │                                ┆ 3. asm增强interface
             │                                ┆
             │                                ↓
-            │                        ④Enhancer-Interface
+            │                        4. Enhancer-Interface
             │                                ↑
             │                                │
             │                                │
-            │                                │ ⑤使用cglib
+            │                                │ 5. 使用cglib
             │                                │
-        ②CatServer <═════════════════════╗   │ 
-                                         ║   │
-                                         ║   │
-                                    ⑥cglib-controller   <══════════  ⑦http调用
+     2. CatServer <═════════════════════╗    │ 
+                                        ║    │
+                                        ║    │
+                               6. cglib-controller   <══════════  7. http调用
 ```
 
 1. feign-interface，包含@PostMapping、@GetMapping、@RequestBody、@RequestParam等注解的interface类；
@@ -682,8 +682,8 @@ public class TokenRemoteTest {
 3. 使用asm对feign-interface增强处理；
 4. 增强后的Interface；
 5. 使用cglib对增强后的Interface动态代理，生成controller角色的类；
-6. 动态代理生成的controller对象，其中持有`2`feign-interface实现类的引用；
-7. http访问controller对象方法，controller执行feign-interface实现类对应的方法；
+6. 动态代理生成的controller对象，其中持有`2. CatServer`实现类的引用；
+7. http访问controller对象方法，controller执行`2. CatServer`对应的方法；
 
 <br><br>
 
@@ -879,11 +879,14 @@ cat-server服务端可以使用标准版的`feign-interface`，也可以使用ca
 @Catface               // 标记为精简模式
 @CatResponesWrapper(ResponseEntityWrapper.class) // 自动拆、加包装器类。如果是客户端，表示自动拆包装器；如果是服务端，则正好相反，表示自动加保证器类
 public interface FaceDemoService {
-    
-    UserInfo param0(); // 方法名可任意，此处只做示例
 
+    // 方法名可任意，此处只做示例
+    UserInfo param0(); 
+
+    // 可以使用注解验证参数必填
     UserInfo param1(@NotBlank(message = "userId不能为空") String userId);
     
+    // 可以添加swagger描述
     @ApiOperation("api - param2")
     UserInfo param2(String userId, Integer status);
 
@@ -897,12 +900,14 @@ public interface FaceDemoService {
 
     UserInfo param7(UserPageVi vi1, UserPageVi vi2, Integer status, Map<String, Object> map);
 
+    // swagger参数描述
     UserInfo param8(@ApiParam("参数map") Map<String, Object> map,
                     @ApiParam("参数vi1") @Valid UserPageVi vi1,
                     @ApiParam("参数vi2") UserPageVi vi2,
                     @ApiParam("参数status") @NotNull(message = "status 不能为空") Integer status,
                     @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
 
+    // 默认方法，提供给客户端使用。当客户端调用失败之后，执行
     default UserInfo param9(@ApiParam("参数map") Map<String, Object> map,
                           @ApiParam("参数vi1") @Validated UserPageVi vi1,
                           @ApiParam("参数date") Date date,
@@ -916,8 +921,6 @@ public interface FaceDemoService {
     
 }
 ```
-
-> 定义一个普通的interface，可以有默认实现。如果存在默认实现，客户端调用发生网络异常时，会先执行默认实现。
 
 <br>
 
