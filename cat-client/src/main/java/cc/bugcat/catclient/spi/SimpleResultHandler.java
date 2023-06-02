@@ -3,8 +3,8 @@ package cc.bugcat.catclient.spi;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodReturnInfo;
-import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catclient.handler.CatClientContextHolder;
+import cc.bugcat.catclient.handler.CatHttpException;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Constructor;
@@ -17,7 +17,7 @@ import java.util.Date;
  *
  * @author bugcat
  * */
-public class DefaultResultHandler implements CatResultProcessor {
+public class SimpleResultHandler implements CatResultProcessor {
 
 
     /**
@@ -49,7 +49,7 @@ public class DefaultResultHandler implements CatResultProcessor {
         }
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatClientInfo catClientInfo = context.getClientInfo();
-        CatJsonResolver resolver = context.getFactoryAdapter().getJsonResolver();
+        CatPayloadResolver resolver = context.getFactoryAdapter().getPayloadResolver();
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
         AbstractResponesWrapper wrapperHandler = catClientInfo.getWrapperHandler();
 

@@ -2,19 +2,28 @@ package cc.bugcat.catclient.beanInfos;
 
 
 import cc.bugcat.catclient.annotation.CatMethod;
-import cc.bugcat.catface.annotation.CatNote;
-import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatSendProcessor;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * interface上的{@link CatMethod}注解描述信息

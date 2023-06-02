@@ -5,7 +5,10 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 当前http请求的相关入参
@@ -75,8 +78,6 @@ public class CatHttpPoint {
      * 2、如果是使用键值对，则将入参序列化后，用于记录日志
      * */
     private String requestBody;
-
-    
     
     
     /**

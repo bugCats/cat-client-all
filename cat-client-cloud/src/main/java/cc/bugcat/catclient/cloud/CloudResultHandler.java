@@ -2,7 +2,7 @@ package cc.bugcat.catclient.cloud;
 
 import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatHttpException;
-import cc.bugcat.catclient.spi.DefaultResultHandler;
+import cc.bugcat.catclient.spi.SimpleResultHandler;
 
 
 /**
@@ -10,7 +10,7 @@ import cc.bugcat.catclient.spi.DefaultResultHandler;
  *
  * @author bugcat
  * */
-public class CloudResultHandler extends DefaultResultHandler{
+public class CloudResultHandler extends SimpleResultHandler {
 
 
     /**

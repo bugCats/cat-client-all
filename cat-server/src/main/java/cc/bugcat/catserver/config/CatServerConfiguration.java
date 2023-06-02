@@ -3,9 +3,9 @@ package cc.bugcat.catserver.config;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catserver.handler.CatServerDefaults;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
-import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.spi.CatResultHandler;
-import cc.bugcat.catserver.spi.DefaultWrapperResultHandler;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
+import cc.bugcat.catserver.spi.SimpleWrapperResultHandler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,23 +37,23 @@ public class CatServerConfiguration implements InitializingBean {
      * */
     @Autowired(required = false)
     @Qualifier("defaultInterceptor")
-    protected CatServerInterceptor defaultInterceptor;
+    protected CatServerInterceptor globalInterceptor;
 
     /**
      * 运行时拦截器组
      * */
     @Autowired(required = false)
-    protected List<CatInterceptorGroup> interceptorGroups;
+    protected List<CatInterceptorGroup> globalInterceptorGroups;
 
 
 
     @Override
     public void afterPropertiesSet() {
-        if( defaultInterceptor == null ){
-            this.defaultInterceptor = CatServerDefaults.DEFAULT_INTERCEPTOR;
+        if( globalInterceptor == null ){
+            this.globalInterceptor = CatServerDefaults.DEFAULT_INTERCEPTOR;
         }
-        if( interceptorGroups == null ){
-            this.interceptorGroups = new ArrayList<>(0);
+        if( globalInterceptorGroups == null ){
+            this.globalInterceptorGroups = new ArrayList<>(0);
         }
     }
 
@@ -69,7 +69,7 @@ public class CatServerConfiguration implements InitializingBean {
      * 默认的响应处理
      * */
     public Class<? extends CatResultHandler> getResultHandler(AbstractResponesWrapper wrapperHandler){
-        return wrapperHandler != null ? DefaultWrapperResultHandler.class : CatResultHandler.Default.class;
+        return wrapperHandler != null ? SimpleWrapperResultHandler.class : CatResultHandler.Default.class;
     }
     
 
@@ -83,8 +83,8 @@ public class CatServerConfiguration implements InitializingBean {
      * 
      * CatServerInterceptor.Off 关闭所有拦截器，包括运行时拦截器。
      * */
-    public CatServerInterceptor getDefaultInterceptor(){
-        return defaultInterceptor;
+    public CatServerInterceptor getServerInterceptor(){
+        return globalInterceptor;
     }
 
 
@@ -92,7 +92,7 @@ public class CatServerConfiguration implements InitializingBean {
      * 全局拦截器组，在运行时匹配。
      * */
     public List<CatInterceptorGroup> getInterceptorGroup(){
-        return interceptorGroups;
+        return globalInterceptorGroups;
     }
 
 }

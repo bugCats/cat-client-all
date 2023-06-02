@@ -3,11 +3,8 @@ package cc.bugcat.catserver.asm;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
-import org.springframework.cglib.core.DefaultNamingPolicy;
-import org.springframework.cglib.core.Predicate;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

@@ -3,9 +3,9 @@ package cc.bugcat.catclient.scanner;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatClientProvider;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
-import cc.bugcat.catclient.spi.DefineCatClients;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -98,7 +98,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         beanRegistry.scannerByClass(CatClientFactory.class);
 
         //扫描所有 CatMethodInterceptor 子类
-        beanRegistry.scannerByClass(CatSendInterceptors.class);
+        beanRegistry.scannerByClass(CatSendInterceptor.class);
 
         // CatClientConfiguration全局默认配置
         beanRegistry.registerBean(annoAttrs.getClass("configuration"));
@@ -121,7 +121,7 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     private int registerCatClient(Class[] inters, BeanDefinitionRegistry registry) {
         int count = 0;
         for ( Class<?> inter : inters ){
-            if( DefineCatClients.class.isAssignableFrom(inter) ){ // interface是CatClients子类，表示使用method批量注册
+            if( CatClientProvider.class.isAssignableFrom(inter) ){ // interface是CatClients子类，表示使用method批量注册
                 Method[] methods = inter.getMethods();
                 for ( Method method : methods ) {
                     CatClient catClient = method.getAnnotation(CatClient.class);

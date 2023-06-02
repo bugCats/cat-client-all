@@ -31,7 +31,7 @@ public class SignRemoteTest {
         prop.put("demo.apikey", "签名示例密钥");
 
         CatClientDepend clientDepend = CatClientDepend.builder()
-                .defaultClientFactory(new SignFactory())
+                .clientFactory(new SignFactory())
                 .build();
 
         remote = CatClientBuilders.builder(SignRemote.class)

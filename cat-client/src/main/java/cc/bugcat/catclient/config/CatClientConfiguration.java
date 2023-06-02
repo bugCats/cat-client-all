@@ -3,17 +3,16 @@ package cc.bugcat.catclient.config;
 import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatLogsMod;
-import cc.bugcat.catclient.spi.*;
-import cc.bugcat.catclient.utils.CatClientUtil;
+import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.spi.CatPayloadResolver;
+import cc.bugcat.catclient.spi.CatLoggerProcessor;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatRestHttp;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-import com.sun.org.apache.regexp.internal.RE;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.util.List;
 
 
 /**
@@ -38,7 +37,7 @@ public class CatClientConfiguration implements InitializingBean {
     /**
      * 默认http拦截器类
      * */
-    public static final Class<? extends CatSendInterceptors> METHOD_INTERCEPTOR = CatSendInterceptors.class;
+    public static final Class<? extends CatSendInterceptor> METHOD_INTERCEPTOR = CatSendInterceptor.class;
 
     /**
      * 默认打印日志方案
@@ -58,26 +57,28 @@ public class CatClientConfiguration implements InitializingBean {
 
 
     @Autowired(required = false)
-    protected CatHttp defaultCatHttp;
+    protected CatHttp globalCatHttp;
     
     @Autowired(required = false)
-    protected CatJsonResolver defaultJsonResolver;
+    protected CatPayloadResolver globalJsonResolver;
     
     @Autowired(required = false)
-    protected CatLoggerProcessor defaultLoggerProcessor;
+    protected CatLoggerProcessor globalLoggerProcessor;
 
+    @Autowired(required = false)
+    protected ObjectMapper globalObjectMapper;
     
     
     @Override
     public void afterPropertiesSet() {
-        if( defaultCatHttp == null ){
-            defaultCatHttp = new CatRestHttp();
+        if( globalCatHttp == null ){
+            globalCatHttp = new CatRestHttp();
         }
-        if( defaultJsonResolver == null ){
-            defaultJsonResolver = new CatJacksonResolver();
+        if( globalJsonResolver == null ){
+            globalJsonResolver = new CatJacksonResolver(globalObjectMapper);
         }
-        if( defaultLoggerProcessor == null ){
-            defaultLoggerProcessor = new CatLoggerProcessor(){};
+        if( globalLoggerProcessor == null ){
+            globalLoggerProcessor = new CatLoggerProcessor(){};
         }
     }
 
@@ -125,7 +126,7 @@ public class CatClientConfiguration implements InitializingBean {
     /**
      * 默认的http发送拦截器
      * */
-    public Class<? extends CatSendInterceptors> getMethodInterceptor(){
+    public Class<? extends CatSendInterceptor> getMethodInterceptor(){
         return METHOD_INTERCEPTOR;
     }
 
@@ -134,7 +135,7 @@ public class CatClientConfiguration implements InitializingBean {
      * 建议为单例
      * */
     public CatHttp getCatHttp(){
-        return defaultCatHttp;
+        return globalCatHttp;
     }
 
 
@@ -142,8 +143,8 @@ public class CatClientConfiguration implements InitializingBean {
      * 默认序列化对象
      * 建议为单例
      * */
-    public CatJsonResolver getJsonResolver(){
-        return defaultJsonResolver;
+    public CatPayloadResolver getPayloadResolver(){
+        return globalJsonResolver;
     }
 
 
@@ -152,7 +153,7 @@ public class CatClientConfiguration implements InitializingBean {
      * 建议为单例
      * */
     public CatLoggerProcessor getLoggerProcessor(){
-        return defaultLoggerProcessor;
+        return globalLoggerProcessor;
     }
 
 }

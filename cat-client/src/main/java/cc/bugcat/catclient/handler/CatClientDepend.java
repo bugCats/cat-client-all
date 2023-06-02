@@ -4,7 +4,10 @@ import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
-import cc.bugcat.catclient.spi.*;
+import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
+import cc.bugcat.catclient.spi.SimpleCatClientFactory;
+import cc.bugcat.catclient.spi.SimpleCatSendInterceptor;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -49,21 +52,18 @@ public class CatClientDepend {
     /**
      * 全局默认的client工厂
      * */
-    private final CatClientFactory defaultClientFactory;
+    private final CatClientFactory clientFactory;
 
     /**
      * 全局默认的http方法拦截器
      * */
-    private final CatSendInterceptors defaultSendInterceptor;
-
-
-
+    private final CatSendInterceptor sendInterceptor;
 
     private CatClientDepend(Builder builder) {
         this.retryConfigurer = builder.retryConfigurer;
         this.clientConfig = builder.clientConfig;
-        this.defaultClientFactory = builder.defaultClientFactory;
-        this.defaultSendInterceptor = builder.defaultSendInterceptor;
+        this.clientFactory = builder.clientFactory;
+        this.sendInterceptor = builder.sendInterceptor;
         this.objectMethodInterceptor = new MethodInterceptor() {
             @Override
             public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -76,24 +76,18 @@ public class CatClientDepend {
     public CatHttpRetryConfigurer getRetryConfigurer() {
         return retryConfigurer;
     }
-
     public CatClientConfiguration getClientConfig() {
         return clientConfig;
     }
-
     public MethodInterceptor getObjectMethodInterceptor() {
         return objectMethodInterceptor;
     }
-
-    public CatClientFactory getDefaultClientFactory() {
-        return defaultClientFactory;
+    public CatClientFactory getClientFactory() {
+        return clientFactory;
     }
-
-    public CatSendInterceptors getDefaultSendInterceptor() {
-        return defaultSendInterceptor;
+    public CatSendInterceptor getSendInterceptor() {
+        return sendInterceptor;
     }
-
-
 
     /**
      * 如果使用main方法调用，需要手动创建该对象
@@ -106,14 +100,10 @@ public class CatClientDepend {
     public static class Builder {
 
         private CatHttpRetryConfigurer retryConfigurer;
-
         private CatClientConfiguration clientConfig;
-
-        private CatClientFactory defaultClientFactory;
-
-        private CatSendInterceptors defaultSendInterceptor;
-
-
+        private CatClientFactory clientFactory;
+        private CatSendInterceptor sendInterceptor;
+        
         public Builder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
             this.retryConfigurer = retryConfigurer;
             return this;
@@ -124,13 +114,13 @@ public class CatClientDepend {
             return this;
         }
 
-        public Builder defaultClientFactory(CatClientFactory defaultClientFactory) {
-            this.defaultClientFactory = defaultClientFactory;
+        public Builder clientFactory(CatClientFactory clientFactory) {
+            this.clientFactory = clientFactory;
             return this;
         }
 
-        public Builder defaultSendInterceptor(CatSendInterceptors defaultSendInterceptor) {
-            this.defaultSendInterceptor = defaultSendInterceptor;
+        public Builder sendInterceptor(CatSendInterceptor sendInterceptor) {
+            this.sendInterceptor = sendInterceptor;
             return this;
         }
 
@@ -145,16 +135,18 @@ public class CatClientDepend {
                 clientConfig.afterPropertiesSet();
             }
 
-            if( defaultSendInterceptor == null ){
-                defaultSendInterceptor = new DefaultCatSendInterceptor();
+            if( sendInterceptor == null ){
+                sendInterceptor = new SimpleCatSendInterceptor();
             }
 
-            if( defaultClientFactory == null ){
-                defaultClientFactory = new DefaultCatClientFactory();
+            if( clientFactory == null ){
+                clientFactory = new SimpleCatClientFactory();
             }
-
+            
             return new CatClientDepend(this);
         }
+
+
     }
 
 

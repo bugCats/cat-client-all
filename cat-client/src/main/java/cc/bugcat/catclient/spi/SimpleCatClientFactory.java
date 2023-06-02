@@ -11,11 +11,11 @@ import java.util.function.Supplier;
  *
  * @author bugcat
  * */
-public class DefaultCatClientFactory implements CatClientFactory {
+public class SimpleCatClientFactory implements CatClientFactory {
 
 
     private CatClientConfiguration configuration;
-    private CatResultProcessor defaultResultHandler;
+    private CatResultProcessor simpleResultHandler;
 
     /**
      * 全局配置对象
@@ -23,7 +23,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
     @Override
     public void setClientConfiguration(CatClientConfiguration clientConfiguration) {
         this.configuration = clientConfiguration;
-        this.defaultResultHandler = new DefaultResultHandler();
+        this.simpleResultHandler = new SimpleResultHandler();
     }
 
     /**
@@ -38,8 +38,8 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * 对象序列化与反序列化
      * */
     @Override
-    public CatJsonResolver getJsonResolver() {
-        return configuration.getJsonResolver();
+    public CatPayloadResolver getPayloadResolver() {
+        return configuration.getPayloadResolver();
     }
 
     /**
@@ -56,7 +56,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * */
     @Override
     public CatResultProcessor getResultHandler() {
-        return defaultResultHandler;
+        return simpleResultHandler;
     }
 
     /**
@@ -65,7 +65,7 @@ public class DefaultCatClientFactory implements CatClientFactory {
      * */
     @Override
     public Supplier<CatSendProcessor> newSendHandler() {
-        return () -> new DefaultSendHandler();
+        return () -> new SimpleSendHandler();
     }
 
 }

@@ -1,7 +1,7 @@
 package cc.bugcat.catclient.handler;
 
 import cc.bugcat.catclient.config.CatClientConfiguration;
-import cc.bugcat.catclient.spi.CatJsonResolver;
+import cc.bugcat.catclient.spi.CatPayloadResolver;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
@@ -14,11 +14,11 @@ import java.lang.reflect.Type;
 
 /**
  * jackson 序列化与反序列化
- * 默认序列化工具，可在{@link CatClientConfiguration#getJsonResolver()}指定
+ * 默认序列化工具，可在{@link CatClientConfiguration#getPayloadResolver()}指定
  *
  * @author bugcat
  * */
-public class CatJacksonResolver implements CatJsonResolver{
+public class CatJacksonResolver implements CatPayloadResolver {
 
 
     private ObjectMapper mapper;

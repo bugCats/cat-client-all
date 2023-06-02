@@ -2,11 +2,12 @@ package cc.bugcat.catclient.utils;
 
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
-import cc.bugcat.catclient.spi.DefineCatClients;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
+import cc.bugcat.catclient.spi.CatClientProvider;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.env.Environment;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,16 +29,16 @@ public abstract class CatClientBuilders {
     }
 
     /**
-     * 通过DefineCatClients + interface创建
+     * 通过CatClientProvider + interface创建
      * */
-    public static <T> CatClientBuilder<T> builder(Class<? extends DefineCatClients> defineClients, Class<T> interfaceClass){
+    public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> defineClients, Class<T> interfaceClass){
         return CatClientBuilder.builder(defineClients, interfaceClass);
     }
 
     /**
-     * 通过DefineCatClients创建
+     * 通过CatClientProvider创建
      * */
-    public static DefineCatClientBuilder define(Class<? extends DefineCatClients> defineClients){
+    public static DefineCatClientBuilder define(Class<? extends CatClientProvider> defineClients){
         return DefineCatClientBuilder.builder(defineClients);
     }
 
@@ -59,7 +60,7 @@ public abstract class CatClientBuilders {
             return builder;
         }
 
-        public static <T> CatClientBuilder<T> builder(Class<? extends DefineCatClients> defineClients, Class<T> interfaceClass){
+        public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> defineClients, Class<T> interfaceClass){
             CatClientBuilder<T> builder = new CatClientBuilder();
             builder.interfaceClass = interfaceClass;
             for ( Method method : defineClients.getMethods() ) {
@@ -112,14 +113,14 @@ public abstract class CatClientBuilders {
 
     public static final class DefineCatClientBuilder {
 
-        private Class<? extends DefineCatClients> defineClients;
+        private Class<? extends CatClientProvider> defineClients;
         private Properties properties;
         private CatClientDepend clientDepend;
         private Predicate<Class> filter;
 
         public DefineCatClientBuilder() { }
 
-        public static DefineCatClientBuilder builder(Class<? extends DefineCatClients> defineClients){
+        public static DefineCatClientBuilder builder(Class<? extends CatClientProvider> defineClients){
             DefineCatClientBuilder builder = new DefineCatClientBuilder();
             builder.defineClients = defineClients;
             return builder;

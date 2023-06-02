@@ -1,11 +1,11 @@
 package cc.bugcat.example.catclient.serverApi;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catclient.spi.DefineCatClients;
+import cc.bugcat.catclient.spi.CatClientProvider;
 import cc.bugcat.example.api.UserService;
 import cc.bugcat.example.api.FaceDemoService;
 
-public interface Config extends DefineCatClients {
+public interface Config extends CatClientProvider {
 
     @CatClient(host = "${core-server.remoteApi}", connect = 3000, socket = 3000)
     UserService userService();

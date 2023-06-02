@@ -41,6 +41,13 @@ public class CatClientUtil implements ApplicationContextAware {
 
 
 
+    public static Object getBean(String name){
+        if( context.containsBean(name) ){
+            return context.getBean(name);
+        }
+        return null;
+    }
+    
     /**
      * 优先从Spring容器中获取
      * 其次catClinetMap

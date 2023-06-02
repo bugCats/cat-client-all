@@ -67,14 +67,14 @@ public class CatClientLogger {
         boolean printIn = CatLogsMod.All == logsMod || CatLogsMod.In == logsMod;
         boolean printOut = CatLogsMod.All == logsMod || CatLogsMod.Out == logsMod;
 
-        if( isSucc() ){
+        if( isSuccess() ){
             logInfo.put("@succ", "1");
         } else {
             logInfo.put("@succ", "0");
             logInfo.put("@error", errorMessge != null ? errorMessge : String.valueOf(exception.getStatusCode()) + " - " + exception.getStatusText());
 
-            printIn = !printIn && (CatLogsMod.All2 == logsMod || CatLogsMod.In2 == logsMod);
-            printOut = !printOut && (CatLogsMod.All2 == logsMod || CatLogsMod.Out2 == logsMod);
+            printIn = printIn || (CatLogsMod.All2 == logsMod || CatLogsMod.In2 == logsMod);
+            printOut = printOut || (CatLogsMod.All2 == logsMod || CatLogsMod.Out2 == logsMod);
         }
 
         String logs = JSONObject.toJSONString(logInfo)
@@ -87,14 +87,14 @@ public class CatClientLogger {
 
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
-    public boolean isSucc(){
+    public boolean isSuccess(){
         return exception == null && errorMessge == null;
     }
 
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
     public boolean isFail(){
-        return !isSucc();
+        return !isSuccess();
     }
 
     @JsonIgnore

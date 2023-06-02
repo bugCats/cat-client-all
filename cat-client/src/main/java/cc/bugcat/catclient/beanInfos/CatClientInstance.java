@@ -1,12 +1,12 @@
 package cc.bugcat.catclient.beanInfos;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientBuilders;
+import cc.bugcat.catface.annotation.CatNote;
 
 import java.lang.annotation.Annotation;
 
@@ -14,7 +14,7 @@ import java.lang.annotation.Annotation;
  * 动态创建{@code @CatClient}实例。
  * 配合{@link CatClientBuilders}使用。
  * */
-public abstract class CatClients implements CatClient {
+public abstract class CatClientInstance implements CatClient {
 
     @Override
     public String value() {
@@ -31,8 +31,8 @@ public abstract class CatClients implements CatClient {
     }
 
     @Override
-    public Class<? extends CatSendInterceptors> interceptor() {
-        return CatSendInterceptors.class;
+    public Class<? extends CatSendInterceptor> interceptor() {
+        return CatSendInterceptor.class;
     }
 
     @Override
@@ -61,7 +61,7 @@ public abstract class CatClients implements CatClient {
     }
 
     @Override
-    public Class<? extends Annotation> annotationType() {
+    public final Class<? extends Annotation> annotationType() {
         return CatClient.class;
     };
 }

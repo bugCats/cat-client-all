@@ -5,6 +5,6 @@ package cc.bugcat.catclient.spi;
  *
  * @author bugcat
  * */
-public class DefaultSendHandler extends CatSendProcessor {
+public class SimpleSendHandler extends CatSendProcessor {
 
 }

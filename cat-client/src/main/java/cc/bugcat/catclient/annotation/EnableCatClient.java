@@ -1,12 +1,16 @@
 package cc.bugcat.catclient.annotation;
 
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.spi.DefineCatClients;
-import cc.bugcat.catclient.scanner.CatClientScannerRegistrar;
 import cc.bugcat.catclient.config.CatClientConfiguration;
+import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
+import cc.bugcat.catclient.scanner.CatClientScannerRegistrar;
+import cc.bugcat.catclient.spi.CatClientProvider;
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
 
@@ -34,9 +38,9 @@ public @interface EnableCatClient {
      *
      * 1. classes是普通的interface类，则指定interface类创建客户端；
      *
-     * 2、classes是{@link DefineCatClients}的子类，并且子类方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；
+     * 2、classes是{@link CatClientProvider}的子类，并且子类方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；
      *
-     * @see DefineCatClients
+     * @see CatClientProvider
      * */
     Class[] classes() default {};
 

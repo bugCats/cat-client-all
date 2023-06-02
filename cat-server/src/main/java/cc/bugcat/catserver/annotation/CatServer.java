@@ -2,13 +2,18 @@ package cc.bugcat.catserver.annotation;
 
 
 import cc.bugcat.catface.annotation.CatNote;
-import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.spi.CatResultHandler;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
 

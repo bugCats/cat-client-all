@@ -2,7 +2,7 @@ package cc.bugcat.example.catclient.token;
 
 import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatHttpPoint;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -16,7 +16,7 @@ import org.springframework.util.MultiValueMap;
  * http拦截器
  * */
 @Component
-public class TokenInterceptor implements CatSendInterceptors {
+public class TokenInterceptor implements CatSendInterceptor {
 
     /**
      * 使用拦截器修改参数

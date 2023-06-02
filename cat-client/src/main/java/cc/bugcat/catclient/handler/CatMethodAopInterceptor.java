@@ -5,8 +5,9 @@ import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatResultProcessor;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
+import cc.bugcat.catface.handler.CatContextHolder;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -28,10 +29,11 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
 
-    private final CatSendInterceptors methodInterceptor;
+    private final CatSendInterceptor methodInterceptor;
     private final CatHttpRetryConfigurer retryConfigurer;
     private final CatClientFactoryAdapter factoryAdapter;
 
+    
     private CatMethodAopInterceptor(Builder builder){
         this.methodHandle = builder.methodHandle;
         this.clientInfo = builder.clientInfo;
@@ -93,26 +95,27 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 .factoryAdapter(factoryAdapter)
                 .retryConfigurer(retryConfigurer)
                 .build();
-        
+
         try {
+            //设置线程上下文
+            CatContextHolder.setContext(context);
 
             //设置参数
             context.executeConfigurationResolver(parameter);
 
             //处理额外参数
             context.executeVariableResolver();
-            
 
             //执行发送http请求
             respStr = doRequest(context, resultHandler);
 
             //执行字符串转对象，此时对象，为方法的返回值类型
             respObj = resultHandler.resultToBean(respStr, context);
-
+            
         } catch ( Throwable throwable ) {
 
             // http异常，或者反序列化异常了
-            context.setException(throwable);
+            CatContextHolder.setException(throwable);
 
             if ( clientInfo.isFallbackMod() ) {
                 //开启了异常回调模式，执行自定义http异常处理
@@ -177,10 +180,9 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
 
             } finally {
 
-                // 在最后的最后，打印日志，移除CatClientContextHolder对象
+                // 在最后的最后，打印日志，移除CatContextHolder对象
                 context.printLog();
-                context.remove();
-
+                CatContextHolder.remove();
             }
         }
 
@@ -238,7 +240,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         private CatClientInfo clientInfo;
         private CatMethodInfo methodInfo;
         private Method method;
-        private CatSendInterceptors methodInterceptor;
+        private CatSendInterceptor methodInterceptor;
         private CatHttpRetryConfigurer retryConfigurer;
         private CatClientFactoryAdapter factoryAdapter;
 
@@ -250,7 +252,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             this.methodInfo = methodInfo;
             return this;
         }
-        public Builder methodInterceptor(CatSendInterceptors methodInterceptor) {
+        public Builder methodInterceptor(CatSendInterceptor methodInterceptor) {
             this.methodInterceptor = methodInterceptor;
             return this;
         }
@@ -269,7 +271,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             this.factoryAdapter = factoryAdapter;
             return this;
         }
-
+        
         public CatMethodAopInterceptor build(){
             if ( method.isDefault() ) {
                 try {

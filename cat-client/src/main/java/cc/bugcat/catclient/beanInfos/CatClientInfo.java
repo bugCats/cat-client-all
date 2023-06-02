@@ -1,18 +1,23 @@
 package cc.bugcat.catclient.beanInfos;
 
 import cc.bugcat.catclient.annotation.CatClient;
-import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatClientDepend;
-import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
 import cc.bugcat.catclient.handler.CatLogsMod;
+import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.handler.CatApiInfo;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * interface上的{@link CatClient}注解描述信息
@@ -66,7 +71,7 @@ public final class CatClientInfo {
     /**
      * http拦截器
      * */
-    private final Class<? extends CatSendInterceptors> interceptorClass;
+    private final Class<? extends CatSendInterceptor> interceptorClass;
 
     /**
      * 是否启用了fallback模式
@@ -94,11 +99,10 @@ public final class CatClientInfo {
 
 
 
+    private CatClientInfo(CatClient client, CatClientApiInfo apiInfo, Properties envProp){
 
-    private CatClientInfo(CatClient client, Map<String, Object> interfaceAttributes, Properties envProp){
-
-        this.clientDepend = (CatClientDepend) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS);
-        this.serviceName = (String) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME);
+        this.clientDepend = apiInfo.getDepends();
+        this.serviceName = apiInfo.getServiceName();
 
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
 
@@ -135,7 +139,7 @@ public final class CatClientInfo {
         this.interceptorClass = CatToosUtil.comparator(CatClientConfiguration.METHOD_INTERCEPTOR, Arrays.asList(client.interceptor()), clientConfig.getMethodInterceptor());
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
+        CatResponesWrapper responesWrapper = apiInfo.getWrapper();
         if ( responesWrapper != null ){
             Class<? extends AbstractResponesWrapper> wrapper = CatToosUtil.comparator(CatClientConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), clientConfig.getWrapper()), null);
             this.wrapperHandler = wrapper != null ? AbstractResponesWrapper.getResponesWrapper(wrapper) : null;
@@ -152,7 +156,7 @@ public final class CatClientInfo {
             this.fallbackMod = true;
         }
 
-        this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
+        this.catface = apiInfo.getCatface();
     }
 
 
@@ -168,12 +172,34 @@ public final class CatClientInfo {
         if( catClient == null ){
             catClient = (CatClient) interfaceClass.getAnnotation(CatClient.class);
         }
-        Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(interfaceClass);
-        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_SERVICE_NAME, interfaceClass.getSimpleName());
-        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, depends);
-        CatClientInfo clientInfo = new CatClientInfo(catClient, interfaceAttributes, envProp);
+        CatClientApiInfo apiInfo = CatToosUtil.getAttributes(interfaceClass, CatClientApiInfo::new);
+        apiInfo.setServiceName(interfaceClass.getSimpleName());
+        apiInfo.setDepends(depends);
+        CatClientInfo clientInfo = new CatClientInfo(catClient, apiInfo, envProp);
         return clientInfo;
     }
+
+
+    private static class CatClientApiInfo extends CatApiInfo {
+        private String serviceName;
+        private CatClientDepend depends;
+
+        public String getServiceName() {
+            return serviceName;
+        }
+        public void setServiceName(String serviceName) {
+            this.serviceName = serviceName;
+        }
+
+        public CatClientDepend getDepends() {
+            return depends;
+        }
+        public void setDepends(CatClientDepend depends) {
+            this.depends = depends;
+        }
+    }
+
+
 
 
     public CatClientDepend getClientDepend() {
@@ -200,7 +226,7 @@ public final class CatClientInfo {
     public Class<? extends CatClientFactory> getFactoryClass() {
         return factoryClass;
     }
-    public Class<? extends CatSendInterceptors> getInterceptorClass() {
+    public Class<? extends CatSendInterceptor> getInterceptorClass() {
         return interceptorClass;
     }
     public boolean isFallbackMod() {
@@ -215,4 +241,8 @@ public final class CatClientInfo {
     public Catface getCatface() {
         return catface;
     }
+
+
+
+
 }

@@ -8,7 +8,7 @@ import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.apache.commons.logging.Log;
@@ -96,7 +96,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         CatClientFactory clientFactory = getAndExectue((Class<CatClientFactory>)clientInfo.getFactoryClass(), bean -> {
             if( bean == null ){
-                bean = clientDepend.getDefaultClientFactory();
+                bean = clientDepend.getClientFactory();
             }
             bean.setClientConfiguration(clientDepend.getClientConfig());
             return bean;
@@ -104,9 +104,9 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         final MethodInterceptor objectMethodInterceptor = clientDepend.getObjectMethodInterceptor();
         final CatHttpRetryConfigurer retryConfigurer = clientDepend.getRetryConfigurer();
-        final CatSendInterceptors methodInterceptor = getAndExectue((Class<CatSendInterceptors>) clientInfo.getInterceptorClass(), bean -> {
+        final CatSendInterceptor methodInterceptor = getAndExectue((Class<CatSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
             if( bean == null ){
-                bean = clientDepend.getDefaultSendInterceptor();
+                bean = clientDepend.getSendInterceptor();
             }
             return bean;
         });
@@ -174,6 +174,8 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         return builder.toString();
     }
 
+    
+    
     /***************************这些属性通过IOC注入进来，因此get set方法不能少*********************************/
 
 

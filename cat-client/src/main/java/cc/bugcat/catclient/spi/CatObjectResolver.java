@@ -33,7 +33,7 @@ public interface CatObjectResolver {
      * 默认使用fastjson工具类
      * @deprecated 不建议使用，可以采用post发送json字符串模式
      * */
-    public static class DefaultResolver implements CatObjectResolver {
+    public static class SimpleObjectResolver implements CatObjectResolver {
 
         /**
          * 复杂对象，转form表单形式

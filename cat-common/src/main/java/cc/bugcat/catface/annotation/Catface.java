@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  *
  * 开启精简模式，仅需要在interface上添加{@code @Catface}注解：
  *
- * Cat-Client客户端，使用DefineCatClients + @CatClient的方式，
+ * Cat-Client客户端，使用CatClientProvider + @CatClient的方式，
  *
  * 将该interface注册为客户端，其内在所有的方法，都会视为API请求，
  *

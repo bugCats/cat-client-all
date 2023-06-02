@@ -39,7 +39,7 @@ public class UserInterceptorConfig extends CatServerConfiguration {
     
 
     @Override
-    public CatServerInterceptor getDefaultInterceptor() {
+    public CatServerInterceptor getServerInterceptor() {
         return this.userDefualtInterceptor;
     }
 

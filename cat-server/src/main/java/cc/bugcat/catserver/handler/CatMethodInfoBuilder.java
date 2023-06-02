@@ -2,7 +2,10 @@ package cc.bugcat.catserver.handler;
 
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.spi.*;
+import cc.bugcat.catserver.spi.CatInterceptorGroup;
+import cc.bugcat.catserver.spi.CatParameterResolver;
+import cc.bugcat.catserver.spi.CatResultHandler;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.Type;
 import org.springframework.cglib.core.Signature;
@@ -93,7 +96,7 @@ public final class CatMethodInfoBuilder {
 
             } else if (CatServerInterceptor.class.equals(clazz) ) {
                 // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
-                handers.add(serverConfig.getDefaultInterceptor());
+                handers.add(serverConfig.getServerInterceptor());
 
             } else {
                 // CatServer上自定义拦截器

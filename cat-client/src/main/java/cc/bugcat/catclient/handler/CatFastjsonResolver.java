@@ -1,6 +1,6 @@
 package cc.bugcat.catclient.handler;
 
-import cc.bugcat.catclient.spi.CatJsonResolver;
+import cc.bugcat.catclient.spi.CatPayloadResolver;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.spi.CatTypeReference;
 import com.alibaba.fastjson.JSONObject;
@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
  *
  * @author bugcat
  * */
-public class CatFastjsonResolver implements CatJsonResolver{
+public class CatFastjsonResolver implements CatPayloadResolver {
 
 
     @Override

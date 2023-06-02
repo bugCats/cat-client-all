@@ -3,6 +3,7 @@ package cc.bugcat.catserver.beanInfos;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.handler.CatApiInfo;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
@@ -11,7 +12,13 @@ import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 
 /**
@@ -59,12 +66,11 @@ public class CatServerInfo {
 
 
 
-    private CatServerInfo(Class<?> serverClass, Map<String, Object> interfaceAttributes, Properties envProp) {
+    private CatServerInfo(Class<?> serverClass, CatServerApiInfo apiInfo, Properties envProp) {
 
         CatServer catServer = serverClass.getAnnotation(CatServer.class);
 
-        this.serverConfig = (CatServerConfiguration) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS);
-
+        this.serverConfig = apiInfo.getConfiguration();
         this.serverClass = serverClass;
 
         // 其他自定义参数、标记
@@ -92,7 +98,7 @@ public class CatServerInfo {
         this.interceptors = interceptors;
 
         //响应包装器类，如果是ResponesWrapper.default，代表没有设置
-        CatResponesWrapper responesWrapper = (CatResponesWrapper) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_WRAPPER);
+        CatResponesWrapper responesWrapper = apiInfo.getWrapper();
         if ( responesWrapper != null ){
             Class<? extends AbstractResponesWrapper> wrapper = CatToosUtil.comparator(CatServerConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), serverConfig.getWrapper()), null);
             this.wrapperHandler = wrapper != null ? AbstractResponesWrapper.getResponesWrapper(wrapper) : null;
@@ -102,23 +108,36 @@ public class CatServerInfo {
 
         this.resultHandler = CatToosUtil.comparator(CatServerConfiguration.RESULT_HANDLER, Arrays.asList(catServer.resultHandler()), serverConfig.getResultHandler(wrapperHandler));
 
-
         //是否启用精简模式
-        this.catface = (Catface) interfaceAttributes.get(CatToosUtil.INTERFACE_ATTRIBUTES_CATFACE);
+        this.catface = apiInfo.getCatface();
         this.isCatface = catface != null;
 
     }
 
 
     public final static CatServerInfo build(Class<?> serverClass, CatEnhancerDepend enhancerDepend) {
-        Map<String, Object> interfaceAttributes = CatToosUtil.getAttributes(serverClass);
-        interfaceAttributes.put(CatToosUtil.INTERFACE_ATTRIBUTES_DEPENDS, enhancerDepend.getServerConfig());
-        CatServerInfo serverInfo = new CatServerInfo(serverClass, interfaceAttributes, enhancerDepend.getEnvProp());
+        CatServerApiInfo apiInfo = CatToosUtil.getAttributes(serverClass, CatServerApiInfo::new);
+        apiInfo.setConfiguration(enhancerDepend.getServerConfig());
+        CatServerInfo serverInfo = new CatServerInfo(serverClass, apiInfo, enhancerDepend.getEnvProp());
         return serverInfo;
+    }
+    
+    
+    private static class CatServerApiInfo extends CatApiInfo {
+        private CatServerConfiguration configuration;
+        
+        public CatServerConfiguration getConfiguration() {
+            return configuration;
+        }
+        public void setConfiguration(CatServerConfiguration configuration) {
+            this.configuration = configuration;
+        }
     }
 
 
-    
+
+
+
     public CatServerConfiguration getServerConfig() {
         return serverConfig;
     }

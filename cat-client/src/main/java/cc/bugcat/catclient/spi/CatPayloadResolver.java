@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
  * @see CatSendProcessor#postVariableResolver(CatClientContextHolder)
  * @author bugcat
  * */
-public interface CatJsonResolver {
+public interface CatPayloadResolver {
 
     <T> T toJavaBean(String text, Type type);
 

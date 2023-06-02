@@ -2,7 +2,7 @@ package cc.bugcat.catclient.cloud;
 
 import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
-import cc.bugcat.catclient.spi.DefaultCatClientFactory;
+import cc.bugcat.catclient.spi.SimpleCatClientFactory;
 import cc.bugcat.catclient.spi.ServerChoose;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import org.springframework.beans.factory.InitializingBean;
@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * @author bugcat
  * */
 @Component
-public class CatClientCloudFactory extends DefaultCatClientFactory implements InitializingBean {
+public class CatClientCloudFactory extends SimpleCatClientFactory implements InitializingBean {
 
     @Autowired(required = false)
     private ServerChoose serverChoose;

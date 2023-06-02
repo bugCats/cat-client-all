@@ -11,7 +11,7 @@ import cc.bugcat.catclient.handler.CatHttpException;
  * 
  * @author bugcat
  * */
-public interface CatSendInterceptors {
+public interface CatSendInterceptor {
 
 
 

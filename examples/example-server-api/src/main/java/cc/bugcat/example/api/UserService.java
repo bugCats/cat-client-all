@@ -29,9 +29,9 @@ import org.springframework.web.bind.annotation.*;
  * CatClient 可以忽略，在客户端重新新建一个interface，继承UserService，在新interface上加@CatClient
  * 参见cc.bugcat.example.catclient.remote.ApiRemote4Ext
  *
- * 或者使用 CatClients 方式：
+ * 或者使用 CatClientProvider 方式：
  * <pre>
- * public interface Config extends CatClients {
+ * public interface Config extends CatClientProvider {
  *
  *      @CatClient(host = "${core-server.remoteApi}", getConnect = 3000, getSocket = 3000)
  *      UserService service();

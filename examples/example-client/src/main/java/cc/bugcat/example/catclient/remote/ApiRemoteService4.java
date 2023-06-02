@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * 注意，@CatClient 注解不在这里，而是在子代类上
  *
- * 如果使用DefineCatClients模式，会根据灵活
+ * 如果使用CatClientProvider模式，会根据灵活
  *
  * 单元测试类 {@link cc.bugcat.example.catclient.remote.ApiRemote4Test}
  *

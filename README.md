@@ -150,7 +150,7 @@ public class Application {
 + `configuration`：一些全局的默认配置项。http链接超时、日志记录方案、对象序列化与反序列化类、http请求类、自动拆包装器类等；
 + `classes`：指定客户端class进行注册，优先度高于包路径。class值分为2大类：
     1. 是普通的class，并且类上包含`@CatClient`注解，将该class注册成客户端；
-    2. 是**DefineCatClients**的子类，解析该子类中包含`@CatClient`注解的方法，将方法返回对象的class注册成客户端；
+    2. 是**CatClientProvider**的子类，解析该子类中包含`@CatClient`注解的方法，将方法返回对象的class注册成客户端；
     
  
 
@@ -177,10 +177,10 @@ public interface UserService {
 
 <br>
 
-方式二，通过**DefineCatClients**子类集中批量定义：  
+方式二，通过**CatClientProvider**子类集中批量定义：  
 
 ```java
-public interface RemoteApis extends DefineCatClients {
+public interface RemoteApis extends CatClientProvider {
 
     @CatClient(host = "${userService.remoteApi}", connect = 3000, socket = 3000)
     UserService userService();
@@ -343,7 +343,7 @@ Void saveUser(@CatNote("req") @RequestBody UserInfo user);
 通过实现该接口，或者继承`DefaultCatClientFactory`，可以修改：
 
 + `CatHttp`：http请求工具类，默认使用RestTemplate；
-+ `CatJsonResolver`：对象序列化与反序列化类，默认使用jackson；
++ `CatPayloadResolver`：对象序列化与反序列化类，默认使用jackson；
 + `CatLoggerProcessor`：打印日志的控制类；默认使用apache slf4j；
 + `CatResultProcessor`：http响应处理类；
 + `CatSendProcessor`：http参数处理类；
@@ -362,11 +362,11 @@ http请求工具类，默认使用RestTemplate；优选从Srping容器中获取R
 
 <br><br>
 
-##### CatJsonResolver
+##### CatPayloadResolver
 
 对象转字符串、字符串转对象处理类，默认使用Jackson框架；可以在`CatClientConfiguration#getJsonResolver()`指定为全局。
 
-实现`cc.bugcat.catclient.spi.CatJsonResolver`接口。`toSendString`方法也可以用于对象转XML。
+实现`cc.bugcat.catclient.spi.CatPayloadResolver`接口。`toSendString`方法也可以用于对象转XML。
 
 注意：默认情况下，如果入参实现了`Stringable`，会优先使用入参自带的序列化方法。
 
@@ -388,7 +388,7 @@ http请求工具类，默认使用RestTemplate；优选从Srping容器中获取R
 
 http请求拦截器，可以用于修改http请求配置、http请求入参、已经http响应。
 
-实现`cc.bugcat.catclient.spi.CatSendInterceptors`接口。
+实现`cc.bugcat.catclient.spi.CatSendInterceptor`接口。
 
 `executeConfigurationResolver`方法，可以对`CatSendProcessor#postConfigurationResolver()`进行环绕增强。<br>
 可以修改与http环境相关的配置，例如：请求地址、请求头、读取超时、日志方案等；
@@ -926,9 +926,9 @@ public interface FaceDemoService {
 
 ```java
 /**
- * 使用DefineCatClients方式定义客户端，避免污染FaceDemoService类
+ * 使用CatClientProvider方式定义客户端，避免污染FaceDemoService类
  * */
-public interface FaceConfig extends DefineCatClients {
+public interface FaceConfig extends CatClientProvider {
     
     @CatClient(host = "${core-server.remoteApi}", connect = -1, socket = -1)
     FaceDemoService faceDemoService();

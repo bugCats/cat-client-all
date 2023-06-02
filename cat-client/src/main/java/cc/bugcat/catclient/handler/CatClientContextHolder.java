@@ -5,9 +5,9 @@ import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatResultProcessor;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
-import cc.bugcat.catface.utils.CatToosUtil;
+import cc.bugcat.catface.handler.CatContextHolder;
 
 import java.util.List;
 
@@ -22,18 +22,14 @@ import java.util.List;
  * */
 public class CatClientContextHolder {
 
-    private static ThreadLocal<CatClientContextHolder> threadLocal = new ThreadLocal<>();
 
     /**
      * 在同一个线程中可以获取
      * */
     public static CatClientContextHolder getContextHolder() {
-        return threadLocal.get();
+        return CatContextHolder.currentContext(CatClientContextHolder.class);
     }
     
-    protected void remove() {
-        threadLocal.remove();
-    }
 
     /**
      * http原始响应内容，不一定有值
@@ -47,29 +43,19 @@ public class CatClientContextHolder {
      * */
     private Object result;
 
-    /**
-     * 进入异常流程时，存储异常信息
-     * */
-    private Throwable throwable;
-
-
     
     public String getResponseBody() {
         return responseBody;
     }
-
+    public Throwable getException() {
+        return CatContextHolder.currentException();
+    }
+    
     public Object getResult() {
         return result;
     }
     public void setResult(Object result) {
         this.result = result;
-    }
-
-    public Throwable getException() {
-        return this.throwable;
-    }
-    public void setException(Throwable error) {
-        this.throwable = CatToosUtil.getCause(error);
     }
 
     
@@ -79,7 +65,7 @@ public class CatClientContextHolder {
     private final CatMethodInfo methodInfo;
     private final CatClientFactoryAdapter factoryAdapter;
     private final CatHttpRetryConfigurer retryConfigurer;
-    private final CatSendInterceptors interceptor;
+    private final CatSendInterceptor interceptor;
     
     protected CatClientContextHolder(CatClientContextHolderBuilder builder) {
         this.sendHandler = builder.sendHandler;
@@ -88,7 +74,6 @@ public class CatClientContextHolder {
         this.interceptor = builder.interceptor;
         this.factoryAdapter = builder.factoryAdapter;
         this.retryConfigurer = builder.retryConfigurer;
-        threadLocal.set(this);
     }
 
 
@@ -105,7 +90,7 @@ public class CatClientContextHolder {
     /**
      * 2、http参数处理切入点
      * */
-    protected void executeVariableResolver(){
+    protected void executeVariableResolver() {
         interceptor.executeVariableResolver(this, () -> {
             CatSendProcessor sendHandler = this.getSendHandler();
             sendHandler.doVariableResolver(this);
@@ -159,7 +144,7 @@ public class CatClientContextHolder {
     protected static class CatClientContextHolderBuilder {
         private CatClientInfo clientInfo;
         private CatMethodInfo methodInfo;
-        private CatSendInterceptors interceptor;
+        private CatSendInterceptor interceptor;
         private CatSendProcessor sendHandler;
         private CatClientFactoryAdapter factoryAdapter;
         private CatHttpRetryConfigurer retryConfigurer;
@@ -174,7 +159,7 @@ public class CatClientContextHolder {
             return this;
         }
 
-        public CatClientContextHolderBuilder interceptor(CatSendInterceptors interceptor) {
+        public CatClientContextHolderBuilder interceptor(CatSendInterceptor interceptor) {
             this.interceptor = interceptor;
             return this;
         }

@@ -1,14 +1,21 @@
 package cc.bugcat.catclient.annotation;
 
-import cc.bugcat.catclient.spi.*;
-import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
-import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.config.CatClientConfiguration;
+import cc.bugcat.catclient.handler.CatLogsMod;
+import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
+import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatClientProvider;
+import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catface.annotation.CatNote;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 
 /**
@@ -19,7 +26,7 @@ import java.lang.annotation.*;
  *
  *  1、使用{@link EnableCatClient#value()}开启包自动扫描
  *  2、使用{@link EnableCatClient#classes()}指定客户端
- *  3、使用{@link EnableCatClient#classes()} + {@link DefineCatClients}批量定义
+ *  3、使用{@link EnableCatClient#classes()} + {@link CatClientProvider}批量定义
  *
  * 注解属性的实际默认值，可以通过{@link CatClientConfiguration}修改
  *
@@ -58,7 +65,7 @@ public @interface CatClient {
      * http发送拦截器
      * 可以添加日志、修改入参签名、token等处理
      * */
-    Class<? extends CatSendInterceptors> interceptor() default CatSendInterceptors.class;
+    Class<? extends CatSendInterceptor> interceptor() default CatSendInterceptor.class;
 
 
     /**
@@ -106,5 +113,5 @@ public @interface CatClient {
      * */
     CatNote[] tags() default {};
 
-
+    
 }

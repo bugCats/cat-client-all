@@ -6,7 +6,7 @@ import cc.bugcat.catface.spi.AbstractResponesWrapper;
 /**
  * 存在包装器类默认情况
  * */
-public class DefaultWrapperResultHandler implements CatResultHandler {
+public class SimpleWrapperResultHandler implements CatResultHandler {
 
     private AbstractResponesWrapper wrapperHandler;
 

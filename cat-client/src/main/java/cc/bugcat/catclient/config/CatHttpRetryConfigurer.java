@@ -5,9 +5,13 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -149,9 +153,10 @@ public class CatHttpRetryConfigurer implements InitializingBean {
                 } else if( exception.contains(",any,") || exception.contains(",*,")){
                     exception = "*";
                 } else {
+                    ClassLoader classLoader = this.getClass().getClassLoader();
                     for(String ex : exception.split(",")){
                         if( CatToosUtil.isNotBlank(ex) ){
-                            Class clazz = Class.forName(ex.trim());
+                            Class clazz = classLoader.loadClass(ex.trim());
                             exceptionCode.add(clazz);
                         }
                     }

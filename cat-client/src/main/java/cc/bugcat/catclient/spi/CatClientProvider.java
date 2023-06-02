@@ -9,7 +9,7 @@ import cc.bugcat.catclient.annotation.CatClient;
  *
  * 
  * <pre>
- *  public interface RemoteApis extends DefineCatClients {
+ *  public interface RemoteApis extends CatClientProvider {
  *
  *      //注册UserService为客户端
  *      @CatClient(host = "${userService.remoteApi}", connect = 3000, socket = 3000)
@@ -35,7 +35,7 @@ import cc.bugcat.catclient.annotation.CatClient;
  *
  * @author bugcat
  * */
-public interface DefineCatClients {
+public interface CatClientProvider {
 
     
 
@@ -50,7 +50,7 @@ public interface DefineCatClients {
     }
     
     
-    public interface RemoteApis extends DefineCatClients {
+    public interface RemoteApis extends CatClientProvider {
     
         @CatClient(host = "${userService.remoteApi}", connect = 3000, socket = 3000)
         UserService userService();

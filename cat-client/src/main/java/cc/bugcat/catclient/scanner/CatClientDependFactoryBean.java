@@ -4,7 +4,7 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
-import cc.bugcat.catclient.spi.CatSendInterceptors;
+import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 客户端前置依赖项管理。
  *
- * 在构建客户端时，动态从ApplicationContext容器中获取依赖组件，这样会导致有些情况，客户端比依赖组件更先加载，导致最终使用了默认值的问题。
+ * 在构建客户端时，动态从ApplicationContext容器中获取依赖组件，这样会导致有些情况，客户端比依赖组件更先加载，最终使用了默认值的问题。
  * 
  * 因此，所有的客户端前置仅依赖CatClientDepend，而使用CatClientDependFactoryBean来创建CatClientDepend，
  * 把真实的所有前置依赖，在CatClientDependFactoryBean预加载：
@@ -43,10 +43,9 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     private List<CatClientFactory> clientFactories;
 
     @Autowired
-    private List<CatSendInterceptors> sendInterceptors;
-
+    private List<CatSendInterceptor> sendInterceptors;
     
-
+    
     @Override
     public boolean isSingleton() {
         return true;
@@ -58,9 +57,8 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     }
 
 
-
     @Override
-    protected CatClientDepend createInstance() throws Exception {
+    protected CatClientDepend createInstance() {
         CatClientDepend clientDepend = CatClientDepend.builder()
                 .retryConfigurer(retryConfigurer)
                 .clientConfig(clientConfig)

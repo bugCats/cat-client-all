@@ -1,6 +1,11 @@
 package cc.bugcat.catclient.handler;
 
-import cc.bugcat.catclient.spi.*;
+import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatHttp;
+import cc.bugcat.catclient.spi.CatPayloadResolver;
+import cc.bugcat.catclient.spi.CatLoggerProcessor;
+import cc.bugcat.catclient.spi.CatResultProcessor;
+import cc.bugcat.catclient.spi.CatSendProcessor;
 
 import java.util.function.Supplier;
 
@@ -14,7 +19,7 @@ public class CatClientFactoryAdapter {
 
     private final CatLoggerProcessor loggerProcessor;
     private final CatResultProcessor resultHandler;
-    private final CatJsonResolver jsonResolver;
+    private final CatPayloadResolver payloadResolver;
     private final CatHttp catHttp;
     private final Supplier<CatSendProcessor> sendProcessorSupplier;
 
@@ -22,7 +27,7 @@ public class CatClientFactoryAdapter {
         this.resultHandler = bridge.getResultHandler();
         this.catHttp = bridge.getCatHttp();
         this.loggerProcessor = bridge.getLoggerProcessor();
-        this.jsonResolver = bridge.getJsonResolver();
+        this.payloadResolver = bridge.getPayloadResolver();
         this.sendProcessorSupplier = bridge.newSendHandler();
     }
 
@@ -58,8 +63,8 @@ public class CatClientFactoryAdapter {
     /**
      * 获取对象序列化处理类
      */
-    public CatJsonResolver getJsonResolver() {
-        return this.jsonResolver;
+    public CatPayloadResolver getPayloadResolver() {
+        return this.payloadResolver;
     }
 
 

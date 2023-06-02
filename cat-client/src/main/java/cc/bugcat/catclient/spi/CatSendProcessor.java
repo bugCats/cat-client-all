@@ -4,7 +4,13 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
-import cc.bugcat.catclient.handler.*;
+import cc.bugcat.catclient.handler.CatClientContextHolder;
+import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
+import cc.bugcat.catclient.handler.CatClientLogger;
+import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.handler.CatHttpPoint;
+import cc.bugcat.catclient.handler.CatLogsMod;
+import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.handler.Stringable;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -82,12 +88,12 @@ public class CatSendProcessor {
                     int start = argsTmpl.indexOf(".");
                     if( start > -1 ){ //是复杂对象
                         String argName = argsTmpl.substring(0, start);
-                        Object argObj = parameter.getArgMap().get(argName);
+                        Object argObj = getArgumentObject(parameter, argName);
                         Expression exp = CatToosUtil.parser.parseExpression(argsTmpl.substring(start + 1));
                         notes.put(key, exp.getValue(argObj));
                         continue;
                     } else {    //简单参数
-                        Object argObj = parameter.getArgMap().get(argsTmpl);
+                        Object argObj = getArgumentObject(parameter, argsTmpl);
                         notes.put(key, argObj);
                         continue;
                     }
@@ -108,7 +114,7 @@ public class CatSendProcessor {
         CatParameter parameter = httpPoint.getParameter();
         
         if( methodInfo.isCatface() ){ // 精简模式，全部默认使用post+字符流模式
-            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            CatPayloadResolver jsonResolver = context.getFactoryAdapter().getPayloadResolver();
             Object value = parameter.getValue();
             if( value instanceof Map ){ // 如果方法上入参是键值对，转换成json字符串
                 parameter.setValue(jsonResolver.toSendString(value));
@@ -143,7 +149,7 @@ public class CatSendProcessor {
     /**
      * 3、如果在调用远程API，需要额外处理参数、添加签名等：
      *   a、继承CatSendProcessor，重写afterVariableResolver方法；
-     *   b、通过{@link CatSendInterceptors}，在preVariableResolver前后修改；
+     *   b、通过{@link CatSendInterceptor}，在preVariableResolver前后修改；
      * 仅会执行一次
      * */
     public void postVariableResolver(CatClientContextHolder context) {
@@ -207,7 +213,14 @@ public class CatSendProcessor {
         return false;
     }
 
-    
+
+    protected Object getArgumentObject(CatParameter parameter, String argName){
+        Object argObj = parameter.getArgMap().get(argName);
+        if( argObj == null ){
+            argObj = CatClientUtil.getBean(argName);
+        }
+        return argObj;
+    }
     
     /**
      * 当前http请求的相切入点参数
@@ -222,7 +235,7 @@ public class CatSendProcessor {
      * 子类可重写增强
      * */
     protected CatObjectResolver newCatObjectResolver(){
-        return objectResolverSupplier != null ? objectResolverSupplier.get() : new CatObjectResolver.DefaultResolver();
+        return objectResolverSupplier != null ? objectResolverSupplier.get() : new CatObjectResolver.SimpleObjectResolver();
     }
 
     
@@ -234,7 +247,7 @@ public class CatSendProcessor {
             CatMethodInfo methodInfo = context.getMethodInfo();
             // 请求入参转换成String，方便记录日志
             CatLogsMod logsMod = methodInfo.getLogsMod();
-            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            CatPayloadResolver jsonResolver = context.getFactoryAdapter().getPayloadResolver();
             if( logsMod.printIn ){
                 return jsonResolver.toSendString(requestMap);
             }
@@ -273,13 +286,12 @@ public class CatSendProcessor {
         } else if ( value instanceof Stringable ){
             requestBody = ((Stringable) value).serialization();
         } else {
-            CatJsonResolver jsonResolver = context.getFactoryAdapter().getJsonResolver();
+            CatPayloadResolver jsonResolver = context.getFactoryAdapter().getPayloadResolver();
             requestBody = jsonResolver.toSendString(value);
         }
         return requestBody;
     }
-    
-    
+
     
     
     /**

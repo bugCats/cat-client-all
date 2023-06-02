@@ -2,9 +2,15 @@ package cc.bugcat.catface.utils;
 
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.handler.CatApiInfo;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.env.*;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.PropertyResolver;
+import org.springframework.core.env.PropertySourcesPropertyResolver;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
@@ -17,8 +23,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -29,13 +42,6 @@ public class CatToosUtil {
 
     public final static String GROUP_ID = "cc.bugcat";
 
-    public final static String INTERFACE_ATTRIBUTES_CATFACE = "catface";
-    public final static String INTERFACE_ATTRIBUTES_WRAPPER = "wrapper";
-
-    public final static String INTERFACE_ATTRIBUTES_SERVICE_NAME = "serviceName";
-    public final static String INTERFACE_ATTRIBUTES_DEPENDS = "interfaceDepend";
-    
-    
     /**
      * spring EL表达式：#{arg.name}
      * 使用方法入参，计算表达式
@@ -217,13 +223,13 @@ public class CatToosUtil {
     /**
      * 从interface上获取注解
      * */
-    public static Map<String, Object> getAttributes(Class inter) {
-        Map<String, Object> paramMap = new HashMap<>();
+    public static <T extends CatApiInfo> T getAttributes(Class inter, Supplier<T> supplier) {
         CatResponesWrapper wrapper = responesWrap(inter, CatResponesWrapper.class);
-        paramMap.put(INTERFACE_ATTRIBUTES_WRAPPER, wrapper);
         Catface catface = responesWrap(inter, Catface.class);
-        paramMap.put(INTERFACE_ATTRIBUTES_CATFACE, catface);
-        return paramMap;
+        CatApiInfo apiInfo = supplier.get();
+        apiInfo.setCatface(catface);
+        apiInfo.setWrapper(wrapper);
+        return (T) apiInfo;
     }
 
     
@@ -294,6 +300,8 @@ public class CatToosUtil {
         return valueMap;
     }
     
+    
+    
     /**
      * 适配Spring环境变量为Properties
      * */
@@ -307,10 +315,8 @@ public class CatToosUtil {
         if( properties instanceof EnvironmentProperty){
             return properties;
         } else {
-            PropertiesPropertySource property = new PropertiesPropertySource("toosProperty", properties);
-            MutablePropertySources sources = new MutablePropertySources();
-            sources.addLast(property);
-            PropertySourcesPropertyResolver source = new PropertySourcesPropertyResolver(sources);
+            StandardEnvironment source = new StandardEnvironment();
+            source.getPropertySources().addLast(new PropertiesPropertySource("catToolsProperty", properties));
             return new EnvironmentProperty(source);
         }
     }
@@ -340,4 +346,6 @@ public class CatToosUtil {
             return defaultValue != null && key.equals(value) ? defaultValue : value;
         }
     }
+
+
 }
