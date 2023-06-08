@@ -82,23 +82,23 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         // spring容器
         beanRegistry.registerBean(CatServerUtil.class);
         
-        //扫描所有的 CatInterceptor 子类
+        // 扫描所有的 CatInterceptor 子类
         beanRegistry.scannerByClass(CatServerInterceptor.class, CatServerInterceptor.Off.class);
 
-        //扫描所有 CatResultHandler 子类
+        // 扫描所有 CatResultHandler 子类
         beanRegistry.scannerByClass(CatResultHandler.class);
         
         // 全局配置对象
         beanRegistry.registerBean(configClass);
-
+        
         // CatServer初始化对象
         beanRegistry.registerBean(CatServerFactoryBean.class, definition -> {
             definition.getPropertyValues().addPropertyValue("serverClassSet", servers);
-            definition.getPropertyValues().addPropertyValue("configClass", configClass);
         });
 
         log.info("catServer 服务端数量：" + servers.size() );
 
+        
         // swagger组件
         CatServerUtil.existClassAndExecute("cc.bugcat.catserver.utils.CatSwaggerScanner", clazz -> {
             beanRegistry.registerBean(clazz, definition -> {

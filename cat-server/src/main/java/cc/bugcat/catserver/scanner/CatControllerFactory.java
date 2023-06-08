@@ -34,7 +34,7 @@ import java.util.Stack;
  *
  * @author bugcat
  * */
-public class CatControllerFactoryBean implements Comparable<CatControllerFactoryBean> {
+public class CatControllerFactory implements Comparable<CatControllerFactory> {
 
     
     /**
@@ -66,7 +66,7 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
      * serverClass类的继承关系
      * 如果是子类，那么level比父类大，排在后面
      * */
-    private int level = 0;
+    private final int level;
 
     
     /**
@@ -76,7 +76,7 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
     
     
     
-    private CatControllerFactoryBean(Factory builder) {
+    private CatControllerFactory(Builder builder) {
         this.serverClass = builder.serverClass;
         this.serverInfo = builder.serverInfo;
         this.controller = builder.controller;
@@ -86,7 +86,7 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
 
 
     @Override
-    public int compareTo(CatControllerFactoryBean info) {
+    public int compareTo(CatControllerFactory info) {
         return level - info.level;
     }
 
@@ -109,12 +109,12 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
     /**********************************************************************************/
     
 
-    public static Factory newFactory(){
-        return new Factory();
+    public static Builder builder(){
+        return new Builder();
     }
 
 
-    public static class Factory {
+    public static class Builder {
         
         /**
          * {@link CatServer}注解信息
@@ -147,17 +147,17 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
          * */
         private CatEnhancerDepend enhancerDepend;
         
-        public Factory serverClass(Class serverClass) {
+        public Builder serverClass(Class serverClass) {
             this.serverClass = serverClass;
             return this;
         }
-        public Factory enhancerDepend(CatEnhancerDepend enhancerDepend){
+        public Builder enhancerDepend(CatEnhancerDepend enhancerDepend){
             this.enhancerDepend = enhancerDepend;
             return this;
         }
         
         
-        public CatControllerFactoryBean createBean() throws Exception {
+        public CatControllerFactory build() throws Exception {
             
             // CatServer注解信息
             this.serverInfo = CatServerInfo.build(serverClass, enhancerDepend);
@@ -183,7 +183,7 @@ public class CatControllerFactoryBean implements Comparable<CatControllerFactory
                 }
             }
 
-            return new CatControllerFactoryBean(this);
+            return new CatControllerFactory(this);
         }
 
 

@@ -1,6 +1,7 @@
 package cc.bugcat.catclient.utils;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
@@ -16,9 +17,6 @@ import java.util.regex.Pattern;
  * */
 public class CatClientUtil implements ApplicationContextAware {
 
-
-    public static final Pattern PARAM_KEY_PAT = Pattern.compile("^\\#\\{(.+)\\}$");
-    
     /**
      * 自定义组件容器
      * 非spring容器时使用
@@ -36,6 +34,7 @@ public class CatClientUtil implements ApplicationContextAware {
     public synchronized void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         if ( context == null ) {
             context = applicationContext;
+            AutowireCapableBeanFactory autowireCapableBeanFactory = context.getAutowireCapableBeanFactory();
         }
     }
 

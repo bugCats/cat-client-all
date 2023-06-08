@@ -301,51 +301,5 @@ public class CatToosUtil {
     }
     
     
-    
-    /**
-     * 适配Spring环境变量为Properties
-     * */
-    public static Properties envProperty(Environment environment){
-        return new EnvironmentProperty(environment);
-    }
-    /**
-     * 适配自定义环境变量为Properties
-     * */
-    public static Properties envProperty(Properties properties){
-        if( properties instanceof EnvironmentProperty){
-            return properties;
-        } else {
-            StandardEnvironment source = new StandardEnvironment();
-            source.getPropertySources().addLast(new PropertiesPropertySource("catToolsProperty", properties));
-            return new EnvironmentProperty(source);
-        }
-    }
-
-
-    /**
-     * 环境变量适配
-     * */    
-    private static class EnvironmentProperty extends Properties {
-
-        private final PropertyResolver property;
-        private EnvironmentProperty(PropertyResolver property) {
-            this.property = property;
-        }
-
-        /**
-         * key 类似于 ${demo.remoteApi}
-         * */
-        @Override
-        public String getProperty(String key) {
-            return getProperty(key, null);
-        }
-
-        @Override
-        public String getProperty(String key, String defaultValue) {
-            String value = property.resolvePlaceholders(key);
-            return defaultValue != null && key.equals(value) ? defaultValue : value;
-        }
-    }
-
 
 }

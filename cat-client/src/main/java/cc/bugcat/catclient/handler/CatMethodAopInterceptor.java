@@ -3,7 +3,6 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
@@ -30,7 +29,6 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
     private final CatMethodInfo methodInfo;
 
     private final CatSendInterceptor methodInterceptor;
-    private final CatHttpRetryConfigurer retryConfigurer;
     private final CatClientFactoryAdapter factoryAdapter;
 
     
@@ -39,7 +37,6 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         this.clientInfo = builder.clientInfo;
         this.methodInfo = builder.methodInfo;
         this.methodInterceptor = builder.methodInterceptor;
-        this.retryConfigurer = builder.retryConfigurer;
         this.factoryAdapter = builder.factoryAdapter;
     }
 
@@ -93,7 +90,6 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 .methodInfo(methodInfo)
                 .interceptor(methodInterceptor)
                 .factoryAdapter(factoryAdapter)
-                .retryConfigurer(retryConfigurer)
                 .build();
 
         try {
@@ -117,12 +113,8 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             // http异常，或者反序列化异常了
             CatContextHolder.setException(throwable);
 
-            if ( clientInfo.isFallbackMod() ) {
-                //开启了异常回调模式，执行自定义http异常处理
-
-                if( method.isDefault() ){
-                    // interface默认方法
-
+            if ( clientInfo.isFallbackMod() ) { //开启了异常回调模式，执行自定义http异常处理
+                if( method.isDefault() ){ // interface默认方法
                     try {
                         respObj = invokeDefaultMethod(target, method, args);
                         return respObj;
@@ -130,9 +122,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                         // interface默认方法中继续抛出异常，不处理
                     }
 
-                } else {
-                    // 具体回调类的方法
-
+                } else { // 具体回调类的方法
                     try {
                         respObj = methodProxy.invokeSuper(target, args);
                         return respObj;
@@ -171,7 +161,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             try {
 
                 // 如果开启了包装器模式，拆包装
-                respObj = resultHandler.doFinally(respObj, context);
+                respObj = resultHandler.onFinally(respObj, context);
 
             } catch ( Exception ex ) {
 
@@ -241,17 +231,19 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         private CatMethodInfo methodInfo;
         private Method method;
         private CatSendInterceptor methodInterceptor;
-        private CatHttpRetryConfigurer retryConfigurer;
         private CatClientFactoryAdapter factoryAdapter;
 
+        
         public Builder clientInfo(CatClientInfo clientInfo) {
             this.clientInfo = clientInfo;
             return this;
         }
+        
         public Builder methodInfo(CatMethodInfo methodInfo) {
             this.methodInfo = methodInfo;
             return this;
         }
+        
         public Builder methodInterceptor(CatSendInterceptor methodInterceptor) {
             this.methodInterceptor = methodInterceptor;
             return this;
@@ -262,16 +254,11 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             return this;
         }
 
-        public Builder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
-            this.retryConfigurer = retryConfigurer;
-            return this;
-        }
-
         public Builder factoryAdapter(CatClientFactoryAdapter factoryAdapter) {
             this.factoryAdapter = factoryAdapter;
             return this;
         }
-        
+
         public CatMethodAopInterceptor build(){
             if ( method.isDefault() ) {
                 try {

@@ -7,6 +7,7 @@ import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.StandardMethodMetadata;
@@ -23,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * interface上的{@link CatMethod}注解描述信息
@@ -53,7 +53,7 @@ public class CatMethodInfo {
     /**
      * 方法上自定义参数、标记
      * */
-    private final Map<String, Object> notes;
+    private final Map<String, String> notes;
 
     /**
      * 发送方式 get|post|delete
@@ -171,27 +171,27 @@ public class CatMethodInfo {
         param.setHeaderMap(headerMap);
 
 
-        // 将入参数组args，转换成： 参数名->入参    此时argMap中一定不包含SendProcessor
-        Map<String, Object> argMap = new HashMap<>();
+        // 将入参数组args，转换成： 参数名->入参    此时argsMap中一定不包含SendProcessor
+        Map<String, Object> argsMap = new HashMap<>();
         params.forEach((key, value) -> {
-            argMap.put(key, args[value.getIndex()]);  // value.getIndex() 等于该参数在方法上出现的索引值
+            argsMap.put(key, args[value.getIndex()]);  // value.getIndex() 等于该参数在方法上出现的索引值
         });
-        param.setArgMap(argMap);
+        param.setArgsMap(argsMap);
 
         Object value = null;
         if ( params.size() == 1 ) {//如果入参仅一个
-            Map.Entry<String, Object> entry = argMap.entrySet().iterator().next();
+            Map.Entry<String, Object> entry = argsMap.entrySet().iterator().next();
             CatMethodParamInfo paramInfo = params.get(entry.getKey());
             if ( paramInfo.isPrimary() || !paramInfo.isSimple() ) {
                 //被@RequestBody、@ModelAttribute标记了、或者是复杂对象，直接返回对象
                 value = entry.getValue();
             } else {
                 //方法上参数列表都是简单数据类型，返回一个map
-                value = argMap;
+                value = argsMap;
             }
         } else {
             //入参是多个，转成键值对
-            value = argMap;
+            value = argsMap;
         }
         param.setValue(value);
         return param;
@@ -211,7 +211,7 @@ public class CatMethodInfo {
     public String getHost() {
         return host;
     }
-    public Map<String, Object> getNotes() {
+    public Map<String, String> getNotes() {
         return notes;
     }
     public RequestMethod getRequestType() {
@@ -240,7 +240,7 @@ public class CatMethodInfo {
 
 
 
-    public static CatMethodInfoBuilder builder(Method method, CatClientInfo clientInfo, Properties envProp) {
+    public static CatMethodInfoBuilder builder(Method method, CatClientInfo clientInfo, EnvironmentAdapter envProp) {
         CatMethodInfoBuilder builder = new CatMethodInfoBuilder(method, clientInfo, envProp);
         return builder;
     }
@@ -251,9 +251,9 @@ public class CatMethodInfo {
         private final String serviceName;
         private final Method method;
         private final CatClientInfo clientInfo;
-        private final Properties envProp;
+        private final EnvironmentAdapter envProp;
 
-        private CatMethodInfoBuilder(Method method, CatClientInfo clientInfo, Properties envProp) {
+        private CatMethodInfoBuilder(Method method, CatClientInfo clientInfo, EnvironmentAdapter envProp) {
             this.serviceName = clientInfo.getServiceName();
             this.method = method;
             this.clientInfo = clientInfo;
@@ -316,7 +316,7 @@ public class CatMethodInfo {
         /**
          * 方法上自定义参数、标记
          * */
-        private Map<String, Object> notes = new HashMap<>();
+        private Map<String, String> notes = new HashMap<>();
 
         /**
          * 除了SendProcessor、PathVariable、RequestHeader以外，其他的参数map => 参数名:参数对象信息
@@ -378,26 +378,20 @@ public class CatMethodInfo {
 
             // /user/save
             String url = attrs.getString("value");
-            this.path = "/" + envProp.getProperty(url).replaceAll("^/", "");
+            this.path = "/" + envProp.getProperty(url, String.class).replaceAll("^/", "");
 
             // post | get
             this.requestType = attrs.getEnum("method");
 
             // 其他自定义参数、标记
-            Map<String, Object> noteMap = new HashMap<>();
+            Map<String, String> noteMap = new HashMap<>();
             CatNote[] notes = attrs.getAnnotationArray("notes", CatNote.class);
             for ( CatNote note : notes ) {
                 String value = CatToosUtil.defaultIfBlank(note.value(), "");
 
                 //如果 key属性为空，默认赋值value
                 String key = CatToosUtil.isBlank(note.key()) ? value : note.key();
-                if ( value.startsWith("${") ) {
-
-                    //初步解析 value上的${}变量
-                    noteMap.put(key, envProp.getProperty(value));
-                } else {
-                    noteMap.put(key, value);
-                }
+                noteMap.put(key, value);
             }
 
             this.notes = noteMap;

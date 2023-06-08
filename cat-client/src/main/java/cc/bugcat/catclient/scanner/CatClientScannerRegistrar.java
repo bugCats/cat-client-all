@@ -13,19 +13,16 @@ import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.lang.reflect.Method;
-import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -35,13 +32,11 @@ import java.util.Set;
  *
  * @author: bugcat
  * */
-public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
+public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
 
     //资源加载器
     private ResourceLoader resourceLoader;
 
-    //获取properties文件中的参数
-    private Properties envProp;
 
 
     @Override
@@ -49,10 +44,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         this.resourceLoader = resourceLoader;
     }
 
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.envProp = CatToosUtil.envProperty(environment);
-    }
 
 
     /**
@@ -93,11 +84,11 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         CatLoggerProcessor.LOGGER.info("catclient 客户端数量：" + count );
 
         BeanRegistry beanRegistry = new BeanRegistry(resourceLoader, registry, scanPackages);
-
-        //扫描所有 CatClientFactory 子类
+        
+        // 扫描所有 CatClientFactory 子类
         beanRegistry.scannerByClass(CatClientFactory.class);
 
-        //扫描所有 CatMethodInterceptor 子类
+        // 扫描所有 CatMethodInterceptor 子类
         beanRegistry.scannerByClass(CatSendInterceptor.class);
 
         // CatClientConfiguration全局默认配置
@@ -105,11 +96,10 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
 
         // spring 容器
         beanRegistry.registerBean(CatClientUtil.class);
-
-        /**
-         * 客户端前置依赖项
-         * */
+        
+        // 客户端前置依赖项
         beanRegistry.registerBean(CatClientDependFactoryBean.BEAN_NAME, CatClientDependFactoryBean.class);
+
     }
 
 
@@ -170,23 +160,12 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         String interfaceName = definition.getBeanClassName();   //扫描到的interface类名
 
         /**
-         * 此处有个很迷惑的操作
-         * definition.getBeanClass() 看似返回类的class，但是由于此时类未加载，实际上class不存在
-         * 执行这个方法时，会报错[has not been resolved into an actual Class]
-         * 但是如果在其他类又必须需要class
-         * 可以通过 definition.getPropertyValues().addPropertyValue("interfaceClass", interfaceName) 形式赋值
-         * 注意，此时interfaceName为String字符串，在其他类中却可以用Class属性接收！
-         * 只能说[org.springframework.beans.PropertyValue]很强大吧
-         * */
-
-        /**
          * 注册FactoryBean工厂，
          * 自动注入，会根据interface，从Spring容器中获取到对应的组件，这需要FactoryBean支持
          * interface -> interface工厂 -> interface实现类 -> 自动注入
          * FactoryBean 的生命周期，早于Spring容器，无法使用自动注入，因此需要使用ioc反射，将对象赋值给FactoryBean
          * */
         definition.setBeanClass(CatClientInfoFactoryBean.class);
-        definition.getPropertyValues().addPropertyValue("envProp", envProp);
         definition.getPropertyValues().addPropertyValue("interfaceClass", interfaceName);
         definition.getPropertyValues().addPropertyValue("catClient", catClient);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);    //生成的对象，支持@Autowire自动注入
@@ -197,9 +176,6 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
     }
 
 
-    /**
-     *
-     * */
     private static class BeanRegistry {
 
         private final ResourceLoader resourceLoader;
@@ -218,10 +194,10 @@ public class CatClientScannerRegistrar implements ImportBeanDefinitionRegistrar,
         private void registerBean(Class beanClass){
             registerBean(CatToosUtil.uncapitalize(beanClass.getSimpleName()), beanClass);
         }
-
         private void registerBean(String beanName, Class beanClass){
             AbstractBeanDefinition definition = new GenericBeanDefinition();
             definition.setBeanClass(beanClass);
+            definition.setPrimary(true);
             registry.registerBeanDefinition(beanName, definition);
         }
 

@@ -33,6 +33,7 @@ public class TokenRemoteTest {
 
         CatClientDepend clientDepend = CatClientDepend.builder()
                 .sendInterceptor(new TokenInterceptor())
+                .environment(prop)
                 .build();
         remote = CatClientBuilders.builder(TokenRemote.class)
                 .clientDepend(clientDepend)
@@ -42,7 +43,6 @@ public class TokenRemoteTest {
                         return "http://127.0.0.1:8012";
                     }
                 })
-                .environment(prop)
                 .build();
     }
     

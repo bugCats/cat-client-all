@@ -1,9 +1,7 @@
 package cc.bugcat.example.catclient.remote;
 
-import cc.bugcat.catclient.annotation.CatClient;
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatHttpPoint;
-import cc.bugcat.catclient.handler.CatLogsMod;
-import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -16,7 +14,6 @@ import cc.bugcat.example.tools.ResponseEntity;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.util.Properties;
 
 
@@ -37,8 +34,9 @@ public class ApiRemote1Test {
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
 
+        CatClientDepend depend = CatClientDepend.builder().environment(prop).build();
         remote = CatClientBuilders.builder(ApiRemoteService1.class)
-                .environment(prop)
+                .clientDepend(depend)
                 .build();
     }
 

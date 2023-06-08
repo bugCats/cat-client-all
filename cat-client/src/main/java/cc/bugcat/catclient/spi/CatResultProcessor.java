@@ -20,6 +20,11 @@ public interface CatResultProcessor {
     boolean canRetry(CatHttpException exception, CatClientContextHolder context);
 
 
+    /**
+     * 将http返回的字符串，转换成对象
+     * */
+    Object resultToBean(String result, CatClientContextHolder context);
+
 
     /**
      * 如果发生了40x、50x等异常处理方式，默认继续抛出；
@@ -34,22 +39,14 @@ public interface CatResultProcessor {
      * */
     boolean onHttpError(CatClientContextHolder context) throws Throwable;
 
-
-
-    /**
-     * 将http返回的字符串，转换成对象
-     * */
-    Object resultToBean(String result, CatClientContextHolder context);
-
-
-
+    
     /**
      * 在resultToBean之后执行
      * 获取到对象之后，再进行拆包装器处理{@link AbstractResponesWrapper}
      *
      * @param resp 经过resultToBean方法转换后的参数
      * */
-    Object doFinally(Object resp, CatClientContextHolder context) throws Exception;
+    Object onFinally(Object resp, CatClientContextHolder context) throws Exception;
 
 
 

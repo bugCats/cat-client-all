@@ -66,7 +66,7 @@ public class CatClientConfiguration implements InitializingBean {
     protected CatLoggerProcessor globalLoggerProcessor;
 
     @Autowired(required = false)
-    protected ObjectMapper globalObjectMapper;
+    protected ObjectMapper objectMapper;
     
     
     @Override
@@ -75,7 +75,7 @@ public class CatClientConfiguration implements InitializingBean {
             globalCatHttp = new CatRestHttp();
         }
         if( globalJsonResolver == null ){
-            globalJsonResolver = new CatJacksonResolver(globalObjectMapper);
+            globalJsonResolver = new CatJacksonResolver(objectMapper);
         }
         if( globalLoggerProcessor == null ){
             globalLoggerProcessor = new CatLoggerProcessor(){};

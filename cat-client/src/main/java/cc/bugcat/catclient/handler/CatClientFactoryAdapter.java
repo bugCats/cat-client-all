@@ -40,13 +40,6 @@ public class CatClientFactoryAdapter {
     }
 
     /**
-     * 如果在定义请求方法时，没有传入请求发送类，则在代理类中，自动生成一个请求发送类对象
-     */
-    public CatSendProcessor newSendHandler() {
-        return sendProcessorSupplier.get();
-    }
-
-    /**
      * 日志处理器
      */
     public CatLoggerProcessor getLoggerProcessor() {
@@ -65,6 +58,13 @@ public class CatClientFactoryAdapter {
      */
     public CatPayloadResolver getPayloadResolver() {
         return this.payloadResolver;
+    }
+
+    /**
+     * 如果在定义请求方法时，没有传入请求发送类，则在代理类中，自动生成一个请求发送类对象
+     */
+    public CatSendProcessor newSendHandler() {
+        return sendProcessorSupplier.get();
     }
 
 

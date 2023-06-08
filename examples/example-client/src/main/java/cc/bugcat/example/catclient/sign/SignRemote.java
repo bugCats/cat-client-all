@@ -35,13 +35,16 @@ public interface SignRemote {
     /**
      * 密钥是可变的，通过方法上的参数获取
      * */
-    @CatMethod(value = "/cat/sign1", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
+    @CatMethod(value = "/cat/sign1", notes = {@CatNote("needSign"), @CatNote(key = "EL", value = "#{nomalCtrl.out(\"${demo.apikey}\", demo.userkey)}"),
+            @CatNote(key = "spring", value = "${demo.apikey}"), @CatNote(key = "spEL", value = "#{demo.userkey}")}, method = RequestMethod.POST)
     ResponseEntity<String> demo12(@ModelAttribute("demo") DemoDTO demo);
 
     /**
      * 密钥是可变的，通过方法上的参数获取
      * */
-    @CatMethod(value = "/cat/sign2", notes = {@CatNote("needSign"), @CatNote(key = "apikey", value = "#{demo.userkey}")}, method = RequestMethod.POST)
+    @CatMethod(value = "/cat/sign2", notes = {@CatNote("needSign"), @CatNote(key = "EL", value = "#{tools.out(\"${demo.apikey}\", demo.userkey)}"),
+                                                @CatNote(key = "spring", value = "${demo.apikey}"), 
+                                                @CatNote(key = "spEL", value = "#{demo.userkey}")}, method = RequestMethod.POST)
     ResponseEntity<String> demo13(@CatNote("demo") @RequestBody DemoDTO demo);
 
 

@@ -23,11 +23,12 @@ public class SignSendProcessor extends CatSendProcessor {
              * demo12 从入参中获取
              * demo13 从入参中获取
              * */
-            String apikey = notes.getString("apikey"); //
+            String spring = notes.getString("spring"); //
+            System.out.println("SignSendProcessor.spring=>" + spring);
 
-            String md5 = "@md5{" + apikey + "}"; //没有引入加密工具类，假设已经加密了
-
-            System.out.println("sign=>" + md5);
+            String spEL = notes.getString("spEL"); //
+            System.out.println("SignSendProcessor.spEL=>" + spEL);
+            
             // 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
         }
     }

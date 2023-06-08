@@ -1,15 +1,13 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catface.utils.CatToosUtil;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * asm相关缓存
@@ -39,10 +37,10 @@ public class CatEnhancerDepend {
     /**
      * 环境变量
      * */
-    private final Properties envProp;
+    private final EnvironmentAdapter envProp;
     
     
-    public CatEnhancerDepend(Class<? extends CatServerConfiguration> configClass, int serverSize) {
+    public CatEnhancerDepend(CatServerConfiguration serverConfig, EnvironmentAdapter envProp, int serverSize) {
         this.objectMethodInterceptor = new MethodInterceptor() {
             @Override
             public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -51,8 +49,8 @@ public class CatEnhancerDepend {
         };
         this.controllerCache = new HashMap<>(serverSize * 2);
         this.classDescriptorMap = new HashMap<>(serverSize * 4);
-        this.serverConfig = CatServerUtil.getBean(configClass);
-        this.envProp = CatToosUtil.envProperty(CatServerUtil.getEnvironment());
+        this.serverConfig = serverConfig;
+        this.envProp = envProp;
     }
     
     
@@ -68,7 +66,7 @@ public class CatEnhancerDepend {
     public AsmClassDescriptor getClassDescriptorMap(Class interfaceClass) {
         return classDescriptorMap.get(interfaceClass);
     }
-    public Properties getEnvProp() {
+    public EnvironmentAdapter getEnvironmentAdapter() {
         return envProp;
     }
 }

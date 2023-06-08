@@ -1,5 +1,6 @@
 package cc.bugcat.example.api;
 
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.example.api.vi.UserPageVi;
 import cc.bugcat.example.catclient.serverApi.Config;
@@ -27,8 +28,9 @@ public class FaceDemoServiceTest{
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
 
+        CatClientDepend clientDepend = CatClientDepend.builder().environment(prop).build();
         faceDemoService = CatClientBuilders.builder(Config.class, FaceDemoService.class)
-                .environment(prop)
+                .clientDepend(clientDepend)
                 .build();
     }
 

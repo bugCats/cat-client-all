@@ -3,7 +3,6 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
@@ -60,11 +59,11 @@ public class CatClientContextHolder {
 
     
     
+    
     private final CatSendProcessor sendHandler;
     private final CatClientInfo clientInfo;
     private final CatMethodInfo methodInfo;
     private final CatClientFactoryAdapter factoryAdapter;
-    private final CatHttpRetryConfigurer retryConfigurer;
     private final CatSendInterceptor interceptor;
     
     protected CatClientContextHolder(CatClientContextHolderBuilder builder) {
@@ -73,7 +72,6 @@ public class CatClientContextHolder {
         this.methodInfo = builder.methodInfo;
         this.interceptor = builder.interceptor;
         this.factoryAdapter = builder.factoryAdapter;
-        this.retryConfigurer = builder.retryConfigurer;
     }
 
 
@@ -128,9 +126,6 @@ public class CatClientContextHolder {
     public CatClientFactoryAdapter getFactoryAdapter() {
         return factoryAdapter;
     }
-    public CatHttpRetryConfigurer getRetryConfigurer() {
-        return retryConfigurer;
-    }
 
 
 
@@ -147,7 +142,6 @@ public class CatClientContextHolder {
         private CatSendInterceptor interceptor;
         private CatSendProcessor sendHandler;
         private CatClientFactoryAdapter factoryAdapter;
-        private CatHttpRetryConfigurer retryConfigurer;
 
         public CatClientContextHolderBuilder clientInfo(CatClientInfo clientInfo) {
             this.clientInfo = clientInfo;
@@ -171,11 +165,6 @@ public class CatClientContextHolder {
 
         public CatClientContextHolderBuilder factoryAdapter(CatClientFactoryAdapter factoryAdapter) {
             this.factoryAdapter = factoryAdapter;
-            return this;
-        }
-
-        public CatClientContextHolderBuilder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
-            this.retryConfigurer = retryConfigurer;
             return this;
         }
 

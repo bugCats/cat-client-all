@@ -90,7 +90,7 @@ public class SimpleResultHandler implements CatResultProcessor {
 
 
     @Override
-    public Object doFinally(Object resp, CatClientContextHolder context) throws Exception {
+    public Object onFinally(Object resp, CatClientContextHolder context) throws Exception {
         CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
 

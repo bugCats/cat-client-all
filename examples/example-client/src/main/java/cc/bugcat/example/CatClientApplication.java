@@ -39,7 +39,8 @@ public class CatClientApplication {
 
         System.out.println("http://localhost:8010/swagger-ui.html");
         System.out.println("测试时，请同时启动 example-server");
-	}
+        
+    }
 
 
 
@@ -61,9 +62,8 @@ public class CatClientApplication {
      *
      * */
     @Api(tags = "客户端 - 一般场景")
-    @RestController
+    @RestController("nomalCtrl")
     public static class NomalController {
-
         @Autowired
         private ApiRemoteService1 catRemoteApi1;
         @Autowired
@@ -157,6 +157,12 @@ public class CatClientApplication {
             demo.setName("bug猫");
             demo.setMark("调用");
             return demo;
+        }
+
+        public String out(String spring, String spEL){
+            System.out.println("ctrl.spring=" + spring);
+            System.out.println("ctrl.spEL=" + spEL);
+            return "ctrl.out";
         }
     }
 }

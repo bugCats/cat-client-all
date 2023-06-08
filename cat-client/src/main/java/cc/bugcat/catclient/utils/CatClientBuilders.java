@@ -5,13 +5,10 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.scanner.CatClientInfoFactoryBean;
 import cc.bugcat.catclient.spi.CatClientProvider;
-import cc.bugcat.catface.utils.CatToosUtil;
-import org.springframework.core.env.Environment;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Predicate;
 
 /**
@@ -31,15 +28,15 @@ public abstract class CatClientBuilders {
     /**
      * 通过CatClientProvider + interface创建
      * */
-    public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> defineClients, Class<T> interfaceClass){
-        return CatClientBuilder.builder(defineClients, interfaceClass);
+    public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> clientProvider, Class<T> interfaceClass){
+        return CatClientBuilder.builder(clientProvider, interfaceClass);
     }
 
     /**
      * 通过CatClientProvider创建
      * */
-    public static DefineCatClientBuilder define(Class<? extends CatClientProvider> defineClients){
-        return DefineCatClientBuilder.builder(defineClients);
+    public static DefineCatClientBuilder define(Class<? extends CatClientProvider> clientProvider){
+        return DefineCatClientBuilder.builder(clientProvider);
     }
 
 
@@ -48,7 +45,6 @@ public abstract class CatClientBuilders {
     public static final class CatClientBuilder<T> {
 
         private Class<T> interfaceClass;
-        private Properties properties;
         private CatClientDepend clientDepend;
         private CatClient catClient;
 
@@ -60,10 +56,10 @@ public abstract class CatClientBuilders {
             return builder;
         }
 
-        public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> defineClients, Class<T> interfaceClass){
+        public static <T> CatClientBuilder<T> builder(Class<? extends CatClientProvider> clientProvider, Class<T> interfaceClass){
             CatClientBuilder<T> builder = new CatClientBuilder();
             builder.interfaceClass = interfaceClass;
-            for ( Method method : defineClients.getMethods() ) {
+            for ( Method method : clientProvider.getMethods() ) {
                 Class clazz = method.getReturnType();
                 if( clazz.equals(interfaceClass) ){
                     builder.catClient(method.getAnnotation(CatClient.class));
@@ -73,16 +69,6 @@ public abstract class CatClientBuilders {
             return builder;
         }
 
-        /**
-         * 环境配置
-         * @see CatToosUtil#envProperty(Environment) 将spring环境变量适配为Properties
-         * 
-         * @param properties 可以是普通Properties，也可以通过CatClientUtil#envProperty(Environment)适配
-         * */
-        public CatClientBuilder<T> environment(Properties properties){
-            this.properties = properties;
-            return this;
-        }
 
         public CatClientBuilder<T> clientDepend(CatClientDepend clientDepend) {
             this.clientDepend = clientDepend;
@@ -90,7 +76,7 @@ public abstract class CatClientBuilders {
         }
 
         /**
-         * @param catClient 可是通过反射获取的@CatClient注解，也可以是CatClients实例
+         * @param catClient 可是通过反射获取的@CatClient注解，也可以是CatClientInstance实例
          * */
         public CatClientBuilder<T> catClient(CatClient catClient){
             this.catClient = catClient;
@@ -98,14 +84,10 @@ public abstract class CatClientBuilders {
         }
 
         public <T> T build(){
-            if( properties == null ){
-                properties = new Properties();
-            }
             if( catClient == null ){
                 catClient = interfaceClass.getAnnotation(CatClient.class);
             }
-
-            T bean = (T) buildClinet(interfaceClass, catClient, clientDepend, properties);
+            T bean = (T) buildClinet(interfaceClass, catClient, clientDepend);
             return bean;
         }
     }
@@ -113,28 +95,16 @@ public abstract class CatClientBuilders {
 
     public static final class DefineCatClientBuilder {
 
-        private Class<? extends CatClientProvider> defineClients;
-        private Properties properties;
+        private Class<? extends CatClientProvider> clientProvider;
         private CatClientDepend clientDepend;
         private Predicate<Class> filter;
 
         public DefineCatClientBuilder() { }
 
-        public static DefineCatClientBuilder builder(Class<? extends CatClientProvider> defineClients){
+        public static DefineCatClientBuilder builder(Class<? extends CatClientProvider> clientProvider){
             DefineCatClientBuilder builder = new DefineCatClientBuilder();
-            builder.defineClients = defineClients;
+            builder.clientProvider = clientProvider;
             return builder;
-        }
-
-        /**
-         * 环境配置
-         * @see CatToosUtil#envProperty(Environment) 将spring环境变量适配为Properties
-         *
-         * @param properties 可以是普通Properties，也可以通过CatClientUtil#envProperty(Environment)适配
-         * */
-        public DefineCatClientBuilder environment(Properties properties){
-            this.properties = properties;
-            return this;
         }
 
         public DefineCatClientBuilder clientDepend(CatClientDepend clientDepend) {
@@ -148,15 +118,12 @@ public abstract class CatClientBuilders {
         }
 
         public Map<Class, Object> build(){
-            if( properties == null ){
-                properties = new Properties();
-            }
             if( filter == null ){
                 filter = clazz -> Boolean.TRUE;
             }
 
             Map<Class, Object> clientMap = new HashMap<>();
-            Method[] methods = defineClients.getMethods();
+            Method[] methods = clientProvider.getMethods();
             for ( Method method : methods ) {
                 CatClient catClient = method.getAnnotation(CatClient.class);
                 if( catClient == null ){
@@ -164,7 +131,7 @@ public abstract class CatClientBuilders {
                 }
                 Class clazz = method.getReturnType();
                 if( filter.test(clazz) ){
-                    Object value = buildClinet(clazz, catClient, clientDepend, properties);
+                    Object value = buildClinet(clazz, catClient, clientDepend);
                     clientMap.put(clazz, value);
                 }
             }
@@ -173,19 +140,18 @@ public abstract class CatClientBuilders {
     }
 
 
-    private static Object buildClinet(Class interfaceClass, CatClient catClient, CatClientDepend clientDepend, Properties properties){
+    private static Object buildClinet(Class interfaceClass, CatClient catClient, CatClientDepend clientDepend){
         if( CatClientUtil.contains(interfaceClass) ){
             return CatClientUtil.getBean(interfaceClass);
         }
-        Properties envProp = CatToosUtil.envProperty(properties);
         if( clientDepend == null ){
             clientDepend = CatClientUtil.getBean(CatClientDepend.class);
             if( clientDepend == null ){
                 clientDepend = CatClientDepend.builder().build();
             }
         }
-        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend, envProp);
-        Object bean = CatClientInfoFactoryBean.createCatClient(interfaceClass, clientInfo, envProp);
+        CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend);
+        Object bean = CatClientInfoFactoryBean.createCatClient(interfaceClass, clientInfo);
         CatClientUtil.registerBean(interfaceClass, bean);
         return bean;
     }

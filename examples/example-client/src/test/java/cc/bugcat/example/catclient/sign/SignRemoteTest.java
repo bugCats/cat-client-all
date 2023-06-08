@@ -2,6 +2,7 @@ package cc.bugcat.example.catclient.sign;
 
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
+import cc.bugcat.example.CatClientApplication;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import cc.bugcat.example.dto.DemoDTO;
@@ -29,14 +30,22 @@ public class SignRemoteTest {
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
         prop.put("demo.apikey", "签名示例密钥");
-
+        prop.put("tools", new Object() {
+            public String out(String spring, String spEL){
+                System.out.println("tools.spring=" + spring);
+                System.out.println("tools.spEL=" + spEL);
+                return "tools.out";
+            }
+            });
+        prop.put("nomalCtrl", new CatClientApplication.NomalController());
+        
         CatClientDepend clientDepend = CatClientDepend.builder()
                 .clientFactory(new SignFactory())
+                .environment(prop)
                 .build();
 
         remote = CatClientBuilders.builder(SignRemote.class)
                     .clientDepend(clientDepend)
-                    .environment(prop)
                     .build();
     }
 

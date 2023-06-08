@@ -8,6 +8,7 @@ import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 import java.util.List;
 
@@ -39,11 +40,15 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     @Autowired
     private CatHttpRetryConfigurer retryConfigurer;
 
-    @Autowired
+    @Autowired(required = false)
     private List<CatClientFactory> clientFactories;
 
-    @Autowired
+    @Autowired(required = false)
     private List<CatSendInterceptor> sendInterceptors;
+    
+    
+    @Autowired
+    private ConfigurableListableBeanFactory configurableBeanFactory;
     
     
     @Override
@@ -62,6 +67,7 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
         CatClientDepend clientDepend = CatClientDepend.builder()
                 .retryConfigurer(retryConfigurer)
                 .clientConfig(clientConfig)
+                .environment(configurableBeanFactory)
                 .build();
         catClient.registerBean(this.getClass(), this);
         return clientDepend;

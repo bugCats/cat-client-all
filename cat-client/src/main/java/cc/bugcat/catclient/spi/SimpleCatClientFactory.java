@@ -65,7 +65,7 @@ public class SimpleCatClientFactory implements CatClientFactory {
      * */
     @Override
     public Supplier<CatSendProcessor> newSendHandler() {
-        return () -> new SimpleSendHandler();
+        return () -> new CatSendProcessor();
     }
 
 }

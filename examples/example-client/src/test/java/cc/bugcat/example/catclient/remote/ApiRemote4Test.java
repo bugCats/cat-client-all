@@ -57,10 +57,10 @@ public class ApiRemote4Test {
 
         CatClientDepend clientDepend = CatClientDepend.builder()
                 .clientConfig(configuration)
+                .environment(prop)
                 .build();
         remote = CatClientBuilders.builder(ApiRemoteService4Plus.class)
                 .clientDepend(clientDepend)
-                .environment(prop)
                 .build();
     }
 

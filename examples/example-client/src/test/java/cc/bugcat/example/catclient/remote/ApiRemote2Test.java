@@ -1,5 +1,6 @@
 package cc.bugcat.example.catclient.remote;
 
+import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import ch.qos.logback.classic.Level;
@@ -31,8 +32,9 @@ public class ApiRemote2Test {
         Properties prop = new Properties();
         prop.put("core-server.remoteApi", "http://127.0.0.1:8012");
 
+        CatClientDepend depend = CatClientDepend.builder().environment(prop).build();
         remote = CatClientBuilders.builder(ApiRemoteService2.class)
-                .environment(prop)
+                .clientDepend(depend)
                 .build();
     }
 

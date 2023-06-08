@@ -4,6 +4,7 @@ import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.CatApiInfo;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
@@ -17,7 +18,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 
@@ -66,7 +66,7 @@ public class CatServerInfo {
 
 
 
-    private CatServerInfo(Class<?> serverClass, CatServerApiInfo apiInfo, Properties envProp) {
+    private CatServerInfo(Class<?> serverClass, CatServerApiInfo apiInfo, EnvironmentAdapter envProp) {
 
         CatServer catServer = serverClass.getAnnotation(CatServer.class);
 
@@ -81,7 +81,7 @@ public class CatServerInfo {
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
             if ( value.startsWith("${") ) {
-                tagMap.put(key, envProp.getProperty(value));
+                tagMap.put(key, envProp.getProperty(value, String.class));
             } else {
                 tagMap.put(key, value);
             }
@@ -118,7 +118,7 @@ public class CatServerInfo {
     public final static CatServerInfo build(Class<?> serverClass, CatEnhancerDepend enhancerDepend) {
         CatServerApiInfo apiInfo = CatToosUtil.getAttributes(serverClass, CatServerApiInfo::new);
         apiInfo.setConfiguration(enhancerDepend.getServerConfig());
-        CatServerInfo serverInfo = new CatServerInfo(serverClass, apiInfo, enhancerDepend.getEnvProp());
+        CatServerInfo serverInfo = new CatServerInfo(serverClass, apiInfo, enhancerDepend.getEnvironmentAdapter());
         return serverInfo;
     }
     

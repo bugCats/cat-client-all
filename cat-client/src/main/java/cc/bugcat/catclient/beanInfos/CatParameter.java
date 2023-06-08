@@ -25,7 +25,7 @@ public class CatParameter {
     /**
      * 原始的参数列表
      * */
-    private Map<String, Object> argMap;
+    private Map<String, Object> argsMap;
 
     /**
      * 方法上经过处理之后的有效参数
@@ -51,11 +51,11 @@ public class CatParameter {
         this.value = value;
     }
 
-    public Map<String, Object> getArgMap() {
-        return argMap;
+    public Map<String, Object> getArgsMap() {
+        return argsMap;
     }
-    public void setArgMap(Map<String, Object> argMap) {
-        this.argMap = argMap;
+    public void setArgsMap(Map<String, Object> argsMap) {
+        this.argsMap = argsMap;
     }
 
     public Map<String, String> getHeaderMap() {

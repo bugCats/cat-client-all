@@ -1,6 +1,6 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catserver.scanner.CatControllerFactoryBean;
+import cc.bugcat.catserver.scanner.CatControllerFactory;
 
 /**
  * 所有通过cat-server生成的服务端controller，一定是其子类。
@@ -13,7 +13,7 @@ public interface CatServerHandler {
     /**
      * 从cglib动态代理的controller中，获取对应CatServer class。
      * 
-     * @see CatControllerFactoryBean#catServerClass
+     * @see CatControllerFactory#getServerClass()
      * 
      * @return 被@CatServer标记的对象实例
      * */

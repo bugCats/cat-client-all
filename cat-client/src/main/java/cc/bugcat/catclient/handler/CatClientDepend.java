@@ -7,11 +7,13 @@ import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.SimpleCatClientFactory;
-import cc.bugcat.catclient.spi.SimpleCatSendInterceptor;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.Method;
+import java.util.Properties;
 
 /**
  * CatClientInfoFactoryBean 相关依赖，单例。
@@ -33,6 +35,7 @@ import java.lang.reflect.Method;
  * */
 public class CatClientDepend {
 
+    
     /**
      * 全局默认的重连对象
      * */
@@ -59,11 +62,17 @@ public class CatClientDepend {
      * */
     private final CatSendInterceptor sendInterceptor;
 
+    /**
+     * 环境变量
+     * */
+    private final EnvironmentAdapter environment;
+    
     private CatClientDepend(Builder builder) {
         this.retryConfigurer = builder.retryConfigurer;
         this.clientConfig = builder.clientConfig;
         this.clientFactory = builder.clientFactory;
         this.sendInterceptor = builder.sendInterceptor;
+        this.environment = builder.environment;
         this.objectMethodInterceptor = new MethodInterceptor() {
             @Override
             public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
@@ -88,6 +97,9 @@ public class CatClientDepend {
     public CatSendInterceptor getSendInterceptor() {
         return sendInterceptor;
     }
+    public EnvironmentAdapter getEnvironment() {
+        return environment;
+    }
 
     /**
      * 如果使用main方法调用，需要手动创建该对象
@@ -103,6 +115,8 @@ public class CatClientDepend {
         private CatClientConfiguration clientConfig;
         private CatClientFactory clientFactory;
         private CatSendInterceptor sendInterceptor;
+        
+        private EnvironmentAdapter environment;
         
         public Builder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
             this.retryConfigurer = retryConfigurer;
@@ -124,6 +138,15 @@ public class CatClientDepend {
             return this;
         }
 
+        public Builder environment(Properties property) {
+            this.environment = EnvironmentAdapter.environmentProperty(property);
+            return this;
+        }
+        public Builder environment(ConfigurableListableBeanFactory configurableBeanFactory) {
+            this.environment = EnvironmentAdapter.environmentProperty(configurableBeanFactory);
+            return this;
+        }
+
         public CatClientDepend build(){
 
             if( retryConfigurer == null ){
@@ -136,7 +159,7 @@ public class CatClientDepend {
             }
 
             if( sendInterceptor == null ){
-                sendInterceptor = new SimpleCatSendInterceptor();
+                sendInterceptor = new CatSendInterceptor(){};
             }
 
             if( clientFactory == null ){

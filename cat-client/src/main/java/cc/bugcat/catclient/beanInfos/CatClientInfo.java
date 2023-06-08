@@ -10,6 +10,7 @@ import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.CatApiInfo;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 
@@ -17,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * interface上的{@link CatClient}注解描述信息
@@ -99,15 +99,16 @@ public final class CatClientInfo {
 
 
 
-    private CatClientInfo(CatClient client, CatClientApiInfo apiInfo, Properties envProp){
+    private CatClientInfo(CatClient client, CatClientApiInfo apiInfo){
 
-        this.clientDepend = apiInfo.getDepends();
+        this.clientDepend = apiInfo.getDepend();
         this.serviceName = apiInfo.getServiceName();
 
+        EnvironmentAdapter envProp = clientDepend.getEnvironment();
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
 
         String host = client.host();
-        this.host = envProp.getProperty(host);
+        this.host = envProp.getProperty(host, String.class);
 
         int connect = client.connect();
         connect = connect < 0 ? -1 : connect;
@@ -126,11 +127,7 @@ public final class CatClientInfo {
             String value = CatToosUtil.defaultIfBlank(tag.value(), "");
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
-            if ( value.startsWith("${") ) {
-                tagMap.put(key, envProp.getProperty(value));
-            } else {
-                tagMap.put(key, value);
-            }
+            tagMap.put(key, envProp.getProperty(value, String.class));
         }
         this.tagMap = Collections.unmodifiableMap(tagMap);
 
@@ -165,24 +162,23 @@ public final class CatClientInfo {
      *
      * @param interfaceClass    interface
      * @param catClient         可以为null，不一定是interface上的注解。也可以是CatClients实例
-     * @param depends           默认依赖
-     * @param envProp           环境变量
+     * @param depend            默认依赖
      * */
-    public static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientDepend depends, Properties envProp) {
+    public static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientDepend depend ) {
         if( catClient == null ){
             catClient = (CatClient) interfaceClass.getAnnotation(CatClient.class);
         }
         CatClientApiInfo apiInfo = CatToosUtil.getAttributes(interfaceClass, CatClientApiInfo::new);
         apiInfo.setServiceName(interfaceClass.getSimpleName());
-        apiInfo.setDepends(depends);
-        CatClientInfo clientInfo = new CatClientInfo(catClient, apiInfo, envProp);
+        apiInfo.setDepend(depend);
+        CatClientInfo clientInfo = new CatClientInfo(catClient, apiInfo);
         return clientInfo;
     }
 
 
     private static class CatClientApiInfo extends CatApiInfo {
         private String serviceName;
-        private CatClientDepend depends;
+        private CatClientDepend depend;
 
         public String getServiceName() {
             return serviceName;
@@ -191,11 +187,11 @@ public final class CatClientInfo {
             this.serviceName = serviceName;
         }
 
-        public CatClientDepend getDepends() {
-            return depends;
+        public CatClientDepend getDepend() {
+            return depend;
         }
-        public void setDepends(CatClientDepend depends) {
-            this.depends = depends;
+        public void setDepend(CatClientDepend depend) {
+            this.depend = depend;
         }
     }
 

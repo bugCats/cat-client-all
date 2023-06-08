@@ -1,12 +1,15 @@
 package cc.bugcat.catserver.scanner;
 
 import cc.bugcat.catface.annotation.Catface;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.IntFunction;
 
@@ -35,23 +39,31 @@ public class CatServerFactoryBean implements InitializingBean {
     /**
      * 全局配置项
      * */
-    private Class<? extends CatServerConfiguration> configClass;
+    @Autowired
+    private CatServerConfiguration serverConfig;
 
+    /**
+     * 环境变量
+     * */
+    @Autowired
+    private ConfigurableListableBeanFactory configurableBeanFactory;
+    
             
     @Override
     public void afterPropertiesSet() throws Exception {
         if( serverClassSet == null ){
             return;
         }
-        
-        CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(configClass, serverClassSet.size());
-        List<CatControllerFactoryBean> controllerFactoryBeans = new ArrayList<>(serverClassSet.size());
+
+        EnvironmentAdapter envProp = EnvironmentAdapter.environmentProperty(configurableBeanFactory);
+        CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(serverConfig, envProp, serverClassSet.size());
+        List<CatControllerFactory> controllerFactoryBeans = new ArrayList<>(serverClassSet.size());
         
         for(Class serverClass : serverClassSet){
-            CatControllerFactoryBean info = CatControllerFactoryBean.newFactory()
+            CatControllerFactory info = CatControllerFactory.builder()
                     .serverClass(serverClass)
                     .enhancerDepend(enhancerDepend)
-                    .createBean();
+                    .build();
             controllerFactoryBeans.add(info);
         }
 
@@ -59,7 +71,7 @@ public class CatServerFactoryBean implements InitializingBean {
          * level越大，说明继承次数越多，
          * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
          * */
-        controllerFactoryBeans.sort(CatControllerFactoryBean::compareTo);
+        controllerFactoryBeans.sort(CatControllerFactory::compareTo);
 
         registerController(controllerFactoryBeans);
 
@@ -71,13 +83,13 @@ public class CatServerFactoryBean implements InitializingBean {
     /**
      * 手动注册controller对象
      * */
-    private void registerController(List<CatControllerFactoryBean> controllerFactoryBeans){
+    private void registerController(List<CatControllerFactory> controllerFactoryBeans){
         
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
 
-        for( CatControllerFactoryBean factory : controllerFactoryBeans ){
+        for( CatControllerFactory factory : controllerFactoryBeans ){
 
             CatServerInfo serverInfo = factory.getServerInfo();
             Catface catface = serverInfo.getCatface();
@@ -132,19 +144,11 @@ public class CatServerFactoryBean implements InitializingBean {
     }
 
 
-
     public Set<Class> getServerClassSet() {
         return serverClassSet;
     }
     public void setServerClassSet(Set<Class> serverClassSet) {
         this.serverClassSet = serverClassSet;
-    }
-
-    public Class<? extends CatServerConfiguration> getConfigClass() {
-        return configClass;
-    }
-    public void setConfigClass(Class<? extends CatServerConfiguration> configClass) {
-        this.configClass = configClass;
     }
 
 }

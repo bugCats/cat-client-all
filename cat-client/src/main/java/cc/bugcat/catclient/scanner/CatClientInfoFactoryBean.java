@@ -10,19 +10,18 @@ import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
-import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Function;
 
 
@@ -46,10 +45,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
      * */
     private CatClient catClient;
 
-    /**
-     * 环境变量
-     * */
-    private Properties envProp;
 
 
 
@@ -68,8 +63,8 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     protected T createInstance() throws Exception {
         try {
             CatClientDepend clientDepend = CatClientUtil.getBean(CatClientDepend.class);
-            CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend, envProp);
-            return createCatClient(interfaceClass, clientInfo, envProp);
+            CatClientInfo clientInfo = CatClientInfo.build(interfaceClass, catClient, clientDepend);
+            return createCatClient(interfaceClass, clientInfo);
         } catch ( Exception ex ) {
             log.error(buildMessage(ex));
             ((ConfigurableApplicationContext) CatClientUtil.getContext()).close();
@@ -81,7 +76,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     /**
      * 解析interface方法，生成动态代理类
      */
-    public final static <T> T createCatClient(Class<T> interfaceClass, CatClientInfo clientInfo, Properties envprop) {
+    public final static <T> T createCatClient(Class<T> interfaceClass, CatClientInfo clientInfo) {
 
         Class[] interfaces = new Class[]{interfaceClass};
 
@@ -93,7 +88,8 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         }
 
         CatClientDepend clientDepend = clientInfo.getClientDepend();
-
+        EnvironmentAdapter envProp = clientDepend.getEnvironment();
+        
         CatClientFactory clientFactory = getAndExectue((Class<CatClientFactory>)clientInfo.getFactoryClass(), bean -> {
             if( bean == null ){
                 bean = clientDepend.getClientFactory();
@@ -101,23 +97,21 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             bean.setClientConfiguration(clientDepend.getClientConfig());
             return bean;
         });
-
-        final MethodInterceptor objectMethodInterceptor = clientDepend.getObjectMethodInterceptor();
-        final CatHttpRetryConfigurer retryConfigurer = clientDepend.getRetryConfigurer();
+        
+        final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientFactory);
         final CatSendInterceptor methodInterceptor = getAndExectue((Class<CatSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
             if( bean == null ){
                 bean = clientDepend.getSendInterceptor();
             }
             return bean;
         });
-        final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientFactory);
 
         CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
             @Override
             protected Object getCallback (Method method) {
                 if( CatToosUtil.isObjectMethod(method) ){//默认方法
-                    return objectMethodInterceptor;
+                    return clientDepend.getObjectMethodInterceptor();
                 } else {
 
                     /**
@@ -130,7 +124,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                         method = info;
                     }
 
-                    CatMethodInfo methodInfo = CatMethodInfo.builder(method, clientInfo, envprop).build();
+                    CatMethodInfo methodInfo = CatMethodInfo.builder(method, clientInfo, envProp).build();
 
                     CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
                             .clientInfo(clientInfo)
@@ -138,7 +132,6 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                             .method(method)
                             .factoryAdapter(factoryAdapter)
                             .methodInterceptor(methodInterceptor)
-                            .retryConfigurer(retryConfigurer)
                             .build();
 
                     return interceptor; //代理方法=aop
@@ -193,10 +186,4 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         this.catClient = catClient;
     }
 
-    public Properties getEnvProp() {
-        return envProp;
-    }
-    public void setEnvProp(Properties envProp) {
-        this.envProp = envProp;
-    }
 }
