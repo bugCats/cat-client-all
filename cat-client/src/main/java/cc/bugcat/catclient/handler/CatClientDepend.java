@@ -6,7 +6,7 @@ import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
-import cc.bugcat.catclient.spi.SimpleCatClientFactory;
+import cc.bugcat.catclient.spi.SimpleClientFactory;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.cglib.proxy.MethodInterceptor;
@@ -163,7 +163,7 @@ public class CatClientDepend {
             }
 
             if( clientFactory == null ){
-                clientFactory = new SimpleCatClientFactory();
+                clientFactory = new SimpleClientFactory();
             }
             
             return new CatClientDepend(this);

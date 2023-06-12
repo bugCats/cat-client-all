@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.beanInfos;
 
+import cc.bugcat.catface.spi.CatTypeReference;
 import cc.bugcat.catface.utils.CatToosUtil;
 
 import java.lang.reflect.Type;
@@ -36,7 +37,7 @@ public class CatMethodReturnInfo {
         this.name = clazz.getSimpleName().toUpperCase();
         this.simple = CatToosUtil.isSimpleClass(clazz);
         this.clazz = clazz;
-        this.type = type;
+        this.type = void.class.equals(clazz) ? CatTypeReference.VOID : type;
     }
 
 

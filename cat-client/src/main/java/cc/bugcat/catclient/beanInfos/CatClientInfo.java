@@ -61,7 +61,7 @@ public final class CatClientInfo {
     /**
      * api标签归类
      * */
-    private final Map<String, String> tagMap;
+    private final Map<String, String> tagsMap;
 
     /**
      * http发送工厂类
@@ -121,15 +121,15 @@ public final class CatClientInfo {
         this.logsMod = CatToosUtil.comparator(CatClientConfiguration.LOGS_MOD, Arrays.asList(client.logsMod(), clientConfig.getLogsMod()), CatLogsMod.All2);
 
         // 其他自定义参数、标记
-        Map<String, String> tagMap = new HashMap<>();
+        Map<String, String> tagsMap = new HashMap<>();
         CatNote[] tags = client.tags();
         for ( CatNote tag : tags ) {
             String value = CatToosUtil.defaultIfBlank(tag.value(), "");
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
-            tagMap.put(key, envProp.getProperty(value, String.class));
+            tagsMap.put(key, envProp.getProperty(value, String.class));
         }
-        this.tagMap = Collections.unmodifiableMap(tagMap);
+        this.tagsMap = Collections.unmodifiableMap(tagsMap);
 
         this.factoryClass = CatToosUtil.comparator(CatClientConfiguration.CLIENT_FACTORY, Arrays.asList(client.factory()), clientConfig.getClientFactory());
 
@@ -216,8 +216,8 @@ public final class CatClientInfo {
     public CatLogsMod getLogsMod() {
         return logsMod;
     }
-    public Map<String, String> getTagMap() {
-        return tagMap;
+    public Map<String, String> getTagsMap() {
+        return tagsMap;
     }
     public Class<? extends CatClientFactory> getFactoryClass() {
         return factoryClass;

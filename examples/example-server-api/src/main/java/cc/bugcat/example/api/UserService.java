@@ -18,20 +18,20 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  *
- * 配合@FeignClient，服务端直接通过 @FeignClient标记的interface，生成Controller
+ * 配合@FeignClient，服务端直接通过 @FeignClient标记的interface，生成Controller；
  *
- * 示例中没有引入Feign包，其实有没有Feign不影响结果
- *
- *
- * 方法上@CatMethod注解，可以换成标准的@RequestMapping、@GetMapping等
+ * 示例中没有引入Feign包，其实有没有Feign不影响结果。
  *
  *
- * CatClient 可以忽略，在客户端重新新建一个interface，继承UserService，在新interface上加@CatClient
+ * 方法上@CatMethod注解，可以换成标准的@RequestMapping、@GetMapping等；
+ *
+ *
+ * CatClient 可以忽略，在客户端重新新建一个interface，继承UserService，在新interface上加@CatClient。
  * 参见cc.bugcat.example.catclient.remote.ApiRemote4Ext
  *
  * 或者使用 CatClientProvider 方式：
  * <pre>
- * public interface Config extends CatClientProvider {
+ * public interface ExampleProvider extends CatClientProvider {
  *
  *      @CatClient(host = "${core-server.remoteApi}", getConnect = 3000, getSocket = 3000)
  *      UserService service();
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.*;
  * }
  * </pre>
  *
+ * 
  * CatResponesWrapper 统一为响应添加包装器类。如果响应本身就是包装器类，则忽略
  * 可以仔细查看swagger文档、和接口响应日志
  * 会发现响应外层自动加了一层ResponseEntity

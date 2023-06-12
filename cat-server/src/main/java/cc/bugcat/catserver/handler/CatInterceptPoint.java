@@ -110,8 +110,8 @@ public final class CatInterceptPoint {
     public Class<?> getServerClass(){
         return serverInfo.getServerClass();
     }
-    public Map<String, String> getServerTagMap() {
-        return serverInfo.getTagMap();
+    public Map<String, String> getServerTagsMap() {
+        return serverInfo.getTagsMap();
     }
 
     public HttpServletRequest getRequest() {

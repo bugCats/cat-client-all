@@ -78,7 +78,7 @@ public class CatClientContextHolder {
     /**
      * 1、设置参数
      * */
-    protected void executeConfigurationResolver(CatParameter parameter) {
+    protected void executeConfigurationResolver(CatParameter parameter) throws Exception {
         interceptor.executeConfigurationResolver(this, parameter, () -> {
             CatSendProcessor sendHandler = this.getSendHandler();
             sendHandler.doConfigurationResolver(this, parameter);
@@ -88,7 +88,7 @@ public class CatClientContextHolder {
     /**
      * 2、http参数处理切入点
      * */
-    protected void executeVariableResolver() {
+    protected void executeVariableResolver() throws Exception {
         interceptor.executeVariableResolver(this, () -> {
             CatSendProcessor sendHandler = this.getSendHandler();
             sendHandler.doVariableResolver(this);

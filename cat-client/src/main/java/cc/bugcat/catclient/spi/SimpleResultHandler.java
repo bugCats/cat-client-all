@@ -43,7 +43,7 @@ public class SimpleResultHandler implements CatResultProcessor {
      * 字符串转方法返回对象
      * */
     @Override
-    public Object resultToBean(String result, CatClientContextHolder context) {
+    public Object resultToBean(String result, CatClientContextHolder context) throws Exception {
         if( result == null ){
             return null;
         }
@@ -55,16 +55,16 @@ public class SimpleResultHandler implements CatResultProcessor {
 
         Class returnClass = returnInfo.getClazz();
         
-        // 如果响应类型是object，那么直接返回原始的字符串
+        // 如果响应类型是Object，那么直接返回原始的字符串，不做任何处理
         if( Object.class.equals(returnClass) ){
             return result;
         }
 
         // 没有设置包装器类
         if ( wrapperHandler == null ) {
-
-            //日期、基本数据类型、及包装类
-            if(returnInfo.isSimple()){
+            if( void.class.equals(returnClass) ){
+                return null;
+            } else  if(returnInfo.isSimple()){ //日期、基本数据类型、及包装类
                 return toSimpleBean(result, returnInfo);
             } else if ( java.sql.Date.class.isAssignableFrom(returnInfo.getClazz()) ){
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-mm-dd HH:mi:ss.SSS");   //非线程安全

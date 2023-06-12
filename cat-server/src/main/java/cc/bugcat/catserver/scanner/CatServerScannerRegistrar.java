@@ -4,6 +4,7 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.annotation.EnableCatServer;
 import cc.bugcat.catserver.config.CatServerConfiguration;
+import cc.bugcat.catserver.handler.CatServerDepend;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.utils.CatServerUtil;
@@ -90,12 +91,17 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         
         // 全局配置对象
         beanRegistry.registerBean(configClass);
+
+        // 依赖项
+        beanRegistry.registerBean(CatServerDepend.BEAN_NAME, CatServerDepend.class, definition -> {});
         
         // CatServer初始化对象
         beanRegistry.registerBean(CatServerFactoryBean.class, definition -> {
+            definition.setDependsOn(CatServerDepend.BEAN_NAME);
             definition.getPropertyValues().addPropertyValue("serverClassSet", servers);
         });
 
+        
         log.info("catServer 服务端数量：" + servers.size() );
 
         

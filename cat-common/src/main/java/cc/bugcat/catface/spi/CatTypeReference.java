@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentMap;
  * */
 public abstract class CatTypeReference<T> {
 
+    public static final Type VOID = new CatTypeReference<Void>(){}.getType();
+    
     protected static ConcurrentMap<Type, Type> classTypeCache = new ConcurrentHashMap<Type, Type>(16, 0.75f, 1);
 
 

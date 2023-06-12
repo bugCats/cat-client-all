@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public ResponseEntity<Void> userSave(UserSaveVi vi) {
         String nul = null;
-        nul.trim();
+        nul.trim();  //默认服务端发生异常
         return ResponseEntity.ok(null);
     }
 

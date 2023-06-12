@@ -8,36 +8,42 @@ import cc.bugcat.catface.spi.CatTypeReference;
 import java.lang.reflect.Type;
 
 /**
- * http响应包装器类处理
+ * http响应包装器类处理。
+ * 如果在客户端，则为拆包装器；
+ * 如果在服务端，则为加包装器；
  *
  * @see AbstractResponesWrapper
  * @author bugcat
  * */
 public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntity>{
 
-
+    /**
+     * 返回包装器class
+     * */
     @Override
     public Class<ResponseEntity> getWrapperClass() {
         return ResponseEntity.class;
     }
 
     /**
-     * 获取json转对象泛型
-     */
+     * 组装包装器类中的实际泛型
+     * */
     @Override
     public <T> CatTypeReference getWrapperType(Type type){
         return new CatTypeReference<ResponseEntity<T>>(type){};
     }
 
     /**
-     * 校验业务
-     * 直接抛出异常
-     */
+     * 拆包装器，并且自动校验业务是否成功？
+     * 本示例直接继续抛出异常
+     * */
     @Override
-    public void checkValid(ResponseEntity wrapper) {
+    public void checkValid(ResponseEntity wrapper) throws Exception {
         if( ResponseEntity.succ.equals(wrapper.getErrCode())){
             //正常
         } else {
+            
+            //记录日志
             CatClientContextHolder contextHolder = CatClientContextHolder.getContextHolder();
             CatClientLogger lastCatLog = contextHolder.getSendHandler().getHttpPoint().getLastCatLog();
             lastCatLog.setErrorMessge("[" + wrapper.getErrCode() + "]" + wrapper.getErrMsg());
@@ -47,18 +53,26 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
         }
     }
 
-
+    /**
+     * 拆包装器，获取包装器类中的业务对象
+     * */
     @Override
     public Object getValue(ResponseEntity wrapper) {
         return wrapper.getData();
     }
 
 
+    /**
+     * 加包装器类
+     * */
     @Override
     public ResponseEntity createEntryOnSuccess(Object value, Type returnType) {
         return ResponseEntity.ok(value);
     }
 
+    /**
+     * 当发生异常时加包装器
+     * */
     @Override
     public ResponseEntity createEntryOnException(Throwable throwable, Type returnType) {
         throwable.printStackTrace();

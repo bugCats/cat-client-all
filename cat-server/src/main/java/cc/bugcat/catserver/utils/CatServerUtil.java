@@ -88,19 +88,13 @@ public class CatServerUtil implements ApplicationContextAware{
         return context.getClassLoader();
     }
 
-    public static Environment getEnvironment(){
-        return context.getEnvironment();
-    }
-    
-
-    
     
     /**
      * 检测 className 是否存在，存在则执行consumer
      * */
     public static boolean existClassAndExecute(String className, Consumer<Class> consumer){
         try {
-            Class clazz = Class.forName(className);
+            Class clazz = CatServerUtil.class.getClassLoader().loadClass(className);
             consumer.accept(clazz);
             return true;
         } catch ( Exception ex ) {

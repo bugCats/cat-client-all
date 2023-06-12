@@ -17,10 +17,10 @@ import java.lang.reflect.Type;
  * */
 public interface CatPayloadResolver {
 
-    <T> T toJavaBean(String text, Type type);
+    <T> T toJavaBean(String text, Type type) throws Exception;
 
-    <T> T toJavaBean(String text, AbstractResponesWrapper<T> wrapper, Type type);
+    <T> T toJavaBean(String text, AbstractResponesWrapper<T> wrapper, Type type) throws Exception;
 
-    String toSendString(Object object);
+    String toSendString(Object object) throws Exception;
     
 }

@@ -17,14 +17,16 @@ public class CatFastjsonResolver implements CatPayloadResolver {
 
     @Override
     public <T> T toJavaBean(String text, Type type) {
-        return JSONObject.parseObject(text, type);
+        T object = JSONObject.parseObject(text, type);
+        return object;
     }
 
 
     @Override
     public <T> T toJavaBean(String text, AbstractResponesWrapper<T> wrapper, Type type) {
         CatTypeReference typeRef = wrapper.getWrapperType(type);
-        return JSONObject.parseObject(text, typeRef.getType());
+        T object = JSONObject.parseObject(text, typeRef.getType());
+        return object;
     }
 
 

@@ -16,7 +16,6 @@ import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.handler.Stringable;
 import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
-import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.util.MultiValueMap;
 
 import java.util.HashMap;
@@ -92,7 +91,7 @@ public class CatSendProcessor {
      * 2、参数处理。如果要修改请求方式、参数转换，在这步操作。
      * 仅会执行一次
      * */
-    public void doVariableResolver(CatClientContextHolder context){
+    public void doVariableResolver(CatClientContextHolder context) throws Exception {
         
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatParameter parameter = httpPoint.getParameter();
@@ -185,7 +184,7 @@ public class CatSendProcessor {
         CatMethodInfo methodInfo = context.getMethodInfo();
         if ( retryConfigurer.isEnable() && retryCount > 0) {
             boolean note = retryConfigurer.containsNote(notes);
-            boolean tags = retryConfigurer.containsTags(clientInfo.getTagMap());
+            boolean tags = retryConfigurer.containsTags(clientInfo.getTagsMap());
             boolean method = retryConfigurer.containsMethod(methodInfo.getMethodName());
             boolean status = retryConfigurer.containsStatus(exception.getStatusCode());
             boolean ex = retryConfigurer.containsException(exception.getIntrospectedClass());
@@ -219,7 +218,7 @@ public class CatSendProcessor {
     /**
      * 入参Map转字符串
      * */
-    protected final String mapToString(Map<String, ?> requestMap){
+    protected final String mapToString(Map<String, ?> requestMap) throws Exception {
         if( false == httpPoint.isPostString() ){
             CatMethodInfo methodInfo = context.getMethodInfo();
             // 请求入参转换成String，方便记录日志
@@ -254,7 +253,7 @@ public class CatSendProcessor {
     /**
      * 入参对象转字符串
      * */
-    protected final String parameterToString(CatHttpPoint httpPoint){
+    protected final String parameterToString(CatHttpPoint httpPoint) throws Exception {
         CatParameter parameter = httpPoint.getParameter();
         Object value = parameter.getValue();
         String requestBody = null;

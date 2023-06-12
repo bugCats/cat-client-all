@@ -50,12 +50,16 @@ public interface ApiRemoteService3 {
 
 
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
-    String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
+    Object demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
 
 
     @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
     PageInfo<Demo> demo3(Demo req, CatSendProcessor send);
 
+
+    @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)
+    ResponseEntity<PageInfo<Demo>> demo32(Demo req, CatSendProcessor send);
+    
     @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
     ResponseEntity<Demo> demo4(@RequestParam("name") String name, @RequestParam("mark") String mark);
 
@@ -74,9 +78,11 @@ public interface ApiRemoteService3 {
      * 抛出自定义异常
      * Void为占位符
      * */
-    @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
-    Void demo6(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name);
+    @CatMethod(value = "/cat/demo4", method = RequestMethod.GET)
+    Void demo6(@RequestParam("name") String name, @RequestParam("mark") String mark);
 
+    @CatMethod(value = "/cat/demo6/{userId}", method = RequestMethod.GET)
+    void demo7(@PathVariable("userId") Long userId, CatSendProcessor send, @RequestParam("name") String name);
 
     /**
      * 模拟发生http异常

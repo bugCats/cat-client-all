@@ -9,7 +9,9 @@ import cc.bugcat.example.tools.ResponseEntityWrapper;
 import io.swagger.annotations.Api;
 import org.springframework.stereotype.Component;
 
-
+/**
+ * 服务端CatServer继承，实现API升级
+ * */
 
 @Api(tags = "用户操作api")
 @Catface

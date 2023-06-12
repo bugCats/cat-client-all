@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatServerHandler;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import org.springframework.cglib.proxy.Callback;
@@ -31,7 +32,7 @@ public class CatControllerAssist {
 	public static class Enable implements Condition {
 		@Override
 		public boolean matches(ConditionContext context, AnnotatedTypeMetadata annotatedTypeMetadata) {
-			return "true".equals(context.getEnvironment().resolvePlaceholders("${cat-server.controller-assist.enable:true}"));
+			return "true".equalsIgnoreCase(context.getEnvironment().resolvePlaceholders("${cat-server.controller-assist.enable:true}"));
 		}
 	}
 	
@@ -40,15 +41,11 @@ public class CatControllerAssist {
 	@ResponseBody
 	public Object handleException(Throwable throwable, HandlerMethod handlerMethod, HttpServletRequest request, HttpServletResponse response) {
 		try {
-			
-			while ( throwable.getCause() != null ) {
-				throwable = throwable.getCause();
-			}
-
-			Method method = handlerMethod.getMethod();
+			throwable = CatToosUtil.getCause(throwable);
 
 			Factory ctrlBean = (Factory) handlerMethod.getBean();
 
+			Method method = handlerMethod.getMethod();
 			CatMethodAopInterceptor methodInterceptor = null;
 			Callback[] callbacks = ctrlBean.getCallbacks();
 			for ( int idx = 0; idx < callbacks.length; idx ++ ){
@@ -64,9 +61,10 @@ public class CatControllerAssist {
 			CatMethodInfo methodInfo = methodInterceptor.getMethodInfo();
 			CatResultHandler resultHandler = methodInfo.getResultHandler();
 
-
 			Object result = resultHandler.onError(throwable, handlerMethod.getMethod().getReturnType());
 			return result;
+				
+			
 		} catch ( Throwable es ) {
 			throw new RuntimeException(es);
 		}

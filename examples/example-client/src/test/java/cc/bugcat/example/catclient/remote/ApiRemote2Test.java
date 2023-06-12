@@ -10,19 +10,26 @@ import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.example.dto.Demo;
 import cc.bugcat.example.tools.PageInfo;
 import cc.bugcat.example.tools.ResponseEntity;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import static org.assertj.core.api.Assertions.*;
 import java.util.Properties;
 
 
 /**
- * 异常增强版
+ * 异常增强版。
+ * ApiRemoteService2配置了异常回调类：fallback=ApiRemoteService2Fallback.class；
+ * 当发生http异常时，会执行回调类对应的方法，返回默认数据
  * */
 public class ApiRemote2Test {
 
     private static ApiRemoteService2 remote;
-    static {
+    
+    
+    @BeforeClass
+    public static void beforeClass(){
         /**
          * 静态方法调用
          * 如果使用Spring容器启动，则不需要这些
@@ -43,19 +50,19 @@ public class ApiRemote2Test {
      * 发生异常回调
      * */
     @Test
-    public void demo1() throws Exception {
+    public void demo1() {
         Demo demo = creart();
         ResponseEntity<Demo> resp = remote.demo1(demo);
-        System.err.println(JSONObject.toJSONString(resp));
+        assertThat(resp).hasFieldOrPropertyWithValue("errMsg", "demo1实际调用失败, 这是ApiRemote2Error异常回调类返回的");
+//        System.err.println(JSONObject.toJSONString(resp));
 
     }
 
     @Test
-    public void demo2() throws Exception {
+    public void demo2() {
         Demo demo = creart();
         CatSendProcessor sendHandler = new CatSendProcessor();
         String resp = remote.demo2(sendHandler, demo);
-
         System.err.println("resp=" + resp);
 
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
@@ -66,7 +73,7 @@ public class ApiRemote2Test {
 
 
     @Test
-    public void demo9() throws Exception {
+    public void demo9() {
         PageInfo<Demo> pageInfo = new PageInfo<>();
         ResponseEntity<String> resp = remote.demo9(pageInfo);
         System.err.println(JSONObject.toJSONString(resp));

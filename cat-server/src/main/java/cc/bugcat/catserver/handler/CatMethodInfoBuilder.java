@@ -18,6 +18,7 @@ import org.springframework.util.ClassUtils;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -103,8 +104,7 @@ public final class CatMethodInfoBuilder {
                 handers.add(CatServerUtil.getBean(clazz));
             }
         }
-        
-        Collections.sort(interceptorGroup, (i1, i2) -> i1.getOrder() < i2.getOrder() ? 1 : -1);
+        Collections.sort(interceptorGroup, Comparator.comparingInt(CatInterceptorGroup::getOrder));
         
         this.interceptors = handers;
         this.interceptorGroups = interceptorGroup;

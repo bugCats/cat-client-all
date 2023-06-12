@@ -32,10 +32,10 @@ public interface ApiRemoteService4 {
 
     /**
      * interface上包含了@CatResponesWrapper，意思是希望自动拆包装器类，但是实际上服务端返回的数据类型是 ResponseEntity<Demo>
-     *     但是此处直接使用String接收，不会报错
+     *     但是此处直接使用Object接收，表示不要反序列化，不会报错
      * */
     @CatMethod(value = "/cat/demo2", method = RequestMethod.POST)
-    String demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
+    Object demo2(CatSendProcessor send, @ModelAttribute("req") DemoEntity req);
 
 
     @CatMethod(value = "/cat/demo3", method = RequestMethod.GET, connect = 60000)

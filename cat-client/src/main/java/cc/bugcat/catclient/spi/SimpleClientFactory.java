@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  *
  * @author bugcat
  * */
-public class SimpleCatClientFactory implements CatClientFactory {
+public class SimpleClientFactory implements CatClientFactory {
 
 
     private CatClientConfiguration configuration;

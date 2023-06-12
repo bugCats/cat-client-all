@@ -22,14 +22,16 @@ import java.util.Map;
 
 
 /**
- * 精简模式
+ * 精简模式。
+ * 所有的方法均视为API，全是采用 post + Json 方式发起请求；
+ * 方法名可以任意，但是不能重复！！
  * */
 @Api(tags = "精简模式")
 @Catface
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface FaceDemoService{
 
-
+    
     UserInfo param0();
 
     UserInfo param1(@NotBlank(message = "userId不能为空") String userId);

@@ -8,18 +8,24 @@ import cc.bugcat.example.tools.ResponseEntity;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 /**
- * 单元测试类
+ * 单元测试类。
+ * TokenRemote使用interceptor=TokenInterceptor.class拦截器修改数据
  * */
 public class TokenRemoteTest {
 
     private static TokenRemote remote;
-    static {
+    
+    
+    
+    @BeforeClass
+    public static void beforeClass(){
         ((Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.ERROR);
         /**
          * 静态方法调用

@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.handler;
 
 
+import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.cglib.reflect.FastMethod;
 
@@ -46,7 +47,7 @@ public class CatServiceMethodProxy {
             try {
                 return methodProxy.invoke(target, args);
             } catch ( Throwable throwable ) {
-                throw new Exception(throwable);
+                throw new Exception(CatToosUtil.getCause(throwable));
             }
         }
     }

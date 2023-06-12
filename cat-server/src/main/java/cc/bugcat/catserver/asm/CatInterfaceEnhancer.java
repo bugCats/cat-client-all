@@ -115,7 +115,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
         AsmClassDescriptor asmClassDescriptor = null;
         
         //从最上级开始解析
-        while ( !interfaceParents.empty() ) {
+        while ( false == interfaceParents.empty() ) {
             Class parentInterface = interfaceParents.pop();
 
             asmClassDescriptor = enhancerDepend.getClassDescriptorMap(parentInterface);
@@ -392,9 +392,8 @@ public final class CatInterfaceEnhancer implements Opcodes {
             }
             try (FileOutputStream fos = new FileOutputStream(dir)){
                 fos.write(newbs);
-                fos.close();
             } catch ( Exception ex ) {
-                System.out.println("CatInterfaceEnhancer's print has an error. " + ex.getMessage());
+                System.err.println("CatInterfaceEnhancer's print has an error. " + ex.getMessage());
             }
         }
     }

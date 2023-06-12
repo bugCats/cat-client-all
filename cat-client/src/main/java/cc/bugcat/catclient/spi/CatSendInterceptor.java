@@ -19,7 +19,7 @@ public interface CatSendInterceptor {
      * 1、拦截器中处理http配置项
      * 每次调用interface的方法，仅执行一次
      * */
-    default void executeConfigurationResolver(CatClientContextHolder context, CatParameter parameter, Intercepting processor){
+    default void executeConfigurationResolver(CatClientContextHolder context, CatParameter parameter, Intercepting processor) throws Exception {
         processor.executeInternal();
     }
     
@@ -28,7 +28,7 @@ public interface CatSendInterceptor {
      * 2、拦截器中处理参数
      * 每次调用interface的方法，仅执行一次
      * */
-    default void executeVariableResolver(CatClientContextHolder context, Intercepting processor) {
+    default void executeVariableResolver(CatClientContextHolder context, Intercepting processor) throws Exception {
         processor.executeInternal();
     }
 
@@ -46,7 +46,7 @@ public interface CatSendInterceptor {
     
     
     static interface Intercepting {
-        void executeInternal();
+        void executeInternal() throws Exception;
     }
     static interface HttpIntercepting {
         String executeInternal() throws CatHttpException;

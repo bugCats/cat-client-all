@@ -6,7 +6,7 @@ import cc.bugcat.example.catclient.remote.ApiRemoteService1;
 import cc.bugcat.example.catclient.remote.ApiRemoteService2;
 import cc.bugcat.example.catclient.remote.ApiRemoteService3;
 import cc.bugcat.example.catclient.remote.ApiRemoteService4;
-import cc.bugcat.example.catclient.serverApi.Config;
+import cc.bugcat.example.catclient.serverApi.ExampleProvider;
 import cc.bugcat.example.catclient.sign.SignRemote;
 import cc.bugcat.example.catclient.token.TokenRemote;
 import cc.bugcat.example.dto.Demo;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-@EnableCatClient(classes = {Config.class})    //开启被CatClient，并且扫描指定包路径
+@EnableCatClient(classes = {ExampleProvider.class})    //开启被CatClient，并且扫描指定包路径
 @SpringBootApplication
 public class CatClientApplication {
 

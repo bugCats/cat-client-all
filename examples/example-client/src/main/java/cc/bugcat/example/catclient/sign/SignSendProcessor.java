@@ -23,12 +23,16 @@ public class SignSendProcessor extends CatSendProcessor {
              * demo12 从入参中获取
              * demo13 从入参中获取
              * */
-            String spring = notes.getString("spring"); //
-            System.out.println("SignSendProcessor.spring=>" + spring);
+            String spring = notes.getString("apikey"); //
+            if ( CatToosUtil.isNotBlank(spring) ) {
+                System.out.println("apikey=>" + spring);
+            }
 
-            String spEL = notes.getString("spEL"); //
-            System.out.println("SignSendProcessor.spEL=>" + spEL);
-            
+            String spEL = notes.getString("spEL");
+            if ( CatToosUtil.isNotBlank(spEL) ) {
+                System.out.println("#{demo.userkey}=" + spEL);
+            }
+
             // 还可以使用 ThreadLocal、或者SendProcessor本身 传递密钥
         }
     }

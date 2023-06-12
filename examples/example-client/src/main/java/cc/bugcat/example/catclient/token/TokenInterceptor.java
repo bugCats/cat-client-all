@@ -22,7 +22,7 @@ public class TokenInterceptor implements CatSendInterceptor {
      * 使用拦截器修改参数
      * */
     @Override
-    public void executeVariableResolver(CatClientContextHolder context, Intercepting intercepting) {
+    public void executeVariableResolver(CatClientContextHolder context, Intercepting intercepting) throws Exception {
         CatSendProcessor sendHandler = context.getSendHandler();
         sendHandler.setTracerId(String.valueOf(System.currentTimeMillis()));
         JSONObject notes = sendHandler.getNotes();
@@ -53,7 +53,7 @@ public class TokenInterceptor implements CatSendInterceptor {
         private String value;
         private String getToken(long now){
             if( now > keepTime ){
-                TokenSend sender = new TokenSend(); // 获取token的时候，显示指定CatSendProcessor实例
+                TokenSend sender = new TokenSend(); // 获取token的时候，显示使用指定CatSendProcessor实例
                 ResponseEntity<String> bean = tokenRemote.getToken(sender, "", "");
                 keepTime = System.currentTimeMillis() + 3600;
                 value = bean.getData();

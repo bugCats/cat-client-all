@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  * 
  * 如果需要修改http整体流程，才需要考虑修改。
  * 
- * @see SimpleCatClientFactory
+ * @see SimpleClientFactory
  * @author bugcat
  * */
 public interface CatClientFactory {

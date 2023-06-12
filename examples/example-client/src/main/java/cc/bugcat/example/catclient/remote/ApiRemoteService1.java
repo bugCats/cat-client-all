@@ -168,7 +168,7 @@ public interface ApiRemoteService1 {
      * */
     @CatMethod(value = "/cat/demo9", method = RequestMethod.GET)
     default ResponseEntity<String> demo9() {
-        return ResponseEntity.fail("-1", "模拟发生http异常");
+        return ResponseEntity.fail("-1", "模拟发生http异常，返回默认数据");
     }
 
 

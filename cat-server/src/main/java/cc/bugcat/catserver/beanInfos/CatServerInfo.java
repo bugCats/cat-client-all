@@ -41,7 +41,7 @@ public class CatServerInfo {
     /**
      * api标签归类
      * */
-    private final Map<String, String> tagMap;
+    private final Map<String, String> tagsMap;
 
     /**
      * controller的拦截器
@@ -74,19 +74,17 @@ public class CatServerInfo {
         this.serverClass = serverClass;
 
         // 其他自定义参数、标记
-        Map<String, String> tagMap = new HashMap<>();
+        Map<String, String> tagsMap = new HashMap<>();
         CatNote[] tags = catServer.tags();
         for ( CatNote tag : tags ) {
             String value = CatToosUtil.defaultIfBlank(tag.value(), "");
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
-            if ( value.startsWith("${") ) {
-                tagMap.put(key, envProp.getProperty(value, String.class));
-            } else {
-                tagMap.put(key, value);
-            }
+            
+            String tagsNote = envProp.getProperty(value, String.class);
+            tagsMap.put(key, tagsNote);
         }
-        this.tagMap = Collections.unmodifiableMap(tagMap);
+        this.tagsMap = Collections.unmodifiableMap(tagsMap);
 
         Set<Class<? extends CatServerInterceptor>> interceptors = new LinkedHashSet<>(catServer.interceptors().length * 2);
         for ( Class<? extends CatServerInterceptor> interceptor : catServer.interceptors() ) {
@@ -144,8 +142,8 @@ public class CatServerInfo {
     public Class<?> getServerClass() {
         return serverClass;
     }
-    public Map<String, String> getTagMap() {
-        return tagMap;
+    public Map<String, String> getTagsMap() {
+        return tagsMap;
     }
     public AbstractResponesWrapper getWrapperHandler() {
         return wrapperHandler;

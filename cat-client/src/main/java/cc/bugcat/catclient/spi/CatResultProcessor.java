@@ -23,7 +23,7 @@ public interface CatResultProcessor {
     /**
      * 将http返回的字符串，转换成对象
      * */
-    Object resultToBean(String result, CatClientContextHolder context);
+    Object resultToBean(String result, CatClientContextHolder context) throws Exception;
 
 
     /**

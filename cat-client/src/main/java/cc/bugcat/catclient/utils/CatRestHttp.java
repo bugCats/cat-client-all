@@ -54,6 +54,12 @@ public class CatRestHttp implements CatHttp {
                         respStr = doPost(path, httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
                     }
                     break;
+                case PUT:
+                    respStr = doPut(path, httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
+                    break;
+                case DELETE:
+                    respStr = doDelete(path, httpPoint.getKeyValueParam(), httpPoint.getHeaderMap(), httpPoint.getSocket(), httpPoint.getConnect());
+                    break;
                 default:
                     throw new HttpClientErrorException(HttpStatus.NOT_IMPLEMENTED, "未实现的请求方式:" + httpPoint.getRequestType());
             }
@@ -90,13 +96,13 @@ public class CatRestHttp implements CatHttp {
     private String doPost(String url, MultiValueMap<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
         return requestSend(url, HttpMethod.POST, headers, params, ints);
     }
-
-    private String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws CatHttpException {
-        headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-        HttpHeaders httpHeaders = getHeaders(headers);
-        HttpEntity<String> request = new HttpEntity<>(jsonStr, httpHeaders);
-        RestTemplate rest = createRestTemplate(ints);
-        return rest.postForObject(url, request, String.class);
+    
+    private String doPut(String url, MultiValueMap<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
+        return requestSend(url, HttpMethod.PUT, headers, params, ints);
+    }
+    
+    private String doDelete(String url, MultiValueMap<String, Object> params, Map<String, String> headers, int... ints) throws CatHttpException {
+        return requestSend(url, HttpMethod.DELETE, headers, params, ints);
     }
 
     private String requestSend(String url, HttpMethod method, Map<String, String> headers, MultiValueMap<String, Object> params, int... ints) {
@@ -111,6 +117,16 @@ public class CatRestHttp implements CatHttp {
     }
 
 
+    private String jsonPost(String url, String jsonStr, Map<String, String> headers, int... ints) throws CatHttpException {
+        headers.put("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        HttpHeaders httpHeaders = getHeaders(headers);
+        HttpEntity<String> request = new HttpEntity<>(jsonStr, httpHeaders);
+        RestTemplate rest = createRestTemplate(ints);
+        return rest.postForObject(url, request, String.class);
+    }
+
+    
+    
     private final RestTemplate createRestTemplate(int[] ints){
         if( ints == null || ints.length != 2 ){
             ints = TIMEOUT;
@@ -132,7 +148,6 @@ public class CatRestHttp implements CatHttp {
         }
         return rest;
     }
-
 
     private final HttpHeaders getHeaders(Map<String, String> headers){
         HttpHeaders httpHeaders = new HttpHeaders();

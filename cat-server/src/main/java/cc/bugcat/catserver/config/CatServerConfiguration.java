@@ -5,6 +5,7 @@ import cc.bugcat.catserver.handler.CatServerDefaults;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
+import cc.bugcat.catserver.spi.DefaultResultHandler;
 import cc.bugcat.catserver.spi.SimpleWrapperResultHandler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ public class CatServerConfiguration implements InitializingBean {
      * 默认的响应处理
      * */
     public Class<? extends CatResultHandler> getResultHandler(AbstractResponesWrapper wrapperHandler){
-        return wrapperHandler != null ? SimpleWrapperResultHandler.class : CatResultHandler.Default.class;
+        return wrapperHandler != null ? SimpleWrapperResultHandler.class : DefaultResultHandler.class;
     }
     
 

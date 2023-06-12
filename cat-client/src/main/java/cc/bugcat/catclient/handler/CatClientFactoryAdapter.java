@@ -27,7 +27,7 @@ public class CatClientFactoryAdapter {
         this.resultHandler = bridge.getResultHandler();
         this.catHttp = bridge.getCatHttp();
         this.loggerProcessor = bridge.getLoggerProcessor();
-        this.payloadResolver = bridge.getPayloadResolver();
+        this.payloadResolver = new CatPayloadResolverDecorator(bridge.getPayloadResolver());
         this.sendProcessorSupplier = bridge.newSendHandler();
     }
 

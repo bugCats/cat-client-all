@@ -43,35 +43,25 @@ public class CatJacksonResolver implements CatPayloadResolver {
 
 
     @Override
-    public <T> T toJavaBean(String jsonString, Type type) {
-        try {
-            JavaType javaType = mapper.getTypeFactory().constructType(type);
-            return mapper.readValue(jsonString, javaType);
-        } catch ( Exception ex ) {
-            throw new RuntimeException("对象反序列化异常：" + ex.getMessage(), ex);
-        }
+    public <T> T toJavaBean(String text, Type type) throws Exception {
+        JavaType javaType = mapper.getTypeFactory().constructType(type);
+        T object = mapper.readValue(text, javaType);
+        return object;
     }
 
 
     @Override
-    public <T> T toJavaBean(String jsonString, AbstractResponesWrapper<T> wrapper, Type type) {
+    public <T> T toJavaBean(String text, AbstractResponesWrapper<T> wrapper, Type type) throws Exception {
         CatTypeReference typeRef = wrapper.getWrapperType(type);
-        try {
-            JavaType javaType = mapper.getTypeFactory().constructType(typeRef.getType());
-            return mapper.readValue(jsonString, javaType);
-        } catch ( Exception ex ) {
-            throw new RuntimeException("对象反序列化异常：" + ex.getMessage(), ex);
-        }
+        JavaType javaType = mapper.getTypeFactory().constructType(typeRef.getType());
+        T object = mapper.readValue(text, javaType);
+        return object;
     }
 
 
     @Override
-    public String toSendString(Object object) {
-        try {
-            return mapper.writeValueAsString(object);
-        } catch ( Exception ex ) {
-            throw new RuntimeException("对象序列化异常", ex);
-        }
+    public String toSendString(Object object) throws Exception {
+        return mapper.writeValueAsString(object);
     }
 
 }

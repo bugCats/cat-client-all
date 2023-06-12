@@ -14,20 +14,29 @@ import cc.bugcat.example.tools.ResponseEntity;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
- *
+ * 客户端继承
  * */
 public class ApiRemote4Test {
 
 
+    /**
+     * 是子类
+     * */
     private static ApiRemoteService4Plus remote;
-    static {
+    
+    
+    @BeforeClass
+    public static void beforeClass(){
         /**
          * 静态方法调用
          * 如果使用Spring容器启动，则不需要这些
@@ -69,7 +78,7 @@ public class ApiRemote4Test {
 
 
     @Test
-    public void demo1() throws Exception {
+    public void demo1()  {
         Demo demo = creart();
         ResponseEntity<Demo> resp = remote.demo1(demo);
         System.out.println(JSONObject.toJSONString(resp));
@@ -77,12 +86,11 @@ public class ApiRemote4Test {
     }
 
     @Test
-    public void demo2() throws Exception {
+    public void demo2()  {
         Demo demo = creart();
         CatSendProcessor sendHandler = new CatSendProcessor();
-        String resp = remote.demo2(sendHandler, new DemoEntity(demo));
-
-        System.out.println("resp=" + JSONObject.toJSONString(resp));
+        Object resp = remote.demo2(sendHandler, new DemoEntity(demo));
+        System.out.println("resp=" + (String)resp);
 
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
         System.out.println("req=" + httpPoint.getRequestBody());
@@ -90,7 +98,7 @@ public class ApiRemote4Test {
     }
 
     @Test
-    public void demo3() throws Exception {
+    public void demo3()  {
         Demo demo = creart();
         CatSendProcessor sendHandler = new CatSendProcessor();
 
@@ -104,7 +112,7 @@ public class ApiRemote4Test {
 
 
     @Test
-    public void demo4() throws Exception {
+    public void demo4()  {
         ResponseEntity<Demo> resp = remote.demo4("bug猫", "bug猫");
         System.out.println(JSONObject.toJSONString(resp));
         ResponseEntity<Demo> resp2 = remote.demo4("bug猫2", "bug猫2");
@@ -114,37 +122,51 @@ public class ApiRemote4Test {
 
     /**
      * 自动拆包异常
+     * @see cc.bugcat.example.catclient.remote.ApiRemote3Test#demo5()
      * */
     @Test
-    public void demo5() throws Exception {
-        Demo resp1 = remote.demo5(System.currentTimeMillis());
-        System.out.println(JSONObject.toJSONString(resp1));
-
-        Demo resp2 = remote.demo5(System.currentTimeMillis());
-        System.out.println(JSONObject.toJSONString(resp2));
+    public void demo5()  {
+        try {
+            Demo resp1 = remote.demo5(System.currentTimeMillis());
+            System.out.println(JSONObject.toJSONString(resp1));
+        } catch ( Exception e ) {
+            assertThat(e).hasMessageContaining("null");
+        }
 
     }
 
     /**
      * 自动拆包并检验异常
+     * @see cc.bugcat.example.catclient.remote.ApiRemote3Test#demo6()
      * */
     @Test
-    public void demo6() throws Exception {
-        CatSendProcessor sendHandler = new CatSendProcessor();
-        Void nul = remote.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
+    public void demo6()  {
+        try {
+            CatSendProcessor sendHandler = new CatSendProcessor();
+            Void nul = remote.demo6(System.currentTimeMillis(), sendHandler, "bug猫");
+        } catch ( Exception e ) {
+            assertThat(e).hasMessageContaining("自定义异常说明");
+        }
     }
 
     @Test
-    public void demo7() throws Exception {
+    public void demo7()  {
         CatSendProcessor sendHandler = new CatSendProcessor();
         Demo resp = remote.demo7("bug猫");
         System.out.println(JSONObject.toJSONString(resp));
     }
 
     @Test
-    public void demo9() throws Exception {
-        ResponseEntity<String> resp = remote.demo9();
-        System.out.println(JSONObject.toJSONString(resp));
+    public void demo9()  {
+        try {
+            /**
+             * 模拟发生http异常
+             * */
+            ResponseEntity<String> resp = remote.demo9();
+            System.out.println(JSONObject.toJSONString(resp));
+        } catch ( Exception e ) {
+            assertThat(e).hasMessageContaining("404");
+        }
     }
 
 
