@@ -8,7 +8,7 @@ import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
 import cc.bugcat.catclient.handler.CatClientLogger;
-import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
@@ -148,12 +148,14 @@ public class CatSendProcessor {
 
         long start = System.currentTimeMillis();
 
+        CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
         CatClientFactoryAdapter factoryAdapter = context.getFactoryAdapter();
 
         CatClientLogger catLog = new CatClientLogger();
         catLog.setTracerId(this.getTracerId());
         catLog.setLogsMod(methodInfo.getLogsMod());
+        catLog.setClientClass(clientInfo.getClientClass());
         catLog.setApiName(methodInfo.getMethodName());
         catLog.setApiUrl(httpPoint.getHost() + httpPoint.getUrl());
         catLog.setRequest(httpPoint.getRequestBody());

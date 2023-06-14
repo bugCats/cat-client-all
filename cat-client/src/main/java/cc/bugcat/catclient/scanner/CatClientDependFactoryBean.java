@@ -4,11 +4,14 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
+import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -32,23 +35,32 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     public static final String BEAN_NAME = "catClientDepend";
 
     @Autowired
-    private CatClientUtil catClient;
-
-    @Autowired
-    private CatClientConfiguration clientConfig;
+    private CatClientUtil clientUtil;
 
     @Autowired
     private CatHttpRetryConfigurer retryConfigurer;
 
+    @Autowired
+    private CatClientConfiguration clientConfig;
+
+    @Autowired(required = false)
+    private List<AbstractResponesWrapper> wrappers;
+    
     @Autowired(required = false)
     private List<CatClientFactory> clientFactories;
 
     @Autowired(required = false)
-    private List<CatSendInterceptor> sendInterceptors;
+    private List<CatResultProcessor> resultProcessors;
     
+    @Autowired(required = false)
+    private List<CatSendInterceptor> sendInterceptors;
+
+    @Autowired(required = false)
+    private List<RestTemplate> restTemplates;
     
     @Autowired
     private ConfigurableListableBeanFactory configurableBeanFactory;
+    
     
     
     @Override
@@ -60,8 +72,7 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     public Class<CatClientDepend> getObjectType() {
         return CatClientDepend.class;
     }
-
-
+    
     @Override
     protected CatClientDepend createInstance() {
         CatClientDepend clientDepend = CatClientDepend.builder()
@@ -69,7 +80,6 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
                 .clientConfig(clientConfig)
                 .environment(configurableBeanFactory)
                 .build();
-        catClient.registerBean(this.getClass(), this);
         return clientDepend;
     }
 }

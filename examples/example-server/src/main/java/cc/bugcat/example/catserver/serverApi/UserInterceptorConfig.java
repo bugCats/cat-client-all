@@ -9,7 +9,6 @@ import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
@@ -20,17 +19,17 @@ import java.util.function.Supplier;
 @Configuration
 public class UserInterceptorConfig extends CatServerConfiguration {
 
-    private CatServerInterceptor userDefualtInterceptor;
+    private CatServerInterceptor userGlobalInterceptor;
 
 
     @Override
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
-        this.userDefualtInterceptor = new CatServerInterceptor() {
+        this.userGlobalInterceptor = new CatServerInterceptor() {
             @Override
             public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                 CatInterceptPoint interceptPoint = contextHolder.getInterceptPoint();
-                System.out.println("默认拦截器，可以被自定义拦截器覆盖 => " + interceptPoint.getRequest().getRequestURI());
+                System.out.println("全局拦截器，可以被自定义拦截器覆盖。这是自定义全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
                 return contextHolder.proceedRequest();
             }
         };
@@ -40,7 +39,7 @@ public class UserInterceptorConfig extends CatServerConfiguration {
 
     @Override
     public CatServerInterceptor getServerInterceptor() {
-        return this.userDefualtInterceptor;
+        return this.userGlobalInterceptor;
     }
 
 
@@ -71,7 +70,7 @@ public class UserInterceptorConfig extends CatServerConfiguration {
                      */
                     @Override
                     public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
-                        System.out.println("全局拦截器，不可以被覆盖，只能使用CatServerInterceptor.Off.class关闭");
+                        System.out.println("全局拦截器，不可以被覆盖，只能使用CatServerInterceptor.GroupOff.class关闭");
                         return contextHolder.proceedRequest();
                     }
                 });

@@ -1,6 +1,8 @@
 package cc.bugcat.catserver.spi;
 
 
+import cc.bugcat.catserver.annotation.CatServer;
+import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.handler.CatInterceptPoint;
 import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 import cc.bugcat.catserver.handler.CatServerContextHolder;
@@ -8,14 +10,19 @@ import cc.bugcat.catserver.handler.CatServerContextHolder;
 
 /**
  *
- * CatServer类上拦截器
+ * CatServer类上拦截器。
  *
  * 被{@code CatServer}标记的类，会作为Controller注册到系统中，
- * 如果需要对这些类权限控制，可以通过Aop切面控制，也可以使用自定义拦截器处理
- *
+ * 如果需要对这些类权限控制，可以通过Aop切面控制，也可以使用自定义拦截器处理；
  * 注意，此拦截器只会通过http访问时生效，如果直接内部调用标记类，是不会生效！
- *
- * 默认会被配置文件中匹配的拦截器组替换
+ * 
+ * {@link CatServer#interceptors()}中
+ *  1、如果需要使用全局默认拦截器，使用{@code CatServerInterceptor.class}占位。
+ *      最终会被{@link CatServerConfiguration#getServerInterceptor()}替换。
+ *  2、如果不需要自定义拦截器和全局拦截器，可以使用{@code CatServerInterceptor.Empty.class}；
+ *  3、默认都会匹配拦截器组，如果满足条件，则会在所有拦截器之前执行。如果不需要拦截组，使用{@code CatServerInterceptor.GroupOff.class}关闭
+ * 
+ * 
  *
  * @see CatMethodAopInterceptor
  *
@@ -24,9 +31,18 @@ import cc.bugcat.catserver.handler.CatServerContextHolder;
 public interface CatServerInterceptor {
 
     /**
-     * 关闭所有拦截器，包括运行时匹配情况
+     * 空的拦截器。
+     * 如果某个CatServer不想使用{@link CatServer#interceptors()}拦截器，可以使用{@code CatServerInterceptor.Empty.class}关闭。
+     * 注意，仍然会执行拦截组！
      * */
-    public static final class Off implements CatServerInterceptor {
+    public static final class Empty implements CatServerInterceptor {
+
+    }
+    
+    /**
+     * 关闭拦截器组。
+     * */
+    public static final class GroupOff implements CatServerInterceptor {
 
     }
     

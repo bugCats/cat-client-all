@@ -3,10 +3,12 @@ package cc.bugcat.catclient.handler;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.handler.CatContextHolder;
+import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -110,15 +112,17 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             
         } catch ( Throwable throwable ) {
 
+            Throwable ex = CatToosUtil.getCause(throwable);
+            
             // http异常，或者反序列化异常了
-            CatContextHolder.setException(throwable);
+            CatContextHolder.setException(ex);
 
             if ( clientInfo.isFallbackMod() ) { //开启了异常回调模式，执行自定义http异常处理
                 if( method.isDefault() ){ // interface默认方法
                     try {
                         respObj = invokeDefaultMethod(target, method, args);
                         return respObj;
-                    } catch ( Throwable ex ) {
+                    } catch ( Throwable ex1 ) {
                         // interface默认方法中继续抛出异常，不处理
                     }
 
@@ -126,7 +130,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                     try {
                         respObj = methodProxy.invokeSuper(target, args);
                         return respObj;
-                    } catch ( Throwable ex ) {
+                    } catch ( Throwable ex1 ) {
                         // 回调类中继续抛出异常，不处理
                     }
                 }
@@ -163,7 +167,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 // 如果开启了包装器模式，拆包装
                 respObj = resultHandler.onFinally(respObj, context);
 
-            } catch ( Exception ex ) {
+            } catch ( Throwable ex ) {
 
                 // 拆包中出现异常
                 throw ex;

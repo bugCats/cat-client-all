@@ -13,11 +13,11 @@ public class DefaultResultHandler implements CatResultHandler {
     }
 
 
-    public Object onSuccess(Object value, Class returnType){
+    public Object onSuccess(Object value, Class methodReturnClass){
         return value;
     }
 
-    public Object onError(Throwable throwable, Class returnType) throws Throwable{
+    public Object onError(Throwable throwable, Class methodReturnClass) throws Throwable{
         throw throwable;
     }
     

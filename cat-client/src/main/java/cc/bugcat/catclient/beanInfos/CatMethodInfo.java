@@ -248,13 +248,11 @@ public class CatMethodInfo {
 
     public static class CatMethodInfoBuilder {
 
-        private final String serviceName;
         private final Method method;
         private final CatClientInfo clientInfo;
         private final EnvironmentAdapter envProp;
 
         private CatMethodInfoBuilder(Method method, CatClientInfo clientInfo, EnvironmentAdapter envProp) {
-            this.serviceName = clientInfo.getServiceName();
             this.method = method;
             this.clientInfo = clientInfo;
             this.envProp = envProp;
@@ -358,7 +356,7 @@ public class CatMethodInfo {
                     methodAttributes.put("logsMod", clientInfo.getLogsMod());
                 }
 
-                String path = CatToosUtil.getDefaultRequestUrl(catface, serviceName, method);
+                String path = CatToosUtil.getDefaultRequestUrl(catface, clientInfo.getClientClassName(), method);
                 methodAttributes.put("value", path);
                 methodAttributes.put("method", RequestMethod.POST);
                 isCatface = true;

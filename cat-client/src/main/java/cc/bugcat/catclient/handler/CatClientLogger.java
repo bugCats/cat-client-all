@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -35,6 +36,8 @@ public class CatClientLogger {
     private String errorMessge;             //错误信息，如果不为null，说明调用失败
     private CatHttpException exception;     //错误信息，如果不为null，说明调用失败
 
+    private Class clientClass;
+    
     private String apiName;     //方法名
 
     private String apiUrl;      //最终请求url
@@ -47,17 +50,17 @@ public class CatClientLogger {
     private List<String> infos = new LinkedList<>();
 
     public CatClientLogger() {
-        
+
     }
 
     /**
      * 默认日志输出格式
      * */
     public String toJson(){
-
+        
         Map<String, Object> logInfo = new LinkedHashMap<>();
         logInfo.put("@tracerId", tracerId);
-        logInfo.put("@name", apiName);
+        logInfo.put("@name", clientClass.getSimpleName() + "." + apiName);
         logInfo.put("@url", apiUrl);
         logInfo.put("@in", "#{in}");
         logInfo.put("@out", "#{out}");
@@ -67,7 +70,7 @@ public class CatClientLogger {
         boolean printIn = CatLogsMod.All == logsMod || CatLogsMod.In == logsMod;
         boolean printOut = CatLogsMod.All == logsMod || CatLogsMod.Out == logsMod;
 
-        if( isSuccess() ){
+        if( this.isSuccess() ){
             logInfo.put("@succ", "1");
         } else {
             logInfo.put("@succ", "0");
@@ -138,6 +141,13 @@ public class CatClientLogger {
     }
     public void setException(CatHttpException exception) {
         this.exception = exception;
+    }
+
+    public Class getClientClass() {
+        return clientClass;
+    }
+    public void setClientClass(Class clientClass) {
+        this.clientClass = clientClass;
     }
 
     public String getApiName() {

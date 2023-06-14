@@ -3,7 +3,7 @@ package cc.bugcat.catserver.utils;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
-import cc.bugcat.catserver.asm.CatServerHandler;
+import cc.bugcat.catserver.asm.CatServerInstance;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Multimaps;
@@ -59,8 +59,8 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                 // 是asm增强后Interface
                 
                 // gclib创建的ctrl对象
-                CatServerHandler ctrlBean = (CatServerHandler) swaggerEntry.ctrlBean;
-                Class serverClass = ctrlBean.getCatServerClass();
+                CatServerInstance ctrlBean = (CatServerInstance) swaggerEntry.ctrlBean;
+                Class serverClass = ctrlBean.getServerProperty().getServerClass();
                 CatSwaggerHandler swaggerHandler = swaggerEntry.parseMethodFrom(serverClass);
                 
                 for (RequestHandler handler : handlers) {
@@ -73,7 +73,7 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                     Class realInterClass = swaggerHandler.getMethodFrom(method);
                     
                     // asm增强后的Interface
-                    Class ctrlInterClass = swaggerHandler.getCtrlInterface();
+                    Class ctrlInterClass = swaggerHandler.getCtrlInterface(realInterClass);
 
                     ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(realInterClass), realInterClass, 0);
 
@@ -147,30 +147,28 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
     private static class CatSwaggerHandler {
 
         // 方法签名：feign-interface
-        private Map<String, Class> infoMap;
+        private Map<String, Class> methodMap = new HashMap<>();
         
         // ctrl对象的Interface
-        private Class ctrlInterface; 
+        private Map<String, Class> ctrlMap = new HashMap<>();
         
         /**
          * @param serverClass 原始的被@CatServer注解类的class
          * */
         private void parseClassFrom(Class ctrlClass, Class serverClass){
-            this.infoMap = new HashMap<>();
             Stack<Class> serverInters = new Stack<>();
             getInterfaces(serverClass, serverInters);
             for( Class inter : serverInters ){
                 boolean isCatface = inter.getAnnotation(Catface.class) != null; //如果是精简模式，直接存方法名
                 for ( Method im : inter.getMethods() ) {
                     String sign = isCatface ? im.getName() : CatToosUtil.signature(im);
-                    infoMap.put(sign, im.getDeclaringClass());
+                    methodMap.put(sign, im.getDeclaringClass());
                 }
             }
 
             for ( Class ctrlInter : ctrlClass.getInterfaces() ) {
-                if( ctrlInter.getSimpleName().contains(CatServerUtil.BRIDGE_NAME) ){
-                    this.ctrlInterface = ctrlInter;
-                    break;
+                if( CatInterfaceEnhancer.isBridgeClass(ctrlInter) ){
+                    ctrlMap.put(ctrlInter.getSimpleName(), ctrlInter);
                 }
             }
         }
@@ -206,15 +204,16 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
          * 返回该方法属于哪个feign-interface
          * */
         private Class getMethodFrom(Method method){
-            Class inter = infoMap.getOrDefault(CatToosUtil.signature(method), infoMap.get(method.getName()));
+            Class inter = methodMap.getOrDefault(CatToosUtil.signature(method), methodMap.get(method.getName()));
             return inter;
         }
 
         /**
          * 通过feign-interface获取增强后的Interface
          * */
-        private Class getCtrlInterface(){
-            return ctrlInterface;
+        private Class getCtrlInterface(Class inter){
+            Class bridgeClass = ctrlMap.getOrDefault(CatInterfaceEnhancer.bridgeClassSimpleNam(inter), inter);
+            return bridgeClass;
         }
 
     }

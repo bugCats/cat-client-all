@@ -17,6 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,7 +41,11 @@ public class CatServerUtil implements ApplicationContextAware{
      * */
     public static final String REQUEST_MAPPING = RequestMapping.class.getName();
 
-
+    /**
+     * 自定义组件容器
+     * 非spring容器时使用
+     * */
+    private static Map<Class, Object> catServerMap = new ConcurrentHashMap<>();
 
     /**
      * spring容器
@@ -57,31 +62,56 @@ public class CatServerUtil implements ApplicationContextAware{
 
 
 
-    public static <T> T getBean (Class<T> clazz){
+    /**
+     * 优先从Spring容器中获取
+     * 其次catClinetMap
+     * 都没有则返回null
+     * */
+    public static <T> T getBean(Class<T> clazz){
         try {
             return context.getBean(clazz);
         } catch ( Exception ex ) {
-            Map<String, T> beans = context.getBeansOfType(clazz);
-            if( beans.size() == 1 ){
-                return beans.values().iterator().next();
-            } else {
-                for(T value : beans.values()){
-                    if( clazz == value.getClass()){
-                        return value;
-                    }
-                    String clazzName = value.getClass().getSimpleName();
-                    int start = clazzName.indexOf("$$");
-                    if( start > -1 ) {
-                        clazzName = clazzName.substring(0, start);
-                    }
-                    if( clazz.getSimpleName().equals(clazzName) ){
-                        return value;
+            try {
+                Map<String, T> beans = context.getBeansOfType(clazz);
+                if( beans.size() == 1 ){
+                    return beans.values().iterator().next();
+                } else {
+                    for(T value : beans.values()){
+                        if( clazz == value.getClass()){
+                            return value;
+                        }
+                        String clazzName = value.getClass().getSimpleName();
+                        int start = clazzName.indexOf("$$");
+                        if( start > -1 ) {
+                            clazzName = clazzName.substring(0, start);
+                        }
+                        if( clazz.getSimpleName().equals(clazzName) ){
+                            return value;
+                        }
                     }
                 }
+            } catch ( Exception e ) {
+
             }
-            throw new NoSuchBeanDefinitionException(clazz);
+            return (T) catServerMap.get(clazz);
         }
     }
+
+    /**
+     * catClinetMap注册bean
+     * */
+    public static void registerBean(Class type, Object bean){
+        catServerMap.putIfAbsent(type, bean);
+    }
+
+    /**
+     * catClinetMap是否包含
+     * */
+    public static boolean contains(Class key) {
+        return catServerMap.containsKey(key);
+    }
+
+
 
 
     public static ClassLoader getClassLoader(){

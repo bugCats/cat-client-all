@@ -35,10 +35,10 @@ public @interface EnableCatClient {
     /**
      *
      * 指定客户端类。
-     *
-     * 1. classes是普通的interface类，则指定interface类创建客户端；
-     *
-     * 2、classes是{@link CatClientProvider}的子类，并且子类方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；
+     * <pre>
+     *  1. classes是普通的interface类，则指定interface类创建客户端；
+     *  2. classes是{@link CatClientProvider}的子类，并且子类方法上含有{@link CatClient}，视为批量声明客户端，其方法的返回对象为客户端；  
+     * </pre>
      *
      * @see CatClientProvider
      * */

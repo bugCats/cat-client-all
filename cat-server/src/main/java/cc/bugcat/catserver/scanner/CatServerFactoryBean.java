@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.IntFunction;
 
@@ -57,23 +56,23 @@ public class CatServerFactoryBean implements InitializingBean {
 
         EnvironmentAdapter envProp = EnvironmentAdapter.environmentProperty(configurableBeanFactory);
         CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(serverConfig, envProp, serverClassSet.size());
-        List<CatControllerFactory> controllerFactoryBeans = new ArrayList<>(serverClassSet.size());
+        List<CatControllerFactory> controllerFactories = new ArrayList<>(serverClassSet.size());
         
         for(Class serverClass : serverClassSet){
-            CatControllerFactory info = CatControllerFactory.builder()
+            CatControllerFactory factory = CatControllerFactory.builder()
                     .serverClass(serverClass)
                     .enhancerDepend(enhancerDepend)
                     .build();
-            controllerFactoryBeans.add(info);
+            controllerFactories.add(factory);
         }
 
         /**
          * level越大，说明继承次数越多，
          * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
          * */
-        controllerFactoryBeans.sort(CatControllerFactory::compareTo);
+        controllerFactories.sort(CatControllerFactory::compareTo);
 
-        registerController(controllerFactoryBeans);
+        registerController(controllerFactories);
 
         serverClassSet = null;
     }
@@ -83,15 +82,16 @@ public class CatServerFactoryBean implements InitializingBean {
     /**
      * 手动注册controller对象
      * */
-    private void registerController(List<CatControllerFactory> controllerFactoryBeans){
+    private void registerController(List<CatControllerFactory> controllerFactories){
         
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
 
-        for( CatControllerFactory factory : controllerFactoryBeans ){
+        for( CatControllerFactory factory : controllerFactories ){
 
             CatServerInfo serverInfo = factory.getServerInfo();
+            
             Catface catface = serverInfo.getCatface();
 
             for(Method method : factory.getBridgeMethods() ){

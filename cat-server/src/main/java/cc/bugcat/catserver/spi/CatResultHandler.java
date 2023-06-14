@@ -11,8 +11,8 @@ public interface CatResultHandler {
 
     void setResponesWrapper(AbstractResponesWrapper wrapperHandler);
     
-    Object onSuccess(Object value, Class returnType);
+    Object onSuccess(Object value, Class methodReturnClass);
 
-    Object onError(Throwable throwable, Class returnType) throws Throwable;
+    Object onError(Throwable throwable, Class methodReturnClass) throws Throwable;
 
 }

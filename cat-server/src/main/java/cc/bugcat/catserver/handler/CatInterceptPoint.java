@@ -93,7 +93,7 @@ public final class CatInterceptPoint {
         return attr;
     }
 
-    public CatInterceptPoint putAttribute(String name, Object value){
+    public CatInterceptPoint settAttribute(String name, Object value){
         attributesMap.put(name, value);
         return this;
     }
@@ -120,7 +120,6 @@ public final class CatInterceptPoint {
     public HttpServletResponse getResponse() {
         return response;
     }
-
     public Object getTarget() {
         return target;
     }

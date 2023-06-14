@@ -22,12 +22,12 @@ public class CatEnhancerDepend {
     /**
      * interface增强后结果缓存，防止同一个interface被反复增强
      * */
-    private final Map<Class, CatAsmResult> controllerCache;
+    private final Map<Class, CatAsmInterface> controllerCache;
 
     /**
      * interface类解析后的信息
      * */
-    private final Map<Class, AsmClassDescriptor> classDescriptorMap;
+    private final Map<Class, AsmInterfaceDescriptor> classDescriptorMap;
     
     /**
      * 一些全局配置项
@@ -52,19 +52,27 @@ public class CatEnhancerDepend {
         this.serverConfig = serverConfig;
         this.envProp = envProp;
     }
+
     
+    public CatAsmInterface getControllerDescriptor(Class interfaceClass) {
+        return controllerCache.get(interfaceClass);
+    }
+    public void putControllerDescriptor(Class interfaceClass, CatAsmInterface asmResult) {
+        controllerCache.put(interfaceClass, asmResult);
+    }
+    
+    public AsmInterfaceDescriptor getClassDescriptor(Class interfaceClass) {
+        return classDescriptorMap.get(interfaceClass);
+    }
+    public void putClassDescriptor(Class interfaceClass, AsmInterfaceDescriptor classDescriptor) {
+        classDescriptorMap.put(interfaceClass, classDescriptor);
+    }
     
     public MethodInterceptor getObjectMethodInterceptor() {
         return objectMethodInterceptor;
     }
-    public Map<Class, CatAsmResult> getControllerCache() {
-        return controllerCache;
-    }
     public CatServerConfiguration getServerConfig() {
         return serverConfig;
-    }
-    public AsmClassDescriptor getClassDescriptorMap(Class interfaceClass) {
-        return classDescriptorMap.get(interfaceClass);
     }
     public EnvironmentAdapter getEnvironmentAdapter() {
         return envProp;

@@ -3,15 +3,16 @@ package cc.bugcat.catserver.scanner;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.asm.CatAsmMethod;
-import cc.bugcat.catserver.asm.CatAsmResult;
+import cc.bugcat.catserver.asm.CatAsmInterface;
 import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
-import cc.bugcat.catserver.asm.CatServerHandler;
+import cc.bugcat.catserver.asm.CatServerInstance;
+import cc.bugcat.catserver.asm.CatServerProperty;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 import cc.bugcat.catserver.handler.CatMethodInfo;
 import cc.bugcat.catserver.handler.CatMethodInfoBuilder;
-import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
+import cc.bugcat.catserver.spi.CatParameterResolver;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.core.DefaultNamingPolicy;
 import org.springframework.cglib.core.Predicate;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Function;
 
 /**
  * controller对象工厂。
@@ -39,9 +41,9 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
     
     /**
      * 从controller中获取被@CatServer注解的对象
-     * {@link CatServerHandler#getCatServerClass()}
+     * {@link CatServerInstance#getServerProperty()}
      * */
-    private final static String catServerClass = "getCatServerClass";
+    private final static String serverPropertyMethodName = CatServerProperty.serverPropertyMethodName();
 
     
     /**
@@ -147,6 +149,8 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
          * */
         private CatEnhancerDepend enhancerDepend;
         
+        
+        
         public Builder serverClass(Class serverClass) {
             this.serverClass = serverClass;
             return this;
@@ -185,8 +189,6 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
 
             return new CatControllerFactory(this);
         }
-
-
         
         
         /**
@@ -199,7 +201,7 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
 
             CatInterfaceEnhancer serverAsm = new CatInterfaceEnhancer();
 
-            // 被@CatServer标记的类，包含的所有原始interface
+            // 被@CatServer标记的类，包含的所有原始interface。
             Stack<Class> interfaces = new Stack<>();
             for ( Class superClass = serverClass; superClass != Object.class; superClass = superClass.getSuperclass()) {
                 for ( Class interfaceClass : superClass.getInterfaces() ) {
@@ -207,37 +209,34 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
                 }
             }
 
-            // 增强后的Interface
+            // 增强后的接口类 asm-interface
             int lengthPointer = 0;
             Class[] thisInters = new Class[interfaces.size() + 1];
-            thisInters[lengthPointer ++ ] = CatServerHandler.class;
+            thisInters[lengthPointer ++ ] = CatServerInstance.class;
 
             
             // 缓存原始CatServer类的method签名，最后需要与增强后的Method对应
-            final Map<String, Method> serverMethodMap = new HashMap<>(serverClass.getMethods().length * 2);
+            final Map<String, Method> serverClassMethodMap = new HashMap<>(serverClass.getMethods().length * 2);
             for ( Method method : serverClass.getMethods() ) {
                 String signatureId = CatServerUtil.typeSignatureId(method);
-                serverMethodMap.put(signatureId, method);
+                serverClassMethodMap.put(signatureId, method);
             }
 
             
-            // 增强前的interface方法签名id => 原始方法
+            // 原interface方法签名id => interface的原始方法
             final Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
 
             // 增强后的Interface方法签名id => CatMethodInfo
             final Map<String, CatAsmMethod> allMethodInfoMap = new HashMap<>();
 
-            Map<Class, CatAsmResult> controllerCache = enhancerDepend.getControllerCache();
-            
-            for (Class interClass : interfaces ){ // 遍历每个interface
-                
-                CatAsmResult asmResult = controllerCache.get(interClass);
-                if( asmResult == null ){
-                    asmResult = serverAsm.enhancer(interClass, serverInfo, enhancerDepend); //使用asm增强interface
-                    controllerCache.put(interClass, asmResult);
-                    allMethodInfoMap.putAll(asmResult.getMethodInfoMap());
+            for (Class interClass : interfaces ){ // 遍历CatServer类的每个interface
+                CatAsmInterface asmInterface = enhancerDepend.getControllerDescriptor(interClass);
+                if( asmInterface == null ){
+                    asmInterface = serverAsm.enhancer(interClass, serverInfo, enhancerDepend); //使用asm增强interface
+                    enhancerDepend.putControllerDescriptor(interClass, asmInterface);
                 }
-                thisInters[lengthPointer ++] = asmResult.getEnhancerClass(); // 增强后的Interface
+                allMethodInfoMap.putAll(asmInterface.getMethodInfoMap());
+                thisInters[lengthPointer ++] = asmInterface.getEnhancerClass(); // 增强后的Interface
 
                 for(Method method : interClass.getMethods()){
 
@@ -253,41 +252,44 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
             }
             // 此时thisInters中，全部为增强后的扩展interface
 
-            CatMethodInfoBuilder infoBuilder = CatMethodInfoBuilder.builder(serverClass, serverInfo);
+            //被CatServer标记的类
+            final Object serverBean = CatServerUtil.getBean(serverClass);
+            final CatServerProperty serverProperty = new CatServerProperty(serverClass, serverInfo);
             
+            CatMethodInfoBuilder methodBuilder = CatMethodInfoBuilder.builder(serverBean, serverInfo);
             
             CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
                 @Override
-                protected Object getCallback (Method method) {
+                protected Object getCallback (Method method) { // method为增强后的方法 asm-method
 
-                    // method为增强后的方法
                     String signatureId = CatServerUtil.typeSignatureId(method);
                     CatAsmMethod methodInfo = allMethodInfoMap.get(signatureId);
-                    if ( methodInfo != null ){
+                    if ( methodInfo != null ){ //如果是asm-interface的方法
                         StandardMethodMetadata metadata = metadataMap.get(methodInfo.getInterfaceSignatureId());
                         if ( metadata != null ) {//原interface方法
-                            
+                            System.out.println(serverClass.getSimpleName() + "." + method.getName());
+
                             //原始CatServer类的方法
-                            Method serverMethod = serverMethodMap.get(methodInfo.getInterfaceSignatureId());
-                            CatParameterResolverStrategy resolver = methodInfo.getResolverStrategy();
+                            Method serverMethod = serverClassMethodMap.get(methodInfo.getInterfaceSignatureId());
+                            CatParameterResolver parameterResolver = methodInfo.getParameterResolver();
                             
-                            CatMethodInfo methodDesc = infoBuilder.interMethod(metadata)
+                            CatMethodInfo methodDesc = methodBuilder.interMethod(metadata)
                                     .controllerMethod(method)
                                     .serverMethod(serverMethod)
-                                    .parameterResolver(resolver.createParameterResolver())
+                                    .parameterResolver(parameterResolver)
                                     .build();
 
                             return CatMethodAopInterceptor.builder()
                                     .methodInfo(methodDesc)
                                     .serverInfo(serverInfo)
-                                    .serverBean(infoBuilder.getServerBean())
+                                    .serverBean(serverBean)
                                     .build();
                         }
-                    } else if ( catServerClass.equals(method.getName()) ){ // 返回CatServer类的class
+                    } else if ( serverPropertyMethodName.equals(method.getName()) ){ // 返回CatServer类的class
                         return new MethodInterceptor() {
                             @Override
                             public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
-                                return serverClass;
+                                return serverProperty;
                             }
                         };
                     }
@@ -303,26 +305,34 @@ public class CatControllerFactory implements Comparable<CatControllerFactory> {
             enhancer.setInterfaces(thisInters);
             enhancer.setCallbackFilter(helper);
             enhancer.setCallbacks(helper.getCallbacks());
-            enhancer.setNamingPolicy(new DefaultNamingPolicy(){
-                public String getClassName(String prefix, String source, Object key, Predicate names) {
-                    if ( prefix != null && prefix.startsWith("java")) {
-                        return super.getClassName(prefix, source, key, names);
-                    }
-                    String base = serverClass.getPackage().getName() + ".asm." + 
-                            serverClass.getSimpleName() + CatServerUtil.BRIDGE_NAME + "$" +
-                            source.substring(source.lastIndexOf(".") + 1) + "$$" +
-                            Math.abs(key.hashCode());
-                    String attempt = base;
-                    for(int suffix = 2; names.evaluate(attempt); attempt = base + "_" + (suffix ++)) {
-                        ;
-                    }
-                    return attempt;
-                }
-            });
+            enhancer.setNamingPolicy(new ControllerNamingPolicy(serverClass));
             
-            Object controller = enhancer.create(); // 一定是CatServerHandler的子类
+            Object controller = enhancer.create(); // 一定是CatServerInstance的子类
             return controller;
         }
     }
     
+    
+    
+    private static class ControllerNamingPolicy extends DefaultNamingPolicy {
+        private final Class serverClass;
+        private ControllerNamingPolicy(Class serverClass) {
+            this.serverClass = serverClass;
+        }
+
+        public String getClassName(String prefix, String source, Object key, Predicate names) {
+            if ( prefix != null && prefix.startsWith("java")) {
+                return super.getClassName(prefix, source, key, names);
+            }
+            String base = serverClass.getPackage().getName() + ".asm." +
+                    serverClass.getSimpleName() + CatServerUtil.BRIDGE_NAME + "$" +
+                    source.substring(source.lastIndexOf(".") + 1) + "$$" +
+                    Math.abs(key.hashCode());
+            String attempt = base;
+            for(int suffix = 2; names.evaluate(attempt); attempt = base + "_" + (suffix ++)) {
+                ;
+            }
+            return attempt;
+        }
+    }
 }

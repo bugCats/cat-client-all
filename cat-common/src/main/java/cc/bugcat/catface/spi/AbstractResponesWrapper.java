@@ -3,6 +3,7 @@ package cc.bugcat.catface.spi;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * http响应包装器类处理。
@@ -25,33 +26,17 @@ import java.util.Map;
  * */
 public abstract class AbstractResponesWrapper<T> {
 
-
     /**
-     * 响应包装器类map
+     * 静态方法调用
      * */
-    private final static Map<Class, AbstractResponesWrapper> wrapperMap = new HashMap<>();
-
-
-
-    public final static AbstractResponesWrapper getResponesWrapper(Class<? extends AbstractResponesWrapper> wrapperClass){
-        if( wrapperClass == null ){
-            return null;
+    public final static synchronized AbstractResponesWrapper getResponesWrapper(Class<? extends AbstractResponesWrapper> wrapperClass, Consumer<AbstractResponesWrapper> consumer){
+        try {
+            AbstractResponesWrapper wrapper = wrapperClass.newInstance();
+            consumer.accept(wrapper);
+            return wrapper;
+        } catch ( Exception e ) {
+            throw new RuntimeException("获取" + wrapperClass.getSimpleName() + "包装器类异常");
         }
-        AbstractResponesWrapper wrapper = wrapperMap.get(wrapperClass);
-        if( wrapper == null ){
-            synchronized ( wrapperMap ) {
-                wrapper = wrapperMap.get(wrapperClass);
-                if ( wrapper == null ) {
-                    try {
-                        wrapper = wrapperClass.newInstance();
-                        wrapperMap.put(wrapperClass, wrapper);
-                    } catch ( Exception e ) {
-                        throw new RuntimeException("获取" + wrapperClass.getSimpleName() + "包装器类异常");
-                    }
-                }
-            }
-        }
-        return wrapper;
     }
 
 
@@ -86,14 +71,13 @@ public abstract class AbstractResponesWrapper<T> {
     /**
      * 成功时构建
      * */
-    public abstract T createEntryOnSuccess(Object value, Type returnType);
+    public abstract T createEntryOnSuccess(Object value, Class methodReturnClass);
 
 
     /**
      * 当异常时构建
      * */
-    public abstract T createEntryOnException(Throwable throwable, Type returnType);
-
+    public abstract T createEntryOnException(Throwable throwable, Class methodReturnClass);
 
 
     /**
@@ -115,11 +99,11 @@ public abstract class AbstractResponesWrapper<T> {
             return null;
         }
         @Override
-        public Object createEntryOnSuccess(Object value, Type returnType) {
+        public Object createEntryOnSuccess(Object value, Class methodReturnClass) {
             return value;
         }
         @Override
-        public Object createEntryOnException(Throwable throwable, Type returnType) {
+        public Object createEntryOnException(Throwable throwable, Class methodReturnClass) {
             throwable.printStackTrace();
             return null;
         }

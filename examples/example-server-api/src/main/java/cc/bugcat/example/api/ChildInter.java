@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * 服务端CatServer继承，实现API升级
  * */
 
-@Api(tags = "用户操作api")
+@Api(tags = "用户操作api - ChildInter")
 @Catface
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface ChildInter extends ParentInter {

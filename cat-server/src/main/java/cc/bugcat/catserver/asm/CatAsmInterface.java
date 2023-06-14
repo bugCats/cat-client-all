@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 被@CatServer标记的interface增强后的处理结果
+ * 被@CatServer标记的interface增强后的类描述
  *
  * @author bugcat
  * */
-public class CatAsmResult {
+public class CatAsmInterface {
 
 
     /**
@@ -18,7 +18,8 @@ public class CatAsmResult {
 
 
     /**
-     * 增强前后的方法信息
+     * 增强后的方法信息；
+     * 增强后签名id：方法描述信息
      * */
     private Map<String, CatAsmMethod> methodInfoMap = new HashMap<>();
 

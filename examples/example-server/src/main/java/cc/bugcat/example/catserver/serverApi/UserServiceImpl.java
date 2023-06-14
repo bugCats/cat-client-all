@@ -30,10 +30,11 @@ import java.util.Arrays;
  *  服务端实现UserService，可以像普通Service一样，实现抽象方法，然后就可以被客户端调用
  *
  *
- * @CatServer 也可以当作普通的Controller，在swagger上调用
+ * //@CatServer 也可以当作普通的Controller，在swagger上调用
  *
  * */
-@CatServer(interceptors = {UserInterceptor2.class,  UserInterceptor.class,})
+//@CatServer(interceptors = {UserInterceptor2.class, UserInterceptor.class, CatServerInterceptor.class, 
+//        CatServerInterceptor.GroupOff.class}) //自定义拦截器 + 全局拦截器，无拦截器组
 public class UserServiceImpl implements UserService{
 
 
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public ResponseEntity<Void> userSave(UserSaveVi vi) {
         String nul = null;
-        nul.trim();  //默认服务端发生异常
+        nul.trim();  //模拟服务端发生异常
         return ResponseEntity.ok(null);
     }
 

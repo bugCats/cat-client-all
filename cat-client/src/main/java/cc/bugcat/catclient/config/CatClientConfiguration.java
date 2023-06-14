@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.config;
 
+import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.EnableCatClient;
 import cc.bugcat.catclient.handler.CatJacksonResolver;
 import cc.bugcat.catclient.handler.CatLogsMod;
@@ -9,6 +10,7 @@ import cc.bugcat.catclient.spi.CatPayloadResolver;
 import cc.bugcat.catclient.spi.CatLoggerProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatRestHttp;
+import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.InitializingBean;
@@ -84,14 +86,6 @@ public class CatClientConfiguration implements InitializingBean {
 
 
     /**
-     * 统一的响应实体包装器类
-     * */
-    public Class<? extends AbstractResponesWrapper> getWrapper(){
-        return WRAPPER;
-    }
-
-
-    /**
      * http读值超时毫秒，默认 1s；-1 代表不限制
      * */
     public int getSocket(){
@@ -114,34 +108,46 @@ public class CatClientConfiguration implements InitializingBean {
         return CatLogsMod.All2;
     }
 
-
+    
     /**
-     * 发送类和响应处理类工厂
+     * 统一的响应实体包装器类。
+     * 在客户端上可以添加{@link CatResponesWrapper}修改
      * */
-    public Class<? extends CatClientFactory> getClientFactory(){
-        return CLIENT_FACTORY;
+    public Class<? extends AbstractResponesWrapper> getWrapper(){
+        return WRAPPER;
     }
 
 
     /**
      * 默认的http发送拦截器
+     * 在客户端可以通{@link CatClient#interceptor()}修改
      * */
     public Class<? extends CatSendInterceptor> getMethodInterceptor(){
         return METHOD_INTERCEPTOR;
     }
-
+    
+    
     /**
-     * 默认http类
-     * 建议为单例
+     * 发送类和响应处理类工厂。
+     * 在客户端可以通{@link CatClient#factory()}修改
+     * */
+    public Class<? extends CatClientFactory> getClientFactory(){
+        return CLIENT_FACTORY;
+    }
+
+    
+    /**
+     * 默认http类，建议为单例。
+     * 可以在{@link CatClientFactory#getCatHttp()}中修改
      * */
     public CatHttp getCatHttp(){
         return globalCatHttp;
     }
-
-
+    
+    
     /**
-     * 默认序列化对象
-     * 建议为单例
+     * 默认序列化对象，建议为单例。
+     * 可以在{@link CatClientFactory#getPayloadResolver()}中修改
      * */
     public CatPayloadResolver getPayloadResolver(){
         return globalJsonResolver;
@@ -149,8 +155,8 @@ public class CatClientConfiguration implements InitializingBean {
 
 
     /**
-     * 默认日志打印
-     * 建议为单例
+     * 默认日志打印，建议为单例。
+     * 可以在{@link CatClientFactory#getLoggerProcessor()}中修改
      * */
     public CatLoggerProcessor getLoggerProcessor(){
         return globalLoggerProcessor;

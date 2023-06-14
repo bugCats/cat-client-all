@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catface.handler.CatContextHolder;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatBefore;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 通过cglib生成代理类，
@@ -75,7 +77,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
         CatResultHandler resultHandler = methodInfo.getResultHandler();
         
         // 原interface返回对象
-        Class<?> returnType = interMethod.getIntrospectedMethod().getReturnType();
+        Class<?> methodReturnClass = interMethod.getIntrospectedMethod().getReturnType();
         
         Object result = null;
         try {
@@ -96,31 +98,31 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
             
             
             // 激活的拦截器
-            List<CatServerInterceptor> actives = new ArrayList<>();
-            if ( methodInfo.getInterceptors().size() > 0 ) { //没有关闭拦截器
-                //拦截器组，在自定义拦截器之前执行
-                for ( CatInterceptorGroup group : methodInfo.getInterceptorGroups() ) {
-                    if ( group.matcher(interceptPoint) ) {
-                        List<CatServerInterceptor> interceptors = group.getInterceptorFactory().get();
-                        if( interceptors != null ){
-                            for ( CatServerInterceptor groupInterceptor : interceptors ) {
-                                if ( groupInterceptor.preHandle(interceptPoint) ) {
-                                    actives.add(groupInterceptor);
-                                }
+            List<CatServerInterceptor> actives = new ArrayList<>(methodInfo.getInterceptorGroups().size() + methodInfo.getInterceptors().size());
+            
+            //拦截器组，在自定义拦截器之前执行
+            for ( CatInterceptorGroup group : methodInfo.getInterceptorGroups() ) {
+                if ( group.matcher(interceptPoint) ) {
+                    Supplier<List<CatServerInterceptor>> supplier = group.getInterceptorFactory();
+                    List<CatServerInterceptor> interceptors = null;
+                    if( supplier != null && (interceptors = supplier.get()) != null ){
+                        for ( CatServerInterceptor groupInterceptor : interceptors ) {
+                            if ( groupInterceptor.preHandle(interceptPoint) ) {
+                                actives.add(groupInterceptor);
                             }
                         }
                     }
                 }
-                for ( CatServerInterceptor interceptor : methodInfo.getInterceptors() ) {
-                    // CatServer上自定义拦截器，如果满足，则放入拦截器链中
-                    if ( interceptor.preHandle(interceptPoint) ) {
-                        actives.add(interceptor);
-                    }
+            }
+            for ( CatServerInterceptor interceptor : methodInfo.getInterceptors() ) {
+                if ( interceptor.preHandle(interceptPoint) ) { // CatServer上自定义拦截器，如果满足，则放入拦截器链中
+                    actives.add(interceptor);
                 }
             }
 
             // 实际调用CatServer方法
             ControllerMethodInterceptor controllerMethod = new ControllerMethodInterceptor(serverBean, methodInfo.getServiceMethodProxy(), args);
+            
             CatServerContextHolder contextHolder = CatServerContextHolder.builder()
                     .interceptPoint(interceptPoint)
                     .interceptors(actives)
@@ -129,31 +131,26 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
                     .resultHandler(resultHandler)
                     .build();
 
+            //设置线程上下文
+            CatContextHolder.setContext(contextHolder);
+            
 
             // 原CatServer类返回的数据
             Object invoke = contextHolder.proceedRequest();
             
             // 包装器类处理
-            result = resultHandler.onSuccess(invoke, returnType);
+            result = resultHandler.onSuccess(invoke, methodReturnClass);
 
-        } catch ( Exception ex ) {
-            result = resultHandler.onError(CatToosUtil.getCause(ex), returnType);
+        } catch ( Throwable throwable ) {
+            Throwable ex = CatToosUtil.getCause(throwable);
+            CatContextHolder.setException(ex);
+            result = resultHandler.onError(ex, methodReturnClass);
+            
         } finally {
-            CatServerContextHolder.remove();
+            CatContextHolder.remove();
         }
         return result;
     }
-    
-    
-    
-    public boolean equalsMethod (Method method){
-        return methodInfo.getControllerMethod().equals(method);
-    }
-
-    public CatMethodInfo getMethodInfo() {
-        return methodInfo;
-    }
-
     
     
     
@@ -215,7 +212,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
                 Class<? extends CatParameterResolver> resolverClass = catBefore.value();
                 argumentResolver = CatServerUtil.getBean(resolverClass);
             } else {
-                argumentResolver = CatServerDefaults.DEFAULT_RESOLVER;
+                argumentResolver = CatServerDepend.DEFAULT_RESOLVER;
             }
             return new CatMethodAopInterceptor(this);
         }

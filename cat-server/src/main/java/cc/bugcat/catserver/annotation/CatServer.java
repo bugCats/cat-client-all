@@ -2,6 +2,7 @@ package cc.bugcat.catserver.annotation;
 
 
 import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.core.annotation.AliasFor;
@@ -45,26 +46,33 @@ public @interface CatServer {
 
     /**
      * 分组标记，
+     * <pre>
      * {@code @CatNote(key="name", value="bugcat")}：直接字符串；
      * {@code @CatNote(key="host", value="${host}")}：从环境变量中获取；
      * {@code @CatNote("bugcat")}：省略key，最终key与value值相同；
+     * </pre>
      * */
     CatNote[] tags() default {};
 
 
     /**
-     * 通过http调用时，CatServer类上的拦截器链。
-     * CatServerInterceptor.class 表示启用全局的默认拦截器配置，最终该位置会被全局配置的拦截器替换；
-     * CatServerInterceptor.Group.class 表示运行时匹配的拦截器，最终该位置会被拦截器组替换。如果没有匹配上，则什么都不执行；
-     * CatServerInterceptor.Off.class 表示关闭所有拦截器。
-     *
-     * {@code @CatServer}：启用默认拦截器，默认拦截器在CatServerConfiguration#getGlobalInterceptor()指定；
-     * {@code @CatServer(interceptors = CatServerInterceptor.class)}：启用默认拦截器；
-     * {@code @CatServer(interceptors = {CatServerInterceptor.class, UserInterceptor.class})}：启用默认拦截器和自定义拦截器
-     * {@code @CatServer(interceptors = UserInterceptor.class)}：仅启用自定义拦截器
+     * 通过http调用时，CatServer类上的拦截器链。 <br>
+     * CatServerInterceptor.class 表示启用全局的默认拦截器配置，最终该位置会被全局配置的拦截器替换； <br>
+     * CatServerInterceptor.Noop.class 表示关闭自定义拦截器和全局拦截器； <br>
+     * CatServerInterceptor.GroupOff.class 关闭拦截器组。
+     * <pre>
+     * {@code @CatServer}：启用默认拦截器，默认拦截器在{@link CatServerConfiguration#getServerInterceptor()}指定；
+     * {@code @CatServer(interceptors = {UserInterceptor.class, CatServerInterceptor.class})}：启用自定义拦截器和全局拦截器；
+     * {@code @CatServer(interceptors = {UserInterceptor.class})}：仅启用自定义拦截器；
+     * {@code @CatServer(interceptors = {UserInterceptor.GroupOff.class})}：关闭拦截器组；全局拦截器有效；
+     * {@code @CatServer(interceptors = {UserInterceptor.Empty.class})}：关闭全局拦截器和自定义拦截器；拦截器组有效；
+     * {@code @CatServer(interceptors = {UserInterceptor.GroupOff.class})}：关闭拦截器组；全局拦截器有效；
+     * {@code @CatServer(interceptors = {UserInterceptor.Empty.class, UserInterceptor.GroupOff.class})}：关闭所有拦截器；
+     * </pre>
      * */
     Class<? extends CatServerInterceptor>[] interceptors() default CatServerInterceptor.class;
 
+    
     /**
      * 异常处理类
      * */

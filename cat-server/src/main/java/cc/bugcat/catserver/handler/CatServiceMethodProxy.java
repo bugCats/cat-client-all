@@ -14,7 +14,7 @@ import org.springframework.cglib.reflect.FastMethod;
  *
  * 并且，在环绕在Service实现类方法上的切面，也可以正常执行。
  * */
-public class CatServiceMethodProxy {
+class CatServiceMethodProxy {
 
 
     protected Object invokeProxy(Object target, Object[] args) throws Exception {
@@ -69,7 +69,5 @@ public class CatServiceMethodProxy {
             return fastMethod.invoke(target, args);
         }
     }
-
-
 
 }

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
  * 可以直接在swagger测试调用
  * @author: bugcat
  * */
-@Api(tags = "服务端API - 一般场景2")
+@Api(tags = "服务端API - 继承子类")
 public interface ApiRemote2 {
 
 

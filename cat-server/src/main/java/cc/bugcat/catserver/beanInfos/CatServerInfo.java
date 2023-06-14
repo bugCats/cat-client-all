@@ -12,6 +12,7 @@ import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
+import cc.bugcat.catserver.utils.CatServerUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,7 +47,7 @@ public class CatServerInfo {
     /**
      * controller的拦截器
      * */
-    private final Set<Class<? extends CatServerInterceptor>> interceptors;
+    private final Class<? extends CatServerInterceptor>[] interceptors;
     
     /**
      * 响应包装器类处理{@link AbstractResponesWrapper}
@@ -56,7 +57,7 @@ public class CatServerInfo {
     /**
      * controller响应处理，一般是异常流程
      * */
-    private final Class<? extends CatResultHandler> resultHandler;
+    private final CatResultHandler resultHandler;
 
     /**
      * 是否启用精简模式
@@ -86,27 +87,32 @@ public class CatServerInfo {
         }
         this.tagsMap = Collections.unmodifiableMap(tagsMap);
 
-        Set<Class<? extends CatServerInterceptor>> interceptors = new LinkedHashSet<>(catServer.interceptors().length * 2);
-        for ( Class<? extends CatServerInterceptor> interceptor : catServer.interceptors() ) {
-            if( interceptors.contains(interceptor) ){
-                interceptors.remove(interceptor);
-            }
-            interceptors.add(interceptor);
-        }
-        this.interceptors = interceptors;
+        // 自定义拦截器
+        this.interceptors = catServer.interceptors();
 
-        //响应包装器类，如果是ResponesWrapper.default，代表没有设置
+        // 响应包装器类，如果是ResponesWrapper.default，代表没有设置
+        AbstractResponesWrapper wrapperHandler = null;
         CatResponesWrapper responesWrapper = apiInfo.getWrapper();
         if ( responesWrapper != null ){
-            Class<? extends AbstractResponesWrapper> wrapper = CatToosUtil.comparator(CatServerConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), serverConfig.getWrapper()), null);
-            this.wrapperHandler = wrapper != null ? AbstractResponesWrapper.getResponesWrapper(wrapper) : null;
-        } else {
-            this.wrapperHandler = null;
+            Class<? extends AbstractResponesWrapper> wrapperClass = CatToosUtil.comparator(CatServerConfiguration.WRAPPER, Arrays.asList(responesWrapper.value(), serverConfig.getWrapper()), null);
+            if( wrapperClass != null ){
+                wrapperHandler = CatServerUtil.getBean(wrapperClass);
+                if( wrapperHandler == null  ){
+                    wrapperHandler = AbstractResponesWrapper.getResponesWrapper(wrapperClass, handler -> {
+                        CatServerUtil.registerBean(wrapperClass, handler);
+                    });
+                }
+            }
         }
+        this.wrapperHandler = wrapperHandler;
 
-        this.resultHandler = CatToosUtil.comparator(CatServerConfiguration.RESULT_HANDLER, Arrays.asList(catServer.resultHandler()), serverConfig.getResultHandler(wrapperHandler));
-
-        //是否启用精简模式
+        
+        Class<? extends CatResultHandler> resultHandlerClass = CatToosUtil.comparator(CatServerConfiguration.RESULT_HANDLER, Arrays.asList(catServer.resultHandler()), serverConfig.getResultHandler(wrapperHandler));
+        this.resultHandler = CatServerUtil.getBean(resultHandlerClass);
+        this.resultHandler.setResponesWrapper(this.wrapperHandler);
+        
+        
+        // 是否启用精简模式
         this.catface = apiInfo.getCatface();
         this.isCatface = catface != null;
 
@@ -148,10 +154,10 @@ public class CatServerInfo {
     public AbstractResponesWrapper getWrapperHandler() {
         return wrapperHandler;
     }
-    public Set<Class<? extends CatServerInterceptor>> getInterceptors() {
+    public Class<? extends CatServerInterceptor>[] getInterceptors() {
         return interceptors;
     }
-    public Class<? extends CatResultHandler> getResultHandler() {
+    public CatResultHandler getResultHandler() {
         return resultHandler;
     }
     public Catface getCatface() {

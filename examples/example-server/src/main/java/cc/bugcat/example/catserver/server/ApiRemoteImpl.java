@@ -15,7 +15,7 @@ import java.util.List;
 
 
 /**
- * 加上注解@CatServer，该类等同于一个RestController
+ * 加上注解//@CatServer，该类等同于一个RestController
  * 但是 url、入参、请求方式，全部在interface中定义
  *
  * 可以同时实现多个interface，但是<b>不建议！</b>
@@ -24,7 +24,7 @@ import java.util.List;
  * @author bugcat
  * */
 
-@CatServer
+@CatServer // 全局拦截器+拦截器组
 public class ApiRemoteImpl implements ApiRemote1, ApiRemote2 {
 
 
@@ -32,13 +32,14 @@ public class ApiRemoteImpl implements ApiRemote1, ApiRemote2 {
     private DemoService demoService;
 
 
-
+    //被子类重写
     public ResponseEntity<Demo> demo1(Demo req) {
         System.out.println("demo11 >>> req: " + JSONObject.toJSONString(req));
         Demo resp = demoService.creart();
         return ResponseEntity.ok(resp);
     }
 
+    //被子类重写
     public String demo2(DemoEntity req) {
         System.out.println("demo12 >>> req: " + JSONObject.toJSONString(req));
         Demo resp = demoService.creart();
@@ -46,6 +47,7 @@ public class ApiRemoteImpl implements ApiRemote1, ApiRemote2 {
     }
 
 
+    //被子类重写
     public ResponseEntity<PageInfo<Demo>> demo3(Demo req) {
         System.out.println("demo13 >>> req: " + JSONObject.toJSONString(req));
 

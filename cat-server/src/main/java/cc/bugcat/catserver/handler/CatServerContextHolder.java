@@ -1,5 +1,7 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catface.handler.CatContextHolder;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.handler.CatMethodAopInterceptor.ControllerMethodInterceptor;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
@@ -17,20 +19,15 @@ import java.util.List;
 public class CatServerContextHolder {
 
 
-
-    private static ThreadLocal<CatServerContextHolder> threadLocal = new ThreadLocal<>();
-
     /**
      * 在同一个线程中可以获取
      * */
     public static CatServerContextHolder getContextHolder() {
-        return threadLocal.get();
+        return CatContextHolder.currentContext(CatServerContextHolder.class);
     }
 
-    protected static void remove() {
-        threadLocal.remove();
-    }
-
+    
+    
     /**
      * controller实例、CatServer实例、入参信息等
      * */
@@ -118,7 +115,7 @@ public class CatServerContextHolder {
             Class<?> returnType = method.getReturnType();
             return resultHandler.onError(throwable, returnType);
         } catch ( Throwable ex ) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException(CatToosUtil.getCause(ex));
         }
     }
 
@@ -163,7 +160,6 @@ public class CatServerContextHolder {
 
         protected CatServerContextHolder build(){
             CatServerContextHolder contextHolder = new CatServerContextHolder(this);
-            threadLocal.set(contextHolder);
             return contextHolder;
         }
     }

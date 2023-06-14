@@ -1,7 +1,6 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.utils.CatToosUtil;
-import cc.bugcat.catserver.handler.CatParameterResolverStrategy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.ClassVisitor;
@@ -39,7 +38,7 @@ import java.util.Map;
  *
  *
  * 虚拟入参对象：
- *  class UserInfo_Virtual_queryByUser implements VirtualParameter {
+ *  class UserInfo_queryByUser implements VirtualParameter {
  *
  *      private UserPageVi arg0;
  *      private UserPageVi arg1;
@@ -55,7 +54,7 @@ import java.util.Map;
  *
  *
  * 增强后方法：
- *  UserInfo queryByUser(@RequestBody UserInfo_Virtual_queryByUser req);
+ *  UserInfo queryByUser(@RequestBody UserInfo_queryByUser req);
  *
  *
  * @author bugcat
@@ -63,7 +62,7 @@ import java.util.Map;
 public class CatVirtualParameterEnhancer implements Constants {
 
 
-    public static Class generator(CatParameterResolverStrategy strategy) throws Exception {
+    public static Class generator(Method method, ParameterResolverStrategy strategy) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
         String className = strategy.getClassName();
@@ -73,10 +72,15 @@ public class CatVirtualParameterEnhancer implements Constants {
         ClassEmitter ce = new ClassEmitter(classVisitor);// ClassEmitter 会将泛型信息擦除，需要使用泛型情况下必须使用 ClassVisitor
         
         // 开始动态创建虚拟入参class
-        ce.begin_class(V1_8, ACC_PUBLIC + ACC_SUPER, className, TYPE_OBJECT, new Type[]{Type.getType(CatVirtualParameter.class)}, SOURCE_FILE);
+        ce.begin_class(V1_8, ACC_PUBLIC + ACC_SUPER, 
+                        className, 
+                        TYPE_OBJECT, 
+                        new Type[]{Type.getType(CatVirtualParameter.class)}, 
+                        SOURCE_FILE);
+        
+        // 默认的构造器
         EmitUtils.null_constructor(ce);
         
-        Method method = strategy.getMethod();
         String[] descs = strategy.getAndResolverDescriptor();   // 方法上所有入参的Type描述信息，转换成字段描述
         String[] signs = strategy.getAndResolverSignature();    // 方法上所有入参的签名信息，转换成字段签名
 

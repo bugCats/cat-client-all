@@ -11,9 +11,9 @@ import java.util.function.Supplier;
 /**
  * 在运行时匹配的拦截器组。
  *
- * 默认在所有拦截器前执行，可以通过{@code CatServerInterceptor.Group.class}手动指定顺序；
+ * 只要匹配上都会执行，可以通过{@link CatServerInterceptor.GroupOff}关闭；
  * 
- * 通过{@link CatServerConfiguration}配置
+ * 通过{@link CatServerConfiguration#getInterceptorGroup()}配置
  * 
  * @see CatServer
  * 

@@ -1,7 +1,7 @@
 package cc.bugcat.catclient.utils;
 
 import cc.bugcat.catclient.handler.CatClientLogger;
-import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catclient.handler.CatHttpPoint;
 import cc.bugcat.catclient.spi.CatHttp;
 import org.springframework.http.HttpEntity;

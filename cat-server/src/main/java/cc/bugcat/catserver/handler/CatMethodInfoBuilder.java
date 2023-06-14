@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,11 +28,6 @@ import java.util.Set;
  * */
 public final class CatMethodInfoBuilder {
 
-
-    /**
-     * 被@CatServer标记的server对象实例
-     * */
-    private final Object serverBean;
 
     /**
      * serverBean的class。
@@ -62,22 +58,14 @@ public final class CatMethodInfoBuilder {
     protected List<CatInterceptorGroup> interceptorGroups;
     
     
-    private CatMethodInfoBuilder(Class serverClass, CatServerInfo serverInfo){
-        this.serverBean = CatServerUtil.getBean(serverClass);
+    private CatMethodInfoBuilder(Object serverBean, CatServerInfo serverInfo){
         this.serverBeanClass = serverBean.getClass();
-        if( !ClassUtils.isCglibProxy(serverBeanClass) ){// server对象，没有、或者不是cglib代理，使用快速处理类
+        if( ClassUtils.isCglibProxy(serverBeanClass) == false ){// server对象，没有、或者不是cglib代理，使用快速处理类
             this.fastClass = FastClass.create(serverBeanClass);
         }
+        this.resultHandler = serverInfo.getResultHandler();
         this.parseInterceptor(serverInfo);
-        this.parseResultHandler(serverInfo);
     }
-    
-
-    
-    public static CatMethodInfoBuilder builder(Class serverClass, CatServerInfo serverInfo){
-        return new CatMethodInfoBuilder(serverClass, serverInfo);
-    }
-
     
     /**
      * 获取拦截器
@@ -85,41 +73,65 @@ public final class CatMethodInfoBuilder {
     private void parseInterceptor(CatServerInfo serverInfo) {
 
         CatServerConfiguration serverConfig = serverInfo.getServerConfig();
-        List<CatInterceptorGroup> interceptorGroup = serverConfig.getInterceptorGroup();
-        Set<Class<? extends CatServerInterceptor>> interceptors = serverInfo.getInterceptors();
+        List<CatInterceptorGroup> interceptorGroup = new ArrayList<>(serverConfig.getInterceptorGroup()); //拦截器组
+
+        boolean userOff = false;
+        boolean groupOff = false;
+        Set<Class<? extends CatServerInterceptor>> interceptorSet = new LinkedHashSet<>();
+        for ( Class<? extends CatServerInterceptor> interceptor : serverInfo.getInterceptors() ) {
+            if( interceptorSet.contains(interceptor) ){
+                interceptorSet.remove(interceptor);
+            }
+            if( CatServerInterceptor.Empty.class == interceptor ){
+                userOff = true;
+                continue;
+            } else if ( CatServerInterceptor.GroupOff.class == interceptor ){
+                groupOff = true;
+                continue;
+            }
+            interceptorSet.add(interceptor);
+        }
+
+        if( groupOff ){ //关闭拦截器组
+            interceptorGroup.clear();
+        }
         
-        List<CatServerInterceptor> handers = new ArrayList<>(interceptors.size());
-        for ( Class<? extends CatServerInterceptor> clazz : interceptors ) {
-            if ( CatServerInterceptor.Off.class.equals(clazz) ) {
-                // 关闭所有拦截器
-                handers.clear();
-                break;
+        List<CatServerInterceptor> handers = null;
+        if( userOff ){ //关闭自定义和全局
+            handers = new ArrayList<>(0);
+            
+        } else { //启用自定义、全局拦截器
+            
+            handers = new ArrayList<>(interceptorSet.size() + 1);
+            for ( Class<? extends CatServerInterceptor> clazz : interceptorSet ) {
+                if (CatServerInterceptor.class.equals(clazz) ) {
+                    // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
+                    handers.add(serverConfig.getServerInterceptor());
 
-            } else if (CatServerInterceptor.class.equals(clazz) ) {
-                // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
+                } else {
+                    // CatServer上自定义拦截器
+                    handers.add(CatServerUtil.getBean(clazz));
+                }
+            }
+            if( handers.size() == 0 ){ //如果没有配置拦截器，添加全局
                 handers.add(serverConfig.getServerInterceptor());
-
-            } else {
-                // CatServer上自定义拦截器
-                handers.add(CatServerUtil.getBean(clazz));
             }
         }
-        Collections.sort(interceptorGroup, Comparator.comparingInt(CatInterceptorGroup::getOrder));
         
+        Collections.sort(interceptorGroup, Comparator.comparingInt(CatInterceptorGroup::getOrder));
         this.interceptors = handers;
         this.interceptorGroups = interceptorGroup;
     }
 
-    
-    /**
-     * 响应处理器
-     * */
-    private void parseResultHandler(CatServerInfo serverInfo) {
-        this.resultHandler = CatServerUtil.getBean(serverInfo.getResultHandler());
-        this.resultHandler.setResponesWrapper(serverInfo.getWrapperHandler());
+
+
+
+    public static CatMethodInfoBuilder builder(Object serverBean, CatServerInfo serverInfo){
+        return new CatMethodInfoBuilder(serverBean, serverInfo);
     }
 
-    
+
+
     /**
      * 原interface的方法
      * */
@@ -204,8 +216,4 @@ public final class CatMethodInfoBuilder {
         return info;
     }
 
-    
-    public Object getServerBean() {
-        return serverBean;
-    }
 }

@@ -17,7 +17,7 @@ public class CatServerApplication {
 	public static void main(String[] args) {
 
 	    //输出cglib动态代理字节码
-        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "E:\\tmp");
+//        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "E:\\tmp\\catface");
 
         SpringApplication app = new SpringApplication(CatServerApplication.class);
         app.run(args);

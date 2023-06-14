@@ -3,8 +3,8 @@ package cc.bugcat.catclient.spi;
 import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.handler.CatClientLogger;
 import cc.bugcat.catclient.handler.CatLogsMod;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -18,17 +18,16 @@ import org.apache.commons.logging.LogFactory;
  * */
 public interface CatLoggerProcessor {
 
-    static final Log LOGGER = LogFactory.getLog(CatLoggerProcessor.class);
-
 
     default void printLog(CatClientLogger logger) {
         if ( CatLogsMod.Off.equals(logger.getLogsMod()) ) {
             // 关闭所有http日志
         } else {
+            Logger log = LoggerFactory.getLogger(logger.getClientClass());
             if( logger.isFail() ){
-                LOGGER.error(logger.toJson());
+                log.error(logger.toJson());
             } else {
-                LOGGER.info(logger.toJson());
+                log.info(logger.toJson());
             }
         }
     }

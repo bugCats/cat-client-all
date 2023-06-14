@@ -1,7 +1,7 @@
 package cc.bugcat.catclient.cloud;
 
 import cc.bugcat.catclient.handler.CatClientContextHolder;
-import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catclient.spi.SimpleResultHandler;
 
 

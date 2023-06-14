@@ -84,7 +84,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
         beanRegistry.registerBean(CatServerUtil.class);
         
         // 扫描所有的 CatInterceptor 子类
-        beanRegistry.scannerByClass(CatServerInterceptor.class, CatServerInterceptor.Off.class);
+        beanRegistry.scannerByClass(CatServerInterceptor.class, CatServerInterceptor.GroupOff.class);
 
         // 扫描所有 CatResultHandler 子类
         beanRegistry.scannerByClass(CatResultHandler.class);

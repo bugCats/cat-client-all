@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.spi;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
+import cc.bugcat.catface.utils.CatToosUtil;
 
 
 /**
@@ -16,23 +17,19 @@ public class SimpleWrapperResultHandler implements CatResultHandler {
     }
 
     @Override
-    public Object onSuccess(Object value, Class returnType){
-        if( value != null ){
-            Class<?> returnClass = value.getClass();
-            Class wrapperClass = wrapperHandler.getWrapperClass();
-            if( wrapperClass.equals(returnClass) || wrapperClass.isAssignableFrom(returnClass)){
-                return value;
-            } else {
-                return wrapperHandler.createEntryOnSuccess(value, returnType);
-            }
+    public Object onSuccess(Object value, Class methodReturnClass){
+        Class wrapperClass = wrapperHandler.getWrapperClass();
+        if( wrapperClass.equals(methodReturnClass) || wrapperClass.isAssignableFrom(methodReturnClass)){
+            return value;
         } else {
-            return wrapperHandler.createEntryOnSuccess(value, returnType);
+            return wrapperHandler.createEntryOnSuccess(value, methodReturnClass);
         }
     }
 
     @Override
-    public Object onError(Throwable throwable, Class returnType) throws Throwable {
-        return wrapperHandler.createEntryOnException(throwable, returnType);
+    public Object onError(Throwable throwable, Class methodReturnClass) {
+        Throwable ex = CatToosUtil.getCause(throwable);
+        return wrapperHandler.createEntryOnException(ex, methodReturnClass);
     }
 
 }

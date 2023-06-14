@@ -2,6 +2,7 @@ package cc.bugcat.example.catserver.server;
 
 
 import cc.bugcat.catserver.annotation.CatBefore;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.example.catserver.DemoService;
 import cc.bugcat.example.dto.DemoEntity;
 import com.alibaba.fastjson.JSONObject;
@@ -27,7 +28,7 @@ import java.util.List;
  *
  * */
 @Api(tags = "服务端API - 继承类")
-@CatServer
+@CatServer(interceptors = CatServerInterceptor.GroupOff.class) //仅全局拦截器
 public class ApiRemoteImplExt extends ApiRemoteImpl {
 
 

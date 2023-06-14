@@ -89,22 +89,10 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         CatClientDepend clientDepend = clientInfo.getClientDepend();
         EnvironmentAdapter envProp = clientDepend.getEnvironment();
-        
-        CatClientFactory clientFactory = getAndExectue((Class<CatClientFactory>)clientInfo.getFactoryClass(), bean -> {
-            if( bean == null ){
-                bean = clientDepend.getClientFactory();
-            }
-            bean.setClientConfiguration(clientDepend.getClientConfig());
-            return bean;
-        });
-        
+
+        CatClientFactory clientFactory = clientInfo.getClientFactory();
+        final CatSendInterceptor sendInterceptor = clientInfo.getSendInterceptor();
         final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientFactory);
-        final CatSendInterceptor methodInterceptor = getAndExectue((Class<CatSendInterceptor>) clientInfo.getInterceptorClass(), bean -> {
-            if( bean == null ){
-                bean = clientDepend.getSendInterceptor();
-            }
-            return bean;
-        });
 
         CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
 
@@ -131,7 +119,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
                             .methodInfo(methodInfo)
                             .method(method)
                             .factoryAdapter(factoryAdapter)
-                            .methodInterceptor(methodInterceptor)
+                            .methodInterceptor(sendInterceptor)
                             .build();
 
                     return interceptor; //代理方法=aop
@@ -150,10 +138,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
 
 
-    private static <T> T getAndExectue(Class<T> clazz, Function<T, T> exectue){
-        T bean = CatClientUtil.getBean(clazz);
-        return exectue.apply(bean);
-    }
+
 
 
     private String buildMessage(Exception exception) {

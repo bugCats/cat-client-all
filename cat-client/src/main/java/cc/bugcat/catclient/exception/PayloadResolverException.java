@@ -1,4 +1,4 @@
-package cc.bugcat.catclient.handler;
+package cc.bugcat.catclient.exception;
 
 public class PayloadResolverException extends RuntimeException {
     

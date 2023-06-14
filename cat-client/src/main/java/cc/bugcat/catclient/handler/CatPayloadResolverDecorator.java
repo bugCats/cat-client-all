@@ -1,5 +1,6 @@
 package cc.bugcat.catclient.handler;
 
+import cc.bugcat.catclient.exception.PayloadResolverException;
 import cc.bugcat.catclient.spi.CatPayloadResolver;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;

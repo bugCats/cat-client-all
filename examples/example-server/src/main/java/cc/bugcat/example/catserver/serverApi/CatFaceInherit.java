@@ -6,7 +6,7 @@ import cc.bugcat.example.api.vo.UserInfo;
 import cc.bugcat.example.tools.ResponseEntity;
 
 
-@CatServer
+//@CatServer
 public class CatFaceInherit implements ChildInter {
 
     @Override

@@ -66,7 +66,7 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
      * 加包装器类
      * */
     @Override
-    public ResponseEntity createEntryOnSuccess(Object value, Type returnType) {
+    public ResponseEntity createEntryOnSuccess(Object value, Class methodReturnClass) {
         return ResponseEntity.ok(value);
     }
 
@@ -74,7 +74,7 @@ public class ResponseEntityWrapper extends AbstractResponesWrapper<ResponseEntit
      * 当发生异常时加包装器
      * */
     @Override
-    public ResponseEntity createEntryOnException(Throwable throwable, Type returnType) {
+    public ResponseEntity createEntryOnException(Throwable throwable, Class methodReturnClass) {
         throwable.printStackTrace();
         return ResponseEntity.fail("-1", throwable.getMessage() == null ? "NullPointerException" : throwable.getMessage());
     }

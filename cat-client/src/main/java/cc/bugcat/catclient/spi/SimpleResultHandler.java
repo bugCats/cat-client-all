@@ -4,7 +4,7 @@ import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodReturnInfo;
 import cc.bugcat.catclient.handler.CatClientContextHolder;
-import cc.bugcat.catclient.handler.CatHttpException;
+import cc.bugcat.catclient.exception.CatHttpException;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 
 import java.lang.reflect.Constructor;
@@ -48,10 +48,10 @@ public class SimpleResultHandler implements CatResultProcessor {
             return null;
         }
         CatMethodInfo methodInfo = context.getMethodInfo();
-        CatClientInfo catClientInfo = context.getClientInfo();
+        CatClientInfo clientInfo = context.getClientInfo();
         CatPayloadResolver resolver = context.getFactoryAdapter().getPayloadResolver();
         CatMethodReturnInfo returnInfo = methodInfo.getReturnInfo();
-        AbstractResponesWrapper wrapperHandler = catClientInfo.getWrapperHandler();
+        AbstractResponesWrapper wrapperHandler = clientInfo.getWrapperHandler();
 
         Class returnClass = returnInfo.getClazz();
         
