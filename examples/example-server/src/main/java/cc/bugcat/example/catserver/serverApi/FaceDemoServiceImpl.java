@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 
-//@CatServer(interceptors = UserInterceptor.class) // 自定义拦截器+拦截器组
+@CatServer(interceptors = UserInterceptor.class) // 自定义拦截器+拦截器组
 public class FaceDemoServiceImpl implements FaceDemoService{
 
     @Override

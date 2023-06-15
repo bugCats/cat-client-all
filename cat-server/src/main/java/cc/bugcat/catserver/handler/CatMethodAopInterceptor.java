@@ -32,31 +32,31 @@ import java.util.function.Supplier;
 public final class CatMethodAopInterceptor implements MethodInterceptor{
 
     /**
-     * 标记的@CatServer注解信息
-     * */
-    private final CatServerInfo serverInfo;
-
-    /**
-     * 被@CatServer标记的server对象
-     * */
-    private final Object serverBean;
-
-    /**
      * 自定义CatServer方法参数预处理
      * */
     private final CatParameterResolver argumentResolver;
 
-    /**
-     * 方法信息
-     * */
+
+    private final Object serverBean;
+
+    private final CatServerInfo serverInfo;
+    
     private final CatMethodInfo methodInfo;
 
 
-    private CatMethodAopInterceptor(Builder builder) {
-        this.serverInfo = builder.serverInfo;
-        this.serverBean = builder.serverBean;
-        this.argumentResolver = builder.argumentResolver;
-        this.methodInfo = builder.methodInfo;
+    public CatMethodAopInterceptor(Object serverBean, CatServerInfo serverInfo, CatMethodInfo methodInfo) {
+        CatBefore catBefore = methodInfo.getServerMethod().getAnnotation(CatBefore.class);
+        CatParameterResolver argumentResolver = null;
+        if( catBefore != null ){
+            Class<? extends CatParameterResolver> resolverClass = catBefore.value();
+            argumentResolver = CatServerUtil.getBean(resolverClass);
+        } else {
+            argumentResolver = CatServerDepend.DEFAULT_RESOLVER;
+        }
+        this.serverBean = serverBean;
+        this.serverInfo = serverInfo;
+        this.argumentResolver = argumentResolver;
+        this.methodInfo = methodInfo;
     }
 
 
@@ -177,46 +177,5 @@ public final class CatMethodAopInterceptor implements MethodInterceptor{
             }
         }
     }
-
-    
-    
-    public static Builder builder(){
-        return new Builder();
-    }
-
-    public static class Builder {
-
-        private CatServerInfo serverInfo;
-        private Object serverBean;
-        private CatParameterResolver argumentResolver;
-        private CatMethodInfo methodInfo;
-
-        public Builder serverInfo(CatServerInfo serverInfo) {
-            this.serverInfo = serverInfo;
-            return this;
-        }
-
-        public Builder serverBean(Object serverBean) {
-            this.serverBean = serverBean;
-            return this;
-        }
-        
-        public Builder methodInfo(CatMethodInfo methodInfo) {
-            this.methodInfo = methodInfo;
-            return this;
-        }
-
-        public CatMethodAopInterceptor build(){
-            CatBefore catBefore = methodInfo.getServerMethod().getAnnotation(CatBefore.class);
-            if( catBefore != null ){
-                Class<? extends CatParameterResolver> resolverClass = catBefore.value();
-                argumentResolver = CatServerUtil.getBean(resolverClass);
-            } else {
-                argumentResolver = CatServerDepend.DEFAULT_RESOLVER;
-            }
-            return new CatMethodAopInterceptor(this);
-        }
-    }
-
 
 }

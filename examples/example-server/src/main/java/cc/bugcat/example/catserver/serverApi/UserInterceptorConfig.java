@@ -29,7 +29,7 @@ public class UserInterceptorConfig extends CatServerConfiguration {
             @Override
             public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
                 CatInterceptPoint interceptPoint = contextHolder.getInterceptPoint();
-                System.out.println("全局拦截器，可以被自定义拦截器覆盖。这是自定义全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
+                System.out.println("全局拦截器：这是自定义全局拦截器 => " + interceptPoint.getRequest().getRequestURI());
                 return contextHolder.proceedRequest();
             }
         };
@@ -70,7 +70,7 @@ public class UserInterceptorConfig extends CatServerConfiguration {
                      */
                     @Override
                     public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
-                        System.out.println("全局拦截器，不可以被覆盖，只能使用CatServerInterceptor.GroupOff.class关闭");
+                        System.out.println("拦截器组，不可以被覆盖，只能使用CatServerInterceptor.GroupOff.class关闭");
                         return contextHolder.proceedRequest();
                     }
                 });

@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catserver.asm.CatServerProperty;
 import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
@@ -27,7 +28,12 @@ import java.util.Set;
  * @author bugcat
  * */
 public final class CatMethodInfoBuilder {
-
+    
+    
+    /**
+     * cglib 的动态调用类
+     * */
+    private FastClass fastClass;
 
     /**
      * serverBean的class。
@@ -35,11 +41,6 @@ public final class CatMethodInfoBuilder {
      * serverBeanClass 不一定等于 serverClass
      * */
     private final Class serverBeanClass;
-    
-    /**
-     * cglib 的动态调用类
-     * */
-    private FastClass fastClass;
 
     /**
      * {@code @CatServer}配置的拦截器
@@ -56,6 +57,13 @@ public final class CatMethodInfoBuilder {
      * @see CatServerConfiguration#getInterceptorGroup()
      * */
     protected List<CatInterceptorGroup> interceptorGroups;
+
+
+
+    public static CatMethodInfoBuilder builder(CatServerProperty serverProperty){
+        return new CatMethodInfoBuilder(serverProperty.getServerBean(), serverProperty.getServerInfo());
+    }
+    
     
     
     private CatMethodInfoBuilder(Object serverBean, CatServerInfo serverInfo){
@@ -82,7 +90,7 @@ public final class CatMethodInfoBuilder {
             if( interceptorSet.contains(interceptor) ){
                 interceptorSet.remove(interceptor);
             }
-            if( CatServerInterceptor.Empty.class == interceptor ){
+            if( CatServerInterceptor.NoOp.class == interceptor ){
                 userOff = true;
                 continue;
             } else if ( CatServerInterceptor.GroupOff.class == interceptor ){
@@ -124,14 +132,6 @@ public final class CatMethodInfoBuilder {
     }
 
 
-
-
-    public static CatMethodInfoBuilder builder(Object serverBean, CatServerInfo serverInfo){
-        return new CatMethodInfoBuilder(serverBean, serverInfo);
-    }
-
-
-
     /**
      * 原interface的方法
      * */
@@ -141,7 +141,6 @@ public final class CatMethodInfoBuilder {
      * cglib生成的ctrl类方法
      * */
     protected Method controllerMethod;
-    
     
     /**
      * 原server类的方法

@@ -12,9 +12,9 @@ public class UserInterceptor2 implements CatServerInterceptor {
 
     @Override
     public Object postHandle(CatServerContextHolder contextHolder) throws Throwable {
-        System.out.println("UserInterceptor2 执行前");
+        System.out.println("自定义拦截器：UserInterceptor2 执行前");
         Object result = contextHolder.proceedRequest();
-        System.out.println("UserInterceptor2 执行后");
+        System.out.println("自定义拦截器：UserInterceptor2 执行后");
 
         return result;
     }

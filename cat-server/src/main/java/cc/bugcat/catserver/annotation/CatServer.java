@@ -58,16 +58,16 @@ public @interface CatServer {
     /**
      * 通过http调用时，CatServer类上的拦截器链。 <br>
      * CatServerInterceptor.class 表示启用全局的默认拦截器配置，最终该位置会被全局配置的拦截器替换； <br>
-     * CatServerInterceptor.Noop.class 表示关闭自定义拦截器和全局拦截器； <br>
+     * CatServerInterceptor.NoOp.class 表示关闭自定义拦截器和全局拦截器； <br>
      * CatServerInterceptor.GroupOff.class 关闭拦截器组。
      * <pre>
      * {@code @CatServer}：启用默认拦截器，默认拦截器在{@link CatServerConfiguration#getServerInterceptor()}指定；
      * {@code @CatServer(interceptors = {UserInterceptor.class, CatServerInterceptor.class})}：启用自定义拦截器和全局拦截器；
      * {@code @CatServer(interceptors = {UserInterceptor.class})}：仅启用自定义拦截器；
      * {@code @CatServer(interceptors = {UserInterceptor.GroupOff.class})}：关闭拦截器组；全局拦截器有效；
-     * {@code @CatServer(interceptors = {UserInterceptor.Empty.class})}：关闭全局拦截器和自定义拦截器；拦截器组有效；
+     * {@code @CatServer(interceptors = {UserInterceptor.NoOp.class})}：关闭全局拦截器和自定义拦截器；拦截器组有效；
      * {@code @CatServer(interceptors = {UserInterceptor.GroupOff.class})}：关闭拦截器组；全局拦截器有效；
-     * {@code @CatServer(interceptors = {UserInterceptor.Empty.class, UserInterceptor.GroupOff.class})}：关闭所有拦截器；
+     * {@code @CatServer(interceptors = {UserInterceptor.NoOp.class, UserInterceptor.GroupOff.class})}：关闭所有拦截器；
      * </pre>
      * */
     Class<? extends CatServerInterceptor>[] interceptors() default CatServerInterceptor.class;

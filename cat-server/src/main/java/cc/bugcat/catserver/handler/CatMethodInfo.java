@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatInterceptorGroup;
 import cc.bugcat.catserver.spi.CatParameterResolver;
@@ -54,7 +55,7 @@ public class CatMethodInfo {
      * 配置的结果处理类
      * */
     private final CatResultHandler resultHandler;
-
+    
     /**
      * 精简模式下参数预处理器
      * */

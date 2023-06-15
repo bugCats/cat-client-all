@@ -56,24 +56,23 @@ public class CatServerFactoryBean implements InitializingBean {
 
         EnvironmentAdapter envProp = EnvironmentAdapter.environmentProperty(configurableBeanFactory);
         CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(serverConfig, envProp, serverClassSet.size());
-        List<CatControllerFactory> controllerFactories = new ArrayList<>(serverClassSet.size());
+        List<CatCtrlInfoBuilder> ctrlInfoBuilders = new ArrayList<>(serverClassSet.size());
         
         for(Class serverClass : serverClassSet){
-            CatControllerFactory factory = CatControllerFactory.builder()
-                    .serverClass(serverClass)
-                    .enhancerDepend(enhancerDepend)
-                    .build();
-            controllerFactories.add(factory);
+            CatCtrlInfoBuilder builder = CatCtrlInfoBuilder.builder(serverClass, enhancerDepend);
+            ctrlInfoBuilders.add(builder);
         }
 
         /**
          * level越大，说明继承次数越多，
          * 优先解析level小的对象，这样level大的对象，会覆盖level小的对象，保证继承性
          * */
-        controllerFactories.sort(CatControllerFactory::compareTo);
+        ctrlInfoBuilders.sort(CatCtrlInfoBuilder::compareTo);
 
-        registerController(controllerFactories);
+        // 注册Controller
+        registerController(ctrlInfoBuilders);
 
+        enhancerDepend.clear();
         serverClassSet = null;
     }
 
@@ -82,19 +81,20 @@ public class CatServerFactoryBean implements InitializingBean {
     /**
      * 手动注册controller对象
      * */
-    private void registerController(List<CatControllerFactory> controllerFactories){
+    private void registerController(List<CatCtrlInfoBuilder> ctrlInfoBuilders) throws Exception {
         
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
         RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
 
-        for( CatControllerFactory factory : controllerFactories ){
+        for( CatCtrlInfoBuilder builder : ctrlInfoBuilders ){
+            CatCtrlInfo ctrlInfo = builder.build();
 
-            CatServerInfo serverInfo = factory.getServerInfo();
+            CatServerInfo serverInfo = ctrlInfo.getServerInfo();
             
             Catface catface = serverInfo.getCatface();
 
-            for(Method method : factory.getBridgeMethods() ){
+            for(Method method : ctrlInfo.getBridgeMethods() ){
 
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
                 Map<String, Object> attributes = metadata.getAnnotationAttributes(CatServerUtil.REQUEST_MAPPING);
@@ -119,7 +119,7 @@ public class CatServerFactoryBean implements InitializingBean {
                         .build();
 
                 mapper.unregisterMapping(mappingInfo);
-                mapper.registerMapping(mappingInfo, factory.getController(), method); // 注册映射处理
+                mapper.registerMapping(mappingInfo, ctrlInfo.getController(), method); // 注册映射处理
             }
         }
     }

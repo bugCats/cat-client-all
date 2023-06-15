@@ -27,7 +27,7 @@ import java.util.List;
  * @author bugcat
  *
  * */
-@Api(tags = "服务端API - 继承类")
+@Api(tags = "CatServer - 继承类") //没用，只能放在interface上
 @CatServer(interceptors = CatServerInterceptor.GroupOff.class) //仅全局拦截器
 public class ApiRemoteImplExt extends ApiRemoteImpl {
 

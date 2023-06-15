@@ -50,7 +50,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Component // 可以省略
-@Api(tags = "用户操作api")
+@Api(tags = "Catface - 用户操作api")
 @CatResponesWrapper(ResponseEntityWrapper.class)
 public interface UserService {
 
