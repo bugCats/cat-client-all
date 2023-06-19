@@ -3,6 +3,7 @@ package cc.bugcat.example.catclient.sign;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNotes;
 import cc.bugcat.example.dto.DemoDTO;
 import cc.bugcat.example.tools.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;

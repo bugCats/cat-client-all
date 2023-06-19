@@ -1,4 +1,4 @@
-package cc.bugcat.catserver.beanInfos;
+package cc.bugcat.catserver.handler;
 
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
@@ -8,7 +8,6 @@ import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
-import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
@@ -17,9 +16,7 @@ import cc.bugcat.catserver.utils.CatServerUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -30,15 +27,15 @@ import java.util.Set;
 public class CatServerInfo {
 
     /**
-     * 全局配置
+     * 组件前置依赖
      * */
-    private CatServerConfiguration serverConfig;
-
+    private final CatServerDepend serverDepend;
+    
     /**
      * 被标记的CatServer类
      * */
     private final Class<?> serverClass;
-
+    
     /**
      * api标签归类
      * */
@@ -67,12 +64,13 @@ public class CatServerInfo {
 
 
 
-    private CatServerInfo(Class<?> serverClass, CatServerApiInfo apiInfo, EnvironmentAdapter envProp) {
-
-        CatServer catServer = serverClass.getAnnotation(CatServer.class);
-
-        this.serverConfig = apiInfo.getConfiguration();
-        this.serverClass = serverClass;
+    private CatServerInfo(CatServer catServer, CatServerApiInfo apiInfo) {
+        
+        this.serverClass = apiInfo.getServerClass();
+        this.serverDepend = apiInfo.getServerDepend();
+        
+        CatServerConfiguration serverConfig = serverDepend.getServerConfig();
+        EnvironmentAdapter envProp = serverDepend.getEnvironmentAdapter();
 
         // 其他自定义参数、标记
         Map<String, String> tagsMap = new HashMap<>();
@@ -119,31 +117,37 @@ public class CatServerInfo {
     }
 
 
-    public final static CatServerInfo build(Class<?> serverClass, CatEnhancerDepend enhancerDepend) {
+    public final static CatServerInfo build(Class<?> serverClass, CatServerDepend serverDepend) {
+        CatServer catServer = serverClass.getAnnotation(CatServer.class);
         CatServerApiInfo apiInfo = CatToosUtil.getAttributes(serverClass, CatServerApiInfo::new);
-        apiInfo.setConfiguration(enhancerDepend.getServerConfig());
-        CatServerInfo serverInfo = new CatServerInfo(serverClass, apiInfo, enhancerDepend.getEnvironmentAdapter());
+        apiInfo.setServerClass(serverClass);
+        apiInfo.setServerDepend(serverDepend);
+        CatServerInfo serverInfo = new CatServerInfo(catServer, apiInfo);
         return serverInfo;
     }
     
     
     private static class CatServerApiInfo extends CatApiInfo {
-        private CatServerConfiguration configuration;
-        
-        public CatServerConfiguration getConfiguration() {
-            return configuration;
+        private Class serverClass;
+        private CatServerDepend serverDepend;
+
+        public Class getServerClass() {
+            return serverClass;
         }
-        public void setConfiguration(CatServerConfiguration configuration) {
-            this.configuration = configuration;
+        public void setServerClass(Class serverClass) {
+            this.serverClass = serverClass;
+        }
+
+        public CatServerDepend getServerDepend() {
+            return serverDepend;
+        }
+        public void setServerDepend(CatServerDepend serverDepend) {
+            this.serverDepend = serverDepend;
         }
     }
 
-
-
-
-
-    public CatServerConfiguration getServerConfig() {
-        return serverConfig;
+    public CatServerDepend getServerDepend() {
+        return serverDepend;
     }
     public Class<?> getServerClass() {
         return serverClass;

@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -111,7 +110,7 @@ public final class CatClientInfo {
 
     private CatClientInfo(CatClient client, CatClientApiInfo apiInfo){
 
-        this.clientDepend = apiInfo.getDepend();
+        this.clientDepend = apiInfo.getClientDepend();
         this.clientClass = apiInfo.getClientClass();
         this.clientClassName = CatToosUtil.defaultIfBlank(client.value(), CatToosUtil.uncapitalize(clientClass.getSimpleName()));
         
@@ -196,7 +195,7 @@ public final class CatClientInfo {
         }
         CatClientApiInfo apiInfo = CatToosUtil.getAttributes(interfaceClass, CatClientApiInfo::new);
         apiInfo.setClientClass(interfaceClass);
-        apiInfo.setDepend(depend);
+        apiInfo.setClientDepend(depend);
         CatClientInfo clientInfo = new CatClientInfo(catClient, apiInfo);
         return clientInfo;
     }
@@ -204,7 +203,7 @@ public final class CatClientInfo {
 
     private static class CatClientApiInfo extends CatApiInfo {
         private Class clientClass;
-        private CatClientDepend depend;
+        private CatClientDepend clientDepend;
 
         public Class getClientClass() {
             return clientClass;
@@ -213,11 +212,11 @@ public final class CatClientInfo {
             this.clientClass = clientClass;
         }
 
-        public CatClientDepend getDepend() {
-            return depend;
+        public CatClientDepend getClientDepend() {
+            return clientDepend;
         }
-        public void setDepend(CatClientDepend depend) {
-            this.depend = depend;
+        public void setClientDepend(CatClientDepend clientDepend) {
+            this.clientDepend = clientDepend;
         }
     }
 

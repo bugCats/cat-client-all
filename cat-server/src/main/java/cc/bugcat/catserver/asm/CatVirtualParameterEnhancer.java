@@ -1,6 +1,8 @@
 package cc.bugcat.catserver.asm;
 
+import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.utils.CatToosUtil;
+import cc.bugcat.catserver.spi.CatVirtualProprietyPolicy;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.ClassVisitor;
@@ -15,11 +17,14 @@ import org.springframework.cglib.core.Constants;
 import org.springframework.cglib.core.EmitUtils;
 import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +67,7 @@ import java.util.Map;
 public class CatVirtualParameterEnhancer implements Constants {
 
 
-    public static Class generator(Method method, ParameterResolverStrategy strategy) throws Exception {
+    public static Class generator(Method method, CatEnhancerDepend enhancerDepend, ParameterResolverStrategy strategy) throws Exception {
 
         ClassLoader classLoader = CatServerUtil.getClassLoader();
         String className = strategy.getClassName();
@@ -81,21 +86,31 @@ public class CatVirtualParameterEnhancer implements Constants {
         // 默认的构造器
         EmitUtils.null_constructor(ce);
         
-        String[] descs = strategy.getAndResolverDescriptor();   // 方法上所有入参的Type描述信息，转换成字段描述
-        String[] signs = strategy.getAndResolverSignature();    // 方法上所有入参的签名信息，转换成字段签名
+        
+        CatVirtualProprietyPolicy proprietyPolicy = enhancerDepend.getProprietyPolicy();
 
-        Class[] parameterType = method.getParameterTypes();
+        List<String> descs = strategy.getAndResolverDescriptor();   // 方法上所有入参的Type描述信息，转换成字段描述
+        List<String> signs = strategy.getAndResolverSignature();    // 方法上所有入参的签名信息，转换成字段签名
+
+        Parameter[] parameters = method.getParameters();
         Annotation[][] annotations = method.getParameterAnnotations();
-
+        
         MethodBuilder methodBuilder = new MethodBuilder(className);
-        FieldSignature[] fields = new FieldSignature[parameterType.length];
+        FieldSignature[] fields = new FieldSignature[parameters.length];
 
-        for(int idx = 0; idx < parameterType.length; idx ++ ){
-
-            String fieldName = "arg" + idx;                   // 虚拟入参对象，属性名
-            String alias = CatToosUtil.capitalize(fieldName); // 首字母大写
-            String desc = descs[idx] + ";";
-            String sign = signs[idx];
+        for(int idx = 0; idx < parameters.length; idx ++ ){
+            Parameter parameter = parameters[idx];
+            Class<?> ptype = parameter.getType();
+            
+            //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
+            String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
+            if ( CatToosUtil.isBlank(pname) ) {
+                pname = "arg" + idx;
+            }
+            
+            String fieldName = pname;                         // 虚拟入参对象，属性名
+            String desc = descs.get(idx);
+            String sign = signs.get(idx);
 
             // 字段描述信息
             FieldSignature field = new FieldSignature();
@@ -108,15 +123,17 @@ public class CatVirtualParameterEnhancer implements Constants {
             // get方法描述信息
             FieldSignature getter = new FieldSignature();
             getter.fieldName = fieldName;
-            getter.methodName = "get" + alias;
+            getter.methodName = proprietyPolicy.getterName(fieldName, ptype);
             getter.descriptor = "()" + desc;
             getter.signature = "()" + sign;
             getter.field = field;
 
+            
+            
             // set方法描述信息
             FieldSignature setter = new FieldSignature();
             setter.fieldName = fieldName;
-            setter.methodName = "set" + alias;
+            setter.methodName = proprietyPolicy.setterName(fieldName, ptype);
             setter.descriptor = "(" + desc + ")V";
             setter.signature = "(" + sign + ")V";
             setter.field = field;

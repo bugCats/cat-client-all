@@ -1,28 +1,25 @@
 package cc.bugcat.catserver.handler;
 
+import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNotes;
+import cc.bugcat.catface.spi.CatClientBridge;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatServerProperty;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
-import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.spi.CatInterceptorGroup;
-import cc.bugcat.catserver.spi.CatParameterResolver;
-import cc.bugcat.catserver.spi.CatResultHandler;
-import cc.bugcat.catserver.spi.CatServerInterceptor;
-import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.Type;
 import org.springframework.cglib.core.Signature;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.cglib.reflect.FastClass;
 import org.springframework.cglib.reflect.FastMethod;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.util.ClassUtils;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.Parameter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author bugcat
@@ -30,112 +27,60 @@ import java.util.Set;
 public final class CatMethodInfoBuilder {
     
     
-    /**
-     * cglib 的动态调用类
-     * */
-    private FastClass fastClass;
+    public static BuilderFactory factory(CatServerProperty serverProperty){
+        return new BuilderFactory(serverProperty);
+    }
+    
+    public static class BuilderFactory {
 
-    /**
-     * serverBean的class。
-     * 如果server对象被其他组件动态代理，则为代理后的class！
-     * serverBeanClass 不一定等于 serverClass
-     * */
+
+        private final CatServerInfo serverInfo;
+
+        /**
+         * serverBean的class。
+         * 如果server对象被其他组件动态代理，则为代理后的class！
+         * serverBeanClass 不一定等于 serverClass
+         * */
+        private final Class serverBeanClass;
+
+        /**
+         * cglib 的动态调用类
+         * */
+        private final FastClass serverFastClass;
+
+        
+        public BuilderFactory(CatServerProperty serverProperty){
+            this.serverInfo = serverProperty.getServerInfo();
+            this.serverBeanClass = serverProperty.getServerBean().getClass();
+            if( ClassUtils.isCglibProxy(serverBeanClass) == false ){// server对象，没有、或者不是cglib代理，使用快速处理类
+                this.serverFastClass = FastClass.create(serverBeanClass);
+            } else {
+                this.serverFastClass = null;
+            }
+        }
+        
+        public CatMethodInfoBuilder builder(){
+            return new CatMethodInfoBuilder(serverInfo, serverBeanClass, serverFastClass);
+        }
+    }
+
+
+
+    
+    private final CatServerInfo serverInfo;
     private final Class serverBeanClass;
+    private final FastClass serverFastClass;
 
-    /**
-     * {@code @CatServer}配置的拦截器
-     * */
-    protected List<CatServerInterceptor> interceptors;
-    
-    /**
-     * 配置的结果处理类
-     * */
-    protected CatResultHandler resultHandler;
-    
-    /**
-     * 运行时拦截器组
-     * @see CatServerConfiguration#getInterceptorGroup()
-     * */
-    protected List<CatInterceptorGroup> interceptorGroups;
-
-
-
-    public static CatMethodInfoBuilder builder(CatServerProperty serverProperty){
-        return new CatMethodInfoBuilder(serverProperty.getServerBean(), serverProperty.getServerInfo());
+    private CatMethodInfoBuilder(CatServerInfo serverInfo, Class serverBeanClass, FastClass serverFastClass) {
+        this.serverInfo = serverInfo;
+        this.serverBeanClass = serverBeanClass;
+        this.serverFastClass = serverFastClass;
     }
-    
-    
-    
-    private CatMethodInfoBuilder(Object serverBean, CatServerInfo serverInfo){
-        this.serverBeanClass = serverBean.getClass();
-        if( ClassUtils.isCglibProxy(serverBeanClass) == false ){// server对象，没有、或者不是cglib代理，使用快速处理类
-            this.fastClass = FastClass.create(serverBeanClass);
-        }
-        this.resultHandler = serverInfo.getResultHandler();
-        this.parseInterceptor(serverInfo);
-    }
-    
-    /**
-     * 获取拦截器
-     * */
-    private void parseInterceptor(CatServerInfo serverInfo) {
-
-        CatServerConfiguration serverConfig = serverInfo.getServerConfig();
-        List<CatInterceptorGroup> interceptorGroup = new ArrayList<>(serverConfig.getInterceptorGroup()); //拦截器组
-
-        boolean userOff = false;
-        boolean groupOff = false;
-        Set<Class<? extends CatServerInterceptor>> interceptorSet = new LinkedHashSet<>();
-        for ( Class<? extends CatServerInterceptor> interceptor : serverInfo.getInterceptors() ) {
-            if( interceptorSet.contains(interceptor) ){
-                interceptorSet.remove(interceptor);
-            }
-            if( CatServerInterceptor.NoOp.class == interceptor ){
-                userOff = true;
-                continue;
-            } else if ( CatServerInterceptor.GroupOff.class == interceptor ){
-                groupOff = true;
-                continue;
-            }
-            interceptorSet.add(interceptor);
-        }
-
-        if( groupOff ){ //关闭拦截器组
-            interceptorGroup.clear();
-        }
-        
-        List<CatServerInterceptor> handers = null;
-        if( userOff ){ //关闭自定义和全局
-            handers = new ArrayList<>(0);
-            
-        } else { //启用自定义、全局拦截器
-            
-            handers = new ArrayList<>(interceptorSet.size() + 1);
-            for ( Class<? extends CatServerInterceptor> clazz : interceptorSet ) {
-                if (CatServerInterceptor.class.equals(clazz) ) {
-                    // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
-                    handers.add(serverConfig.getServerInterceptor());
-
-                } else {
-                    // CatServer上自定义拦截器
-                    handers.add(CatServerUtil.getBean(clazz));
-                }
-            }
-            if( handers.size() == 0 ){ //如果没有配置拦截器，添加全局
-                handers.add(serverConfig.getServerInterceptor());
-            }
-        }
-        
-        Collections.sort(interceptorGroup, Comparator.comparingInt(CatInterceptorGroup::getOrder));
-        this.interceptors = handers;
-        this.interceptorGroups = interceptorGroup;
-    }
-
 
     /**
      * 原interface的方法
      * */
-    protected StandardMethodMetadata interMethod;
+    protected StandardMethodMetadata interfaceMethod;
 
     /**
      * cglib生成的ctrl类方法
@@ -153,34 +98,26 @@ public final class CatMethodInfoBuilder {
     protected CatServiceMethodProxy serviceMethodProxy;
 
     /**
-     * 精简模式下参数预处理器
+     * {@code @CatNote}注解信息
      * */
-    protected CatParameterResolver parameterResolver;
-
+    protected Map<String, String> noteMap;
+    
+    /**
+     * 方法上参数列表
+     * */
+    protected Map<String, Integer> paramIndex;
 
     /**
      * 原interface的方法
      * */
-    public CatMethodInfoBuilder interMethod(StandardMethodMetadata interMethod) {
-        this.interMethod = interMethod;
-        
-        Method method = interMethod.getIntrospectedMethod();
-        if( fastClass != null ){
-            // server对象，没有、或者不是cglib代理，使用快速处理类
-            FastMethod fastMethod = fastClass.getMethod(method);
-            this.serviceMethodProxy = CatServiceMethodProxy.getFastProxy(fastMethod);
-        } else {
-            // server对象，被cglib代理
-            MethodProxy proxy = MethodProxy.find(serverBeanClass, new Signature(method.getName(), Type.getMethodDescriptor(method)));
-            this.serviceMethodProxy = CatServiceMethodProxy.getCglibProxy(proxy);
-        }
+    public CatMethodInfoBuilder interfaceMethod(StandardMethodMetadata interfaceMethod) {
+        this.interfaceMethod = interfaceMethod;
         return this;
     }
     
     /**
      * cglib生成的ctrl类方法
      * */
-
     public CatMethodInfoBuilder controllerMethod(Method controllerMethod) {
         this.controllerMethod = controllerMethod;
         return this;
@@ -195,24 +132,61 @@ public final class CatMethodInfoBuilder {
     }
     
     /**
-     * 方法入参处理器
-     * */
-    public CatMethodInfoBuilder parameterResolver(CatParameterResolver parameterResolver) {
-        this.parameterResolver = parameterResolver;
-        return this;
-    }
-
-    
-    /**
      * 生成方法描述信息对象，之后把临时缓存清空
      * */
     public CatMethodInfo build(){
-        CatMethodInfo info = new CatMethodInfo(this);
-        this.interMethod = null;
-        this.serverMethod = null;
-        this.serviceMethodProxy = null;
-        this.parameterResolver = null;
-        return info;
+
+        Method method = interfaceMethod.getIntrospectedMethod();
+        if( serverFastClass != null ){
+            // server对象，没有、或者不是cglib代理，使用快速处理类
+            FastMethod fastMethod = serverFastClass.getMethod(method);
+            this.serviceMethodProxy = CatServiceMethodProxy.getFastProxy(fastMethod);
+        } else {
+            // server对象，被cglib代理
+            MethodProxy proxy = MethodProxy.find(serverBeanClass, new Signature(method.getName(), Type.getMethodDescriptor(method)));
+            this.serviceMethodProxy = CatServiceMethodProxy.getCglibProxy(proxy);
+        }
+
+        this.paramIndex = new LinkedHashMap<>();
+        Parameter[] parameters = method.getParameters();
+        for ( int idx = 0; idx < parameters.length; idx++ ) {
+            Parameter parameter = parameters[idx];
+            //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
+            String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
+            if ( CatToosUtil.isBlank(pname) ) {
+                if ( serverInfo.isCatface() ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2、argX...命名
+                    pname = "arg" + idx;
+                } else {
+                    pname = parameter.getName();
+                }
+            }
+            paramIndex.put(pname,Integer.valueOf(idx));
+        }
+
+        
+        CatNote[] notes = null;
+        CatNotes.Group noteGroup = AnnotationUtils.findAnnotation(method, CatNotes.Group.class);
+        if( noteGroup != null ){
+            notes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
+        } else {
+            CatClientBridge clientBridge = CatClientBridge.loadService();
+            notes = clientBridge.findCatNotes(method);
+        }
+        // 其他自定义参数、标记
+        Map<String, String> noteMap = new LinkedHashMap<>();
+        if( notes != null ){
+            for ( CatNote note : notes ) {
+                String value = CatToosUtil.defaultIfBlank(note.value(), "");
+
+                //如果 key属性为空，默认赋值value
+                String key = CatToosUtil.isBlank(note.key()) ? value : note.key();
+                noteMap.put(key, value);
+            }
+        }
+        this.noteMap = noteMap;
+
+        return new CatMethodInfo(this);
     }
+
 
 }

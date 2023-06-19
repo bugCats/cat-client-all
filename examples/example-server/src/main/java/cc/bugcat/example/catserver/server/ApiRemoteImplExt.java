@@ -65,12 +65,6 @@ public class ApiRemoteImplExt extends ApiRemoteImpl {
     }
 
 
-    public Demo demo5(Long uid) {
-        System.out.println("demo25 >>> req: userId=" + uid);
-        Demo resp = demoService.creart();
-        resp.setId(uid);
-        return resp;
-    }
 
 
 

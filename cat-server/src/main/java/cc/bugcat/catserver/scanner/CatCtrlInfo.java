@@ -1,6 +1,6 @@
 package cc.bugcat.catserver.scanner;
 
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
+import cc.bugcat.catserver.handler.CatServerInfo;
 
 import java.lang.reflect.Method;
 import java.util.Set;

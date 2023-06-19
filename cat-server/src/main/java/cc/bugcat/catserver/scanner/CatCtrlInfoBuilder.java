@@ -8,17 +8,20 @@ import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
 import cc.bugcat.catserver.asm.CatServerInstance;
 import cc.bugcat.catserver.asm.CatServerProperty;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
+import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 import cc.bugcat.catserver.handler.CatMethodInfo;
 import cc.bugcat.catserver.handler.CatMethodInfoBuilder;
+import cc.bugcat.catserver.handler.CatMethodInfoBuilder.BuilderFactory;
+import cc.bugcat.catserver.handler.CatServerDepend;
+import cc.bugcat.catserver.handler.CatServerInfo;
+import cc.bugcat.catserver.spi.CatInterceptorGroup;
+import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.cglib.core.DefaultNamingPolicy;
 import org.springframework.cglib.core.Predicate;
-import org.springframework.cglib.core.ReflectUtils;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.CallbackFilter;
-import org.springframework.cglib.proxy.CallbackHelper;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -26,8 +29,11 @@ import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,10 +46,6 @@ import java.util.Stack;
  * @author bugcat
  * */
 class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
-
-    public static CatCtrlInfoBuilder builder(Class serverClass, CatEnhancerDepend enhancerDepend){
-        return new CatCtrlInfoBuilder(serverClass, enhancerDepend);
-    }
 
 
     /**
@@ -60,14 +62,18 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
      * 全局配置项与缓存
      * */
     private final CatEnhancerDepend enhancerDepend;
+    
+    /**
+     * 环境
+     * */
+    private final CatServerDepend serverDepend;
+    
     /**
      * serverClass类的继承关系
      * 如果是子类，那么level比父类大，排在后面
      * */
     private final int level;
 
-    
-    
     /**
      * {@link CatServer}注解信息
      * */
@@ -86,8 +92,9 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
 
 
 
-    private CatCtrlInfoBuilder(Class serverClass, CatEnhancerDepend enhancerDepend) {
+    protected CatCtrlInfoBuilder(Class serverClass, CatServerDepend serverDepend, CatEnhancerDepend enhancerDepend) {
         this.serverClass = serverClass;
+        this.serverDepend = serverDepend;
         this.enhancerDepend = enhancerDepend;
 
         // 当前CatServer类的继承层数，继承层级越多，level越大
@@ -110,12 +117,19 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
     protected CatCtrlInfo build() throws Exception {
         
         // CatServer注解信息
-        this.serverInfo = CatServerInfo.build(serverClass, enhancerDepend);
+        this.serverInfo = CatServerInfo.build(serverClass, serverDepend);
         
         // 1. 增强被实现的interface
         // 2. 通过增强Interface动态代理生成controller
         this.controller = createController();
 
+        final Map<String, Method> serverClassMethodMap = new HashMap<>(serverClass.getMethods().length * 2);
+        for ( Method method : serverClass.getMethods() ) {
+            if ( serverClass.equals(method.getDeclaringClass()) ) {
+                String signatureId = CatServerUtil.methodSignature(method);
+                serverClassMethodMap.put(signatureId, method); //包含父类没有重写的方法
+            }
+        }
         
         //cglib动态生成的class => Interface的实现类
         Class thisClazz = controller.getClass(); 
@@ -124,7 +138,10 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
         for( Class interfaceClass : interfaces ){ //增强后的interface
             if ( CatInterfaceEnhancer.isBridgeClass(interfaceClass) ) { //判断是否为增强后的Interface
                 for( Method method : interfaceClass.getMethods() ){ // 增强后的Method
-                    bridgeMethods.add(method);
+                    String signatureId = CatServerUtil.methodSignature(method);
+                    if( serverClassMethodMap.containsKey(signatureId) ){
+                        bridgeMethods.add(method);
+                    }
                 }
             }
         }
@@ -160,99 +177,127 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
         // 缓存原始CatServer类的method签名，最后需要与增强后的Method对应
         final Map<String, Method> serverClassMethodMap = new HashMap<>(serverClass.getMethods().length * 2);
         for ( Method method : serverClass.getMethods() ) {
-            String signatureId = CatServerUtil.typeSignatureId(method);
-            serverClassMethodMap.put(signatureId, method);
+            String signatureId = CatServerUtil.methodSignature(method);
+            serverClassMethodMap.put(signatureId, method); //包含父类没有重写的方法
         }
 
         
         // 原interface方法签名id => interface的原始方法
-        final Map<String, StandardMethodMetadata> metadataMap = new HashMap<>();
+        final Map<String, StandardMethodMetadata> interfaceMap = new HashMap<>();
 
         // 增强后的Interface方法签名id => CatMethodInfo
-        final Map<String, CatAsmMethod> allMethodInfoMap = new HashMap<>();
-
-        // interface与对应的方法拦截器
-        final Map<Method, CatMethodAopInterceptor> interceptorMap = enhancerDepend.getInterceptorMap();
+        final Map<String, CatAsmMethod> asmMethodInfoMap = new HashMap<>();
 
         for (Class interClass : interfaces ){ // 遍历CatServer类的每个interface
             CatAsmInterface asmInterface = enhancerDepend.getControllerDescriptor(interClass);
             if( asmInterface == null ){
                 asmInterface = serverAsm.enhancer(interClass, serverInfo, enhancerDepend); //使用asm增强interface
-                enhancerDepend.putControllerDescriptor(interClass, asmInterface);
+                enhancerDepend.putControllerDescriptor(interClass, asmInterface); //缓存interface，避免重复增强
             }
-            allMethodInfoMap.putAll(asmInterface.getMethodInfoMap());
+            asmMethodInfoMap.putAll(asmInterface.getMethodInfoMap());
             thisInters[lengthPointer ++] = asmInterface.getEnhancerClass(); // 增强后的Interface
 
             for(Method method : interClass.getMethods()){
-
-                // 是否为object默认方法
-                if( CatToosUtil.isObjectMethod(CatToosUtil.signature(method)) ){ 
+                if( CatToosUtil.isObjectMethod(CatToosUtil.signature(method)) ){ // 是否为object默认方法
                     continue;
                 }
-                
-                String signatureId = CatServerUtil.typeSignatureId(method);
+                String signatureId = CatServerUtil.methodSignature(method);
                 StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-                metadataMap.put(signatureId, metadata);
+                interfaceMap.put(signatureId, metadata);
             }
         }
         // 此时thisInters中，全部为增强后的扩展interface
+        
+        CatServerConfiguration serverConfig = serverDepend.getServerConfig();
+        List<CatInterceptorGroup> interceptorGroup = new ArrayList<>(serverConfig.getInterceptorGroup()); //拦截器组
+        boolean userOff = false;
+        boolean groupOff = false;
+        Set<Class<? extends CatServerInterceptor>> interceptorSet = new LinkedHashSet<>();
+        for ( Class<? extends CatServerInterceptor> interceptor : serverInfo.getInterceptors() ) {
+            if( interceptorSet.contains(interceptor) ){
+                interceptorSet.remove(interceptor);
+            }
+            if( CatServerInterceptor.NoOp.class == interceptor ){
+                userOff = true;
+                continue;
+            } else if ( CatServerInterceptor.GroupOff.class == interceptor ){
+                groupOff = true;
+                continue;
+            }
+            interceptorSet.add(interceptor);
+        }
+        if( groupOff ){ //关闭拦截器组
+            interceptorGroup.clear();
+        }
+        List<CatServerInterceptor> handers = null;
+        if( userOff ){ //关闭自定义和全局
+            handers = new ArrayList<>(0);
+        } else { //启用自定义、全局拦截器
+            handers = new ArrayList<>(interceptorSet.size() + 1);
+            for ( Class<? extends CatServerInterceptor> clazz : interceptorSet ) {
+                if (CatServerInterceptor.class.equals(clazz) ) {
+                    // 默认拦截器，使用CatServerConfiguration.getGlobalInterceptor()替换
+                    handers.add(serverConfig.getServerInterceptor());
 
+                } else {
+                    // CatServer上自定义拦截器
+                    handers.add(CatServerUtil.getBean(clazz));
+                }
+            }
+            if( handers.size() == 0 ){ //如果没有配置拦截器，添加全局
+                handers.add(serverConfig.getServerInterceptor());
+            }
+        }
+        Collections.sort(interceptorGroup, Comparator.comparingInt(CatInterceptorGroup::getOrder));
+        
+        final List<CatServerInterceptor> interceptors = handers;    //自定义和全局拦截器
+        final List<CatInterceptorGroup> interceptorGroups = interceptorGroup; //运行时拦截器组
+        
         //被CatServer标记的类
         final Object serverBean = CatServerUtil.getBean(serverClass);
         final CatServerProperty serverProperty = new CatServerProperty(serverClass, serverBean, serverInfo);
-        final CatMethodInfoBuilder methodBuilder = CatMethodInfoBuilder.builder(serverProperty);
+        final BuilderFactory factory = CatMethodInfoBuilder.factory(serverProperty);
+        final Map<Method, CatMethodAopInterceptor> interceptorMap = new HashMap<>();;
 
-        CatCallbackHelper helper = new CatCallbackHelper();
-        helper.setEnhancerDepend(enhancerDepend)
-                .setServerProperty(serverProperty)
-                .setMethodBuilder(methodBuilder)
-                .setAllMethodInfoMap(allMethodInfoMap)
-                .setServerClassMethodMap(serverClassMethodMap)
-                .setMetadataMap(metadataMap);
+        final List<Method> ctrlMethods = new ArrayList<>();
+        Enhancer.getMethods(Object.class, thisInters, ctrlMethods);
+        for ( Method ctrlMethod : ctrlMethods ) {//所有增强之后的interface的方法
+            String signatureId = CatServerUtil.methodSignature(ctrlMethod);
+            CatAsmMethod methodInfo = asmMethodInfoMap.get(signatureId);
+            if( methodInfo == null ){
+                continue; //不在增强方法Map中，忽略
+            }
+
+            //如果是asm-interface的方法
+            StandardMethodMetadata metadata = interfaceMap.get(methodInfo.getInterfaceSignatureId()); // interface的原始方法
+            Method serverMethod = serverClassMethodMap.get(methodInfo.getInterfaceSignatureId()); //原始CatServer类的方法
+            
+            CatMethodInfo methodDesc = factory.builder()
+                    .interfaceMethod(metadata)
+                    .controllerMethod(ctrlMethod)
+                    .serverMethod(serverMethod)
+                    .build();
+
+            CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
+                    .serverInfo(serverInfo)
+                    .methodInfo(methodDesc)
+                    .serverBean(serverBean)
+                    .interceptorGroups(interceptorGroups)
+                    .interceptors(interceptors)
+                    .resultHandler(serverInfo.getResultHandler())
+                    .parameterResolver(methodInfo.getParameterResolver())
+                    .build();
+            
+            interceptorMap.put(ctrlMethod, interceptor);
+        }
+        
+        CatCallbackHelper helper = new CatCallbackHelper()
+                .setEnhancerDepend(enhancerDepend)
+                .setInterceptorMap(interceptorMap)
+                .setServerProperty(serverProperty);
         
         CatCallbackFilter filter = new CatCallbackFilter();
-        filter.parse(helper, Object.class, thisInters);
-        
-//        CallbackHelper helper = new CallbackHelper(Object.class, thisInters) {
-//            @Override
-//            protected Object getCallback (Method method) { // method为增强后的方法 asm-method
-//
-//                String signatureId = CatServerUtil.typeSignatureId(method);
-//                CatAsmMethod methodInfo = allMethodInfoMap.get(signatureId);
-//                if ( methodInfo != null ){ //如果是asm-interface的方法
-//                    StandardMethodMetadata metadata = metadataMap.get(methodInfo.getInterfaceSignatureId());
-//                    //原始CatServer类的方法
-//                    Method serverMethod = serverClassMethodMap.get(methodInfo.getInterfaceSignatureId());
-//
-//                    CatMethodAopInterceptor interceptor = interceptorMap.get(serverMethod);
-//                    if( interceptor != null ){
-//                        return interceptor;
-//                    }
-//
-//                    CatMethodInfo methodDesc = methodBuilder.interMethod(metadata)
-//                            .controllerMethod(method)
-//                            .serverMethod(serverMethod)
-//                            .parameterResolver(methodInfo.getParameterResolver())
-//                            .build();
-//
-//                    interceptor = new CatMethodAopInterceptor(methodDesc);
-//
-//                    interceptorMap.put(serverMethod, interceptor);
-//                    return interceptor;
-//                    
-//                } else if ( serverPropertyMethodName.equals(method.getName()) ){ // 返回CatServer类的class
-//                    return new MethodInterceptor() {
-//                        @Override
-//                        public Object intercept(Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-//                            return serverProperty;
-//                        }
-//                    };
-//                }
-//                
-//                // object默认方法
-//                return enhancerDepend.getObjectMethodInterceptor();
-//            }
-//        };
+        filter.parse(helper, ctrlMethods);
         
         Enhancer enhancer = new Enhancer();
         enhancer.setClassLoader(classLoader);
@@ -277,103 +322,53 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
         // 被CatServer标记的类一些自定义属性
         private CatServerProperty serverProperty;
 
-        private CatMethodInfoBuilder methodBuilder;
-        
-        // 增强后的Interface方法签名id => CatMethodInfo
-        private Map<String, CatAsmMethod> allMethodInfoMap;
-        
-        // 原interface方法签名id => interface的原始方法
-        private Map<String, StandardMethodMetadata> metadataMap;
-        
-        // 缓存原始CatServer类的method签名，最后需要与增强后的Method对应
-        private Map<String, Method> serverClassMethodMap;
-
 
         public CatCallbackHelper setEnhancerDepend(CatEnhancerDepend enhancerDepend) {
             this.enhancerDepend = enhancerDepend;
-            this.interceptorMap = enhancerDepend.getInterceptorMap();
+            return this;
+        }
+        public CatCallbackHelper setInterceptorMap(Map<Method, CatMethodAopInterceptor> interceptorMap){
+            this.interceptorMap = interceptorMap;
             return this;
         }
         public CatCallbackHelper setServerProperty(CatServerProperty serverProperty) {
             this.serverProperty = serverProperty;
             return this;
         }
-        public CatCallbackHelper setMethodBuilder(CatMethodInfoBuilder methodBuilder) {
-            this.methodBuilder = methodBuilder;
-            return this;
-        }
-        public CatCallbackHelper setAllMethodInfoMap(Map<String, CatAsmMethod> allMethodInfoMap) {
-            this.allMethodInfoMap = allMethodInfoMap;
-            return this;
-        }
-        public CatCallbackHelper setMetadataMap(Map<String, StandardMethodMetadata> metadataMap) {
-            this.metadataMap = metadataMap;
-            return this;
-        }
-        public CatCallbackHelper setServerClassMethodMap(Map<String, Method> serverClassMethodMap) {
-            this.serverClassMethodMap = serverClassMethodMap;
-            return this;
-        }
-    
     }
     
 
     private static class CatCallbackFilter implements CallbackFilter {
-        
-        private Map<Method, Integer> methodIndexMap = new HashMap();
-        private List<Callback> callbacks = new ArrayList();
-        private List<Class> callbackTypes = new ArrayList();
 
-        public void parse(CatCallbackHelper helper, Class superclass, Class[] interfaces) {
-            
-            List<Method> methods = new ArrayList();
-            Enhancer.getMethods(superclass, interfaces, methods);
+        private Map<Method, Integer> methodIndexMap = new HashMap<>();
+        private List<Callback> callbacks = new ArrayList<>();
+
+        public void parse(CatCallbackHelper helper, List<Method> ctrlMethods) {
             Map<Callback, Integer> indexes = new HashMap();
 
-            for(int index = 0, size = methods.size(); index < size; index ++ ) {
-                Method method = methods.get(index); // method为增强后的方法 asm-method
+            for(int index = 0, size = ctrlMethods.size(); index < size; index ++ ) {
+                Method method = ctrlMethods.get(index); // method为增强后的方法 asm-method
                 Callback callback = this.getCallback(helper, method);
                 if (indexes.get(callback) == null) {
                     indexes.put(callback, index);
                 }
                 this.methodIndexMap.put(method, index);
                 this.callbacks.add(callback);
-                this.callbackTypes.add(callback.getClass());
             }
         }
 
         private Callback getCallback (CatCallbackHelper helper, Method method) { 
-            
-            String signatureId = CatServerUtil.typeSignatureId(method);
-            CatAsmMethod methodInfo = helper.allMethodInfoMap.get(signatureId);
-            if ( methodInfo != null ){ //如果是asm-interface的方法
-                StandardMethodMetadata metadata = helper.metadataMap.get(methodInfo.getInterfaceSignatureId());
-                //原始CatServer类的方法
-                Method serverMethod = helper.serverClassMethodMap.get(methodInfo.getInterfaceSignatureId());
-
-                CatMethodAopInterceptor interceptor = helper.interceptorMap.get(serverMethod);
+            if ( serverPropertyMethodName.equals(method.getName()) ){ // 返回CatServer类的class
+                return new PropertyMethodInterceptor(helper.serverProperty);
+            } else {
+                CatMethodAopInterceptor interceptor = helper.interceptorMap.get(method);
                 if( interceptor != null ){
                     return interceptor;
+                } else {
+                    // object默认方法
+                    return helper.enhancerDepend.getObjectMethodInterceptor();
                 }
-
-                CatMethodInfo methodDesc = helper.methodBuilder.interMethod(metadata)
-                        .controllerMethod(method)
-                        .serverMethod(serverMethod)
-                        .parameterResolver(methodInfo.getParameterResolver())
-                        .build();
-                
-                CatServerProperty serverProperty = helper.serverProperty;
-                interceptor = new CatMethodAopInterceptor(serverProperty.getServerBean(), serverProperty.getServerInfo(), methodDesc);
-
-                helper.interceptorMap.put(serverMethod, interceptor);
-                return interceptor;
-
-            } else if ( serverPropertyMethodName.equals(method.getName()) ){ // 返回CatServer类的class
-                return new PropertyMethodInterceptor(helper.serverProperty);
             }
-
-            // object默认方法
-            return helper.enhancerDepend.getObjectMethodInterceptor();
         }
 
         @Override
@@ -385,9 +380,6 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
             return this.callbacks.toArray(new Callback[callbacks.size()]);
         }
 
-        public Class[] getCallbackTypes() {
-            return this.callbackTypes.toArray(new Class[callbackTypes.size()]);
-        }
     }
 
     

@@ -82,7 +82,7 @@ public class FaceDemoServiceTest{
         UserPageVi vi = new UserPageVi();
         vi.setUid("param5");
         vi.setName("入参5");
-        UserInfo userInfo = faceDemoService.param5("userId", vi, 1);
+        UserInfo userInfo = faceDemoService.param5("userId", vi, true);
         assertThat(userInfo).isNotNull().hasFieldOrPropertyWithValue("name", "userId-param5-1");
     }
 
@@ -136,7 +136,7 @@ public class FaceDemoServiceTest{
         map.put("mapKey1", "value1");
         map.put("mapKey2", "value2");
 
-        UserInfo userInfo = faceDemoService.param8(map, vi1, vi2, 1, vi3);
+        UserInfo userInfo = faceDemoService.param8(map, vi1, vi2, true, vi3);
         assertThat(userInfo).isNotNull().hasFieldOrPropertyWithValue("uid", "face");
     }
 

@@ -80,7 +80,7 @@ public class CatSendProcessor {
 
         this.notes = new JSONObject();
         EnvironmentAdapter newAdapter = EnvironmentAdapter.newAdapter(envAdapter, parameter.getArgsMap());
-        methodInfo.getNotes().forEach((key, value) -> {
+        methodInfo.getNoteMap().forEach((key, value) -> {
             Object render = newAdapter.getProperty(value, Object.class);
             notes.put(key, render);
         });

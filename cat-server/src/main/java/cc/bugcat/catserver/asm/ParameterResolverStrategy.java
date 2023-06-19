@@ -3,12 +3,15 @@ package cc.bugcat.catserver.asm;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.handler.CatServerDepend;
 import cc.bugcat.catserver.spi.CatParameterResolver;
+import cc.bugcat.catserver.utils.CatServerUtil;
+import org.springframework.asm.Type;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,11 +57,11 @@ class ParameterResolverStrategy {
         return sign;
     }
     
-    public String[] getAndResolverDescriptor(){
-        return new String[0];
+    public List<String> getAndResolverDescriptor(){
+        return new ArrayList<>(0);
     }
-    public String[] getAndResolverSignature() {
-        return new String[0];
+    public List<String> getAndResolverSignature() {
+        return new ArrayList<>(0);
     }
 
     /**
@@ -81,11 +84,11 @@ class ParameterResolverStrategy {
     /**
      * 精简模式
      * */
-    private static final class VirtualParameterResolverStrategy extends ParameterResolverStrategy {
+    static final class VirtualParameterResolverStrategy extends ParameterResolverStrategy {
 
         /**
          * 虚拟参数对象类名
-         * cc.bugcat.example.api.FaceDemoService_param0
+         * cc.bugcat.example.api.virtual.FaceDemoService_param0
          * */
         private final String className;
 
@@ -99,13 +102,13 @@ class ParameterResolverStrategy {
          * 原方法入参对象Type描述。通过Type.getType()方法，只能获取描述，泛型会丢失
          * 入参1描述;入参2描述;入参3描述;
          * */
-        private String descriptor;
+        private List<String> descriptors;
 
         /**
          * 原方法入参对象签名信息
          * 入参1签名<泛型;>;入参2签名<泛型;>;入参3签名<泛型;>;
          * */
-        private String signature;
+        private List<String> signatures;
 
         
         /**
@@ -130,8 +133,8 @@ class ParameterResolverStrategy {
          * */
         @Override
         public String transformDescriptor(String desc) {
-            return matcherAndReplace(desc, matched -> {
-                this.descriptor = matched;
+            return typeReplace(desc, argTypes -> {
+                this.descriptors = argTypes;
                 return this.classDesc;
             });
         }
@@ -152,8 +155,8 @@ class ParameterResolverStrategy {
          * */
         @Override
         public String transformSignature(String sign) {
-            return matcherAndReplace(sign, matched -> {
-                this.signature = matched;
+            return typeReplace(sign, argTypes -> {
+                this.signatures = argTypes;
                 return this.classDesc;
             });
         }
@@ -167,8 +170,8 @@ class ParameterResolverStrategy {
          * @return [入参1描述, 入参2描述, 入参3描述]
          * */
         @Override
-        public String[] getAndResolverDescriptor() {
-            return descriptor.split(";");
+        public List<String> getAndResolverDescriptor() {
+            return descriptors;
         }
 
 
@@ -178,28 +181,8 @@ class ParameterResolverStrategy {
          * @return [入参1签名<泛型;>, 入参2签名<泛型;>, 入参3签名<泛型;>;]
          * */
         @Override
-        public String[] getAndResolverSignature() {
-            if( signature == null ){
-                return new String[0];
-            }
-            List<String> list = new ArrayList<>();
-            int lastIndex = 0;
-            Stack<Boolean> stack = new Stack();
-            for(int i = 0; i < signature.length(); i ++ ){
-                char cr = signature.charAt(i);
-                if( cr == ';' ){
-                    if( stack.empty() ){
-                        int end = i + 1;
-                        list.add(signature.substring(lastIndex, end));
-                        lastIndex = end;
-                    }
-                } else if( cr == '<' ){
-                    stack.push(Boolean.TRUE);
-                } else if( cr == '>' ){
-                    stack.pop();
-                }
-            }
-            return list.toArray(new String[list.size()]);
+        public List<String> getAndResolverSignature() {
+            return signatures;
         }
 
 
@@ -221,20 +204,15 @@ class ParameterResolverStrategy {
     }
 
 
-    private static String matcherAndReplace(String text, Function<String, String> function){
+    private static String typeReplace(String text, Function<List<String>, String> function){
         if( text != null ) {
-            Matcher matcher = trimParameter.matcher(text);
-            matcher.find();
-            String matched = matcher.group(1); // 匹配括号内 (i1;i2;i3)o => i1;i2;i3
-            String replace = function.apply(matched);
-            if( CatToosUtil.isBlank(matched) ){
-                return matcher.replaceAll("()");
-            } else {
-                return matcher.replaceAll("(" + replace + ")");
+            List<String> argTypes = CatTypeTools.getArgumentTypes(text);
+            if( argTypes.size() > 0 ){
+                String replace = function.apply(argTypes);
+                return trimParameter.matcher(text).replaceFirst("(" + replace + ")");
             }
-        } else {
-            return text;
         }
+        return text;
     }
 
 }

@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.handler;
 
 
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catserver.asm.CatVirtualParameterEnhancer;
 import cc.bugcat.catserver.config.CatServerConfiguration;
@@ -8,6 +9,7 @@ import cc.bugcat.catserver.spi.CatParameterResolver;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class CatServerDepend {
     
     @Autowired
     private CatServerConfiguration serverConfig;
-
+    
     @Autowired(required = false)
     private List<AbstractResponesWrapper> wrappers;
     
@@ -34,14 +36,23 @@ public class CatServerDepend {
 
     @Autowired(required = false)
     private List<CatParameterResolver> parameterResolvers;
-
-
-
+    
+    @Autowired
+    public void setConfigurableListableBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+        this.envProp = EnvironmentAdapter.environmentProperty(beanFactory);
+    }
+    
+    
+    
+    /**
+     * 环境
+     * */
+    private EnvironmentAdapter envProp;
+    
     /**
      * 默认拦截器
      * */
     public static final CatServerInterceptor DEFAULT_INTERCEPTOR = new CatServerInterceptor() {};
-
     
     /**
      * 默认方法入参预处理
@@ -54,8 +65,14 @@ public class CatServerDepend {
     public static final CatParameterResolver FACE_RESOLVER = new FaceParameterResolver();
 
 
-    
-    
+    public CatServerConfiguration getServerConfig() {
+        return serverConfig;
+    }
+
+    public EnvironmentAdapter getEnvironmentAdapter() {
+        return envProp;
+    }
+
     /**
      * 默认的方法入参处理
      * */

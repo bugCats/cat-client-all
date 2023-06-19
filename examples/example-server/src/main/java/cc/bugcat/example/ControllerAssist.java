@@ -2,7 +2,6 @@ package cc.bugcat.example;
 
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatServerInstance;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.handler.CatControllerAssist;
 import cc.bugcat.example.tools.ResponseEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;

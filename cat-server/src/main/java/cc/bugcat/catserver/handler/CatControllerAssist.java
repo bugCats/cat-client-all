@@ -2,7 +2,6 @@ package cc.bugcat.catserver.handler;
 
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatServerInstance;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;

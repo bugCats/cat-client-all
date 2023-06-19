@@ -111,6 +111,7 @@ public class CatServerScannerRegistrar implements ImportBeanDefinitionRegistrar,
                 definition.setPrimary(true);
                 definition.setLazyInit(true);
             });
+            return null;
         });
 
     }

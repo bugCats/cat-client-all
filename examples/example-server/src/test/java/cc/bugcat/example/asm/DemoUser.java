@@ -1,9 +1,6 @@
 package cc.bugcat.example.asm;
 
 
-import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
-import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.example.catserver.server.ApiRemote1;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.cglib.proxy.CallbackHelper;
@@ -14,13 +11,11 @@ import org.springframework.cglib.proxy.MethodProxy;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.Date;
 
 public class DemoUser {
 
 
     public static void main(String[] args) {
-
 
         Class[] interfaces = new Class[]{ApiRemote1.class};
 

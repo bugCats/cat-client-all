@@ -1,8 +1,12 @@
 package cc.bugcat.catface.utils;
 
+import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNotes;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.CatApiInfo;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.Environment;
@@ -23,6 +27,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,13 +45,8 @@ import java.util.function.Supplier;
  * */
 public class CatToosUtil {
 
+    
     public final static String GROUP_ID = "cc.bugcat";
-
-    /**
-     * spring EL表达式：#{arg.name}
-     * 使用方法入参，计算表达式
-     * */
-    public static ExpressionParser parser = new SpelExpressionParser();
 
     /**
      * Object.class中的方法
@@ -70,8 +70,20 @@ public class CatToosUtil {
         while ( error.getCause() != null ) {
             error = error.getCause();
         }
-        return error;
+        Throwable newThrowable = new Throwable(throwable.getMessage());
+        newThrowable.setStackTrace(error.getStackTrace());
+        return newThrowable;
     }
+    
+    /**
+     * 过滤堆栈
+     * */
+    public static StackTraceElement[] filterStackTrace(Throwable throwable, String groupId){
+        StackTraceElement[] stackTraces = throwable.getStackTrace();
+        return Arrays.stream(stackTraces).filter(stackTrace -> stackTrace.getClassName().contains(groupId))
+                .toArray(StackTraceElement[]::new);
+    }
+
 
 
     /**
@@ -98,23 +110,6 @@ public class CatToosUtil {
     }
 
     
-    
-    /**
-     * 按顺序，获取第一个存在的注解的value值
-     * */
-    public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns) {
-        for ( Class clazz : anns ) {
-            Annotation annotation = element.getAnnotation(clazz);
-            if ( annotation != null ) {
-                Object value = AnnotationUtils.getValue(annotation);
-                if ( value != null && CatToosUtil.isNotBlank(value.toString()) ) {
-                    return value.toString();
-                }
-            }
-        }
-        return "";
-    }
-
 
     
     public static boolean isBlank(String str) {
@@ -181,17 +176,6 @@ public class CatToosUtil {
         }
     }
 
-
-    /**
-     * 过滤堆栈
-     * */
-    public static StackTraceElement[] filterStackTrace(Throwable throwable, String groupId){
-        StackTraceElement[] stackTraces = throwable.getStackTrace();
-        return Arrays.stream(stackTraces).filter(stackTrace -> stackTrace.getClassName().contains(groupId))
-                .toArray(StackTraceElement[]::new);
-    }
-
-
     /**
      * 方法签名：
      * @return method.name([parameterType, parameterType])
@@ -207,8 +191,7 @@ public class CatToosUtil {
         }
         return method.getName() + "([" + sbr + "])";
     }
-
-
+    
     /**
      * 是否为object内置方法
      */
@@ -217,6 +200,40 @@ public class CatToosUtil {
     }
     public static boolean isObjectMethod(String sign) {
         return objectDefaultMethod.contains(sign);
+    }
+
+    /**
+     * object方法拦截器
+     * */
+    public static MethodInterceptor defaultMethodInterceptor(){
+        return new DefaultMethodInterceptor();
+    }
+
+    /**
+     * 默认的拦截器
+     * */
+    private static class DefaultMethodInterceptor implements MethodInterceptor {
+        @Override
+        public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+            return methodProxy.invokeSuper(target, args);
+        }
+    }
+
+
+    /**
+     * 按顺序，获取第一个存在的注解的value值
+     * */
+    public static String getAnnotationValue(AnnotatedElement element, Class<? extends Annotation>... anns) {
+        for ( Class clazz : anns ) {
+            Annotation annotation = element.getAnnotation(clazz);
+            if ( annotation != null ) {
+                Object value = AnnotationUtils.getValue(annotation);
+                if ( value != null && CatToosUtil.isNotBlank(value.toString()) ) {
+                    return value.toString();
+                }
+            }
+        }
+        return "";
     }
 
 
@@ -263,6 +280,27 @@ public class CatToosUtil {
         return path;
     }
 
+    
+    public static CatNote[] getCatNotes(CatNotes.Group group, CatNotes.Scope scope){
+        CatNotes[] notes = group.value();
+        List<CatNote[]> noteList = new ArrayList<>(notes.length);
+        int length = 0;
+        for ( CatNotes note : notes ) {
+            if( note.scope().matcher(scope) ){
+                CatNote[] values = note.value();
+                length += values.length;
+                noteList.add(values);
+            }
+        }
+        CatNote[] note = new CatNote[length];
+        length = 0;
+        for ( CatNote[] catNotes : noteList ) {
+            for ( CatNote catNote : catNotes ) {
+                note[length ++] = catNote;
+            }
+        }
+        return note;
+    }
 
     /**
      * 从contrasts去掉standar，如果均没有则返回defaultValue

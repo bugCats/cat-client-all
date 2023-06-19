@@ -1,7 +1,6 @@
 package cc.bugcat.catserver.handler;
 
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
-import org.springframework.core.type.StandardMethodMetadata;
+import cc.bugcat.catface.handler.EnvironmentAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 
 /**
@@ -40,15 +40,10 @@ public final class CatInterceptPoint {
     private final CatServerInfo serverInfo;
 
     /**
-     * url映射调用的方法。为原始interface的方法
-     * */
-    private final Method method;
-
-    /**
      * 原interface的方法
      * */
-    private final StandardMethodMetadata interMethod;
-
+    private final CatMethodInfo methodInfo;
+    
     /**
      * 访问的CatServer类对象
      * */
@@ -58,16 +53,21 @@ public final class CatInterceptPoint {
      * 处理后的方法入参
      * */
     private final Object[] arguments;
+    
+    /**
+     * {@code @CarNotes}
+     * */
+    private final Map<String, Object> noteMap;
 
 
     private CatInterceptPoint(Builder builder) {
         this.request = builder.request;
         this.response = builder.response;
         this.serverInfo = builder.serverInfo;
+        this.methodInfo = builder.methodInfo;
         this.target = builder.target;
-        this.interMethod = builder.interMethod;
-        this.method = interMethod.getIntrospectedMethod();
         this.arguments = builder.arguments;
+        this.noteMap = builder.noteMap;
     }
 
     /**
@@ -76,14 +76,13 @@ public final class CatInterceptPoint {
     public <A extends Annotation> A getAnnotations(Class<A> annotationClass){
         return serverInfo.getServerClass().getAnnotation(annotationClass);
     }
-
     /**
      * 获取方法上的注解
      * */
     public Map<String, Object> getMethodAnnotations(Class annotationClass){
         Map<String, Object> attr = annAttrMap.get(annotationClass);
         if( attr == null ){
-            Map<String, Object> map = interMethod.getAnnotationAttributes(annotationClass.getName());
+            Map<String, Object> map = methodInfo.getInterfaceMethod().getAnnotationAttributes(annotationClass.getName());
             if( map == null ){
                 map = new HashMap<>();
             }
@@ -92,7 +91,6 @@ public final class CatInterceptPoint {
         }
         return attr;
     }
-
     public CatInterceptPoint settAttribute(String name, Object value){
         attributesMap.put(name, value);
         return this;
@@ -100,13 +98,15 @@ public final class CatInterceptPoint {
     public <T> T getAttribute(String name, Class<T> clazz){
         return (T) attributesMap.get(name);
     }
-    public <T> T getAttribute(String name, T defaultValue){
-        return (T) attributesMap.getOrDefault(name, defaultValue);
+    public <T> T getAttribute(String name, Supplier<T> supplier){
+        Object value = attributesMap.get(name);
+        return value != null ? (T) value : supplier.get();
     }
     public Map<String, Object> getAttributesMap() {
         return attributesMap;
     }
 
+    
     public Class<?> getServerClass(){
         return serverInfo.getServerClass();
     }
@@ -123,15 +123,20 @@ public final class CatInterceptPoint {
     public Object getTarget() {
         return target;
     }
+    
+    /**
+     * url映射调用的方法。为原始interface的方法
+     * */
     public Method getMethod() {
-        return method;
+        return methodInfo.getInterfaceMethod().getIntrospectedMethod();
     }
+    
     public Object[] getArguments() {
         return arguments;
     }
-
-
-    
+    public Map<String, Object> getNoteMap() {
+        return noteMap;
+    }
 
     protected static Builder builder(){
         return new Builder();
@@ -144,8 +149,9 @@ public final class CatInterceptPoint {
         private HttpServletResponse response;
         private CatServerInfo serverInfo;
         private Object target;
-        private StandardMethodMetadata interMethod;
         private Object[] arguments;
+        private CatMethodInfo methodInfo;
+        private Map<String, Object> noteMap;
         
         public Builder request(HttpServletRequest request) {
             this.request = request;
@@ -162,13 +168,13 @@ public final class CatInterceptPoint {
             return this;
         }
 
-        public Builder target(Object target) {
-            this.target = target;
+        public Builder methodInfo(CatMethodInfo methodInfo) {
+            this.methodInfo = methodInfo;
             return this;
         }
-
-        public Builder interMethod(StandardMethodMetadata interMethod) {
-            this.interMethod = interMethod;
+        
+        public Builder target(Object target) {
+            this.target = target;
             return this;
         }
 
@@ -177,7 +183,25 @@ public final class CatInterceptPoint {
             return this;
         }
 
+ 
+
         public CatInterceptPoint build(){
+
+            // 将入参数组args，转换成： 参数名->入参    此时argsMap中一定不包含SendProcessor
+            Map<String, Object> argsMap = new HashMap<>();
+            methodInfo.getParamIndex().forEach((key, value) -> {
+                argsMap.put(key, arguments[value]);  // value 等于该参数在方法上出现的索引值
+            });
+            
+            CatServerDepend serverDepend = serverInfo.getServerDepend();
+            EnvironmentAdapter envProp = serverDepend.getEnvironmentAdapter();
+            EnvironmentAdapter newAdapter = EnvironmentAdapter.newAdapter(envProp, argsMap);
+
+            this.noteMap = new HashMap<>();
+            methodInfo.getNoteMap().forEach((key, value) -> {
+                Object render = newAdapter.getProperty(value, Object.class);
+                noteMap.put(key, render);
+            });
             return new CatInterceptPoint(this);
         }
 

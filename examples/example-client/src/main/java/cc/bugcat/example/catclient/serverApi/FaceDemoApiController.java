@@ -81,7 +81,7 @@ public class FaceDemoApiController{
         UserPageVi vi = new UserPageVi();
         vi.setUid("param5");
         vi.setName("入参5");
-        return faceDemoService.param5("userId", vi, 1);
+        return faceDemoService.param5("userId", vi, false);
     }
 
     @ApiOperation("入参6")
@@ -134,7 +134,7 @@ public class FaceDemoApiController{
         map.put("mapKey1", "value1");
         map.put("mapKey2", "value2");
         
-        return faceDemoService.param8(map, vi1, vi2, 1, vi3);
+        return faceDemoService.param8(map, vi1, vi2, false, vi3);
     }
 
 

@@ -1,8 +1,10 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.handler.EnvironmentAdapter;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
+import cc.bugcat.catserver.spi.CatVirtualProprietyPolicy;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 
@@ -21,19 +23,10 @@ public class CatEnhancerDepend {
     private final MethodInterceptor objectMethodInterceptor;
     
     /**
-     * 一些全局配置项
+     * getter、setter方法生成规则
      * */
-    private final CatServerConfiguration serverConfig;
+    private final CatVirtualProprietyPolicy proprietyPolicy;
     
-    /**
-     * 环境变量
-     * */
-    private final EnvironmentAdapter envProp;
-    
-    /**
-     * CatServer-interface 与对应方法拦截器
-     * */
-    private final Map<Method, CatMethodAopInterceptor> interceptorMap = new HashMap<>();
 
     /**
      * interface增强后结果缓存，防止同一个interface被反复增强
@@ -43,34 +36,28 @@ public class CatEnhancerDepend {
     /**
      * interface类解析后的信息
      * */
-    private final Map<Class, AsmInterfaceDescriptor> classDescriptorMap;
+    private final Map<Class, AsmInterfaceDescriptor> classDescMap;
     
     
-    public CatEnhancerDepend(CatServerConfiguration serverConfig, EnvironmentAdapter envProp, int serverSize) {
-        this.objectMethodInterceptor = new DefaultMethodInterceptor();
+    public CatEnhancerDepend(int serverSize) {
+        this.objectMethodInterceptor = CatToosUtil.defaultMethodInterceptor();
         this.ctrlAsmMap = new HashMap<>(serverSize * 2);
-        this.classDescriptorMap = new HashMap<>(serverSize * 4);
-        this.serverConfig = serverConfig;
-        this.envProp = envProp;
+        this.classDescMap = new HashMap<>(serverSize * 4);
+        this.proprietyPolicy = CatVirtualProprietyPolicy.loadService();
     }
+
+    public void clear(){
+        ctrlAsmMap.clear();
+        classDescMap.clear();
+    }
+
 
     public MethodInterceptor getObjectMethodInterceptor() {
         return objectMethodInterceptor;
     }
-    public CatServerConfiguration getServerConfig() {
-        return serverConfig;
+    public CatVirtualProprietyPolicy getProprietyPolicy() {
+        return proprietyPolicy;
     }
-    public EnvironmentAdapter getEnvironmentAdapter() {
-        return envProp;
-    }
-
-
-    public void clear(){
-        ctrlAsmMap.clear();
-        classDescriptorMap.clear();
-        interceptorMap.clear();
-    }
-
 
     public CatAsmInterface getControllerDescriptor(Class interfaceClass) {
         return ctrlAsmMap.get(interfaceClass);
@@ -80,24 +67,10 @@ public class CatEnhancerDepend {
     }
 
     public AsmInterfaceDescriptor getClassDescriptor(Class interfaceClass) {
-        return classDescriptorMap.get(interfaceClass);
+        return classDescMap.get(interfaceClass);
     }
     public void putClassDescriptor(Class interfaceClass, AsmInterfaceDescriptor classDescriptor) {
-        classDescriptorMap.put(interfaceClass, classDescriptor);
+        classDescMap.put(interfaceClass, classDescriptor);
     }
 
-    public Map<Method, CatMethodAopInterceptor> getInterceptorMap() {
-        return interceptorMap;
-    }
-
-    
-    /**
-     * 默认的拦截器
-     * */
-    private static class DefaultMethodInterceptor implements MethodInterceptor {
-        @Override
-        public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-            return methodProxy.invokeSuper(target, args);
-        }
-    }
 }

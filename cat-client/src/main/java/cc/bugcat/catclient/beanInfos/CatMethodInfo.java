@@ -6,6 +6,7 @@ import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNotes;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
@@ -23,6 +24,7 @@ import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -53,7 +55,7 @@ public class CatMethodInfo {
     /**
      * 方法上自定义参数、标记
      * */
-    private final Map<String, String> notes;
+    private final Map<String, String> noteMap;
 
     /**
      * 发送方式 get|post|delete
@@ -84,7 +86,7 @@ public class CatMethodInfo {
     /**
      * 除了SendProcessor、PathVariable、RequestHeader以外，其他的参数map => 参数名:参数对象信息
      * */
-    private final Map<String, CatMethodParamInfo> params;
+    private final Map<String, CatMethodParamInfo> paramInfoMap;
 
     /**
      * 出现在url上的参数{@link PathVariable}map => 参数名:参数对象信息
@@ -124,8 +126,8 @@ public class CatMethodInfo {
         this.handlerIndex = builder.handlerIndex;
         this.isCatface = builder.isCatface;
 
-        this.notes = Collections.unmodifiableMap(builder.notes);
-        this.params = Collections.unmodifiableMap(builder.paramNameMap);
+        this.noteMap = Collections.unmodifiableMap(builder.noteMap);
+        this.paramInfoMap = Collections.unmodifiableMap(builder.paramNameMap);
         this.pathParamIndexMap = Collections.unmodifiableMap(builder.pathParamIndexMap);
         this.headerParamIndexMap = Collections.unmodifiableMap(builder.headerParamIndexMap);
     }
@@ -173,15 +175,15 @@ public class CatMethodInfo {
 
         // 将入参数组args，转换成： 参数名->入参    此时argsMap中一定不包含SendProcessor
         Map<String, Object> argsMap = new HashMap<>();
-        params.forEach((key, value) -> {
+        paramInfoMap.forEach((key, value) -> {
             argsMap.put(key, args[value.getIndex()]);  // value.getIndex() 等于该参数在方法上出现的索引值
         });
         param.setArgsMap(argsMap);
 
         Object value = null;
-        if ( params.size() == 1 ) {//如果入参仅一个
+        if ( paramInfoMap.size() == 1 ) {//如果入参仅一个
             Map.Entry<String, Object> entry = argsMap.entrySet().iterator().next();
-            CatMethodParamInfo paramInfo = params.get(entry.getKey());
+            CatMethodParamInfo paramInfo = paramInfoMap.get(entry.getKey());
             if ( paramInfo.isPrimary() || !paramInfo.isSimple() ) {
                 //被@RequestBody、@ModelAttribute标记了、或者是复杂对象，直接返回对象
                 value = entry.getValue();
@@ -211,8 +213,8 @@ public class CatMethodInfo {
     public String getHost() {
         return host;
     }
-    public Map<String, String> getNotes() {
-        return notes;
+    public Map<String, String> getNoteMap() {
+        return noteMap;
     }
     public RequestMethod getRequestType() {
         return requestType;
@@ -314,22 +316,22 @@ public class CatMethodInfo {
         /**
          * 方法上自定义参数、标记
          * */
-        private Map<String, String> notes = new HashMap<>();
+        private Map<String, String> noteMap = new LinkedHashMap<>();
 
         /**
          * 除了SendProcessor、PathVariable、RequestHeader以外，其他的参数map => 参数名:参数对象信息
          * */
-        private Map<String, CatMethodParamInfo> paramNameMap = new HashMap<>();
+        private Map<String, CatMethodParamInfo> paramNameMap = new LinkedHashMap<>();
 
         /**
          * 出现在url上的参数{@link PathVariable} map => 参数名:参数对象信息
          * */
-        private Map<String, CatMethodParamInfo> pathParamIndexMap = new HashMap<>();
+        private Map<String, CatMethodParamInfo> pathParamIndexMap = new LinkedHashMap<>();
 
         /**
          * 出现在url上的参数{@link RequestHeader} map => 参数名:参数对象信息
          * */
-        private Map<String, CatMethodParamInfo> headerParamIndexMap = new HashMap<>();
+        private Map<String, CatMethodParamInfo> headerParamIndexMap = new LinkedHashMap<>();
 
 
         public CatMethodInfo build() {
@@ -348,19 +350,30 @@ public class CatMethodInfo {
                 //是精简模式
 
                 if ( methodAttributes == null ) {
-                    //使用interface上的注解
+
+                    //其他使用interface上的注解
                     methodAttributes = new HashMap<>();
                     methodAttributes.put("notes", new CatNote[0]);
                     methodAttributes.put("socket", clientInfo.getSocket());
                     methodAttributes.put("connect", clientInfo.getConnect());
                     methodAttributes.put("logsMod", clientInfo.getLogsMod());
                 }
-
                 String path = CatToosUtil.getDefaultRequestUrl(catface, clientInfo.getClientClassName(), method);
                 methodAttributes.put("value", path);
                 methodAttributes.put("method", RequestMethod.POST);
                 isCatface = true;
             }
+
+            
+            /**
+             * 当存在CatNotes时，会直接覆盖{@link CatMethod#notes()}
+             * */
+            CatNotes.Group noteGroup = method.getAnnotation(CatNotes.Group.class);
+            if( noteGroup != null ){
+                CatNote[] catNotes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
+                methodAttributes.put("notes", catNotes);
+            }
+            
             AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttributes);
             return attrs;
         }
@@ -382,7 +395,7 @@ public class CatMethodInfo {
             this.requestType = attrs.getEnum("method");
 
             // 其他自定义参数、标记
-            Map<String, String> noteMap = new HashMap<>();
+            Map<String, String> noteMap = new LinkedHashMap<>();
             CatNote[] notes = attrs.getAnnotationArray("notes", CatNote.class);
             for ( CatNote note : notes ) {
                 String value = CatToosUtil.defaultIfBlank(note.value(), "");
@@ -392,7 +405,7 @@ public class CatMethodInfo {
                 noteMap.put(key, value);
             }
 
-            this.notes = noteMap;
+            this.noteMap = noteMap;
 
             // 控制日志打印
             this.logsMod = CatToosUtil.comparator(CatLogsMod.Def, Arrays.asList(attrs.getEnum("logsMod")), clientInfo.getLogsMod());
@@ -448,12 +461,11 @@ public class CatMethodInfo {
 
 
                 //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
-                String pname = null;
-                if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2、argX...命名
-                    pname = "arg" + idx;
-                } else {
-                    pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
-                    if ( CatToosUtil.isBlank(pname) ) {
+                String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
+                if ( CatToosUtil.isBlank(pname) ) {
+                    if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2、argX...命名
+                        pname = "arg" + idx;
+                    } else {
                         pname = parameter.getName();
                     }
                 }

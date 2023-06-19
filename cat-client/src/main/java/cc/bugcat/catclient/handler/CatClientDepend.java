@@ -8,6 +8,7 @@ import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.SimpleClientFactory;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
+import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
@@ -73,12 +74,7 @@ public class CatClientDepend {
         this.clientFactory = builder.clientFactory;
         this.sendInterceptor = builder.sendInterceptor;
         this.environment = builder.environment;
-        this.objectMethodInterceptor = new MethodInterceptor() {
-            @Override
-            public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
-                return methodProxy.invokeSuper(target, args);
-            }
-        };
+        this.objectMethodInterceptor = CatToosUtil.defaultMethodInterceptor();
     }
 
 

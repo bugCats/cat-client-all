@@ -15,7 +15,7 @@ import java.util.List;
 
 
 /**
- * 加上注解@CatServer，该类等同于一个RestController
+ * 加上注解//@CatServer，该类等同于一个RestController
  * 但是 url、入参、请求方式，全部在interface中定义
  *
  * 可以同时实现多个interface，但是<b>不建议！</b>

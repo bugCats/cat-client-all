@@ -3,11 +3,9 @@ package cc.bugcat.catclient.scanner;
 import cc.bugcat.catclient.annotation.CatClient;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
-import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.handler.CatClientFactoryAdapter;
 import cc.bugcat.catclient.handler.CatMethodAopInterceptor;
-import cc.bugcat.catclient.spi.CatClientFactory;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
@@ -15,14 +13,16 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.cglib.proxy.CallbackHelper;
+import org.springframework.cglib.proxy.Callback;
+import org.springframework.cglib.proxy.CallbackFilter;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 
 /**
@@ -80,64 +80,123 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         Class[] interfaces = new Class[]{interfaceClass};
 
-        Map<String, Method> methodMap = new HashMap<>();
+        final Map<String, Method> methodMap = new HashMap<>();
         if( clientInfo.isFallbackMod() ){
             for( Method method : interfaceClass.getMethods() ){
                 methodMap.put(CatToosUtil.signature(method), method);
             }
         }
+        final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientInfo.getClientFactory());
 
-        CatClientDepend clientDepend = clientInfo.getClientDepend();
-        EnvironmentAdapter envProp = clientDepend.getEnvironment();
+        CatCallbackHelper helper = new CatCallbackHelper()
+                .setClientInfo(clientInfo)
+                .setFactoryAdapter(factoryAdapter)
+                .setMethodMap(methodMap);
 
-        CatClientFactory clientFactory = clientInfo.getClientFactory();
-        final CatSendInterceptor sendInterceptor = clientInfo.getSendInterceptor();
-        final CatClientFactoryAdapter factoryAdapter = new CatClientFactoryAdapter(clientFactory);
-
-        CallbackHelper helper = new CallbackHelper(clientInfo.getFallback(), interfaces) {
-
-            @Override
-            protected Object getCallback (Method method) {
-                if( CatToosUtil.isObjectMethod(method) ){//默认方法
-                    return clientDepend.getObjectMethodInterceptor();
-                } else {
-
-                    /**
-                     * 是否使用了 fallback？
-                     * 如果使用了回调模式，入参Method，为fallback类中的方法
-                     * 需要切换成interface上的方法
-                     * */
-                    Method info = methodMap.get(CatToosUtil.signature(method));
-                    if( info != null ){
-                        method = info;
-                    }
-
-                    CatMethodInfo methodInfo = CatMethodInfo.builder(method, clientInfo, envProp).build();
-
-                    CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
-                            .clientInfo(clientInfo)
-                            .methodInfo(methodInfo)
-                            .method(method)
-                            .factoryAdapter(factoryAdapter)
-                            .methodInterceptor(sendInterceptor)
-                            .build();
-
-                    return interceptor; //代理方法=aop
-                }
-            }
-        };
-
+        CatCallbackFilter filter = new CatCallbackFilter();
+        filter.parse(helper, clientInfo.getFallback(), interfaces);
+        
         Enhancer enhancer = new Enhancer();
         enhancer.setInterfaces(interfaces);
         enhancer.setSuperclass(clientInfo.getFallback());
-        enhancer.setCallbackFilter(helper);
-        enhancer.setCallbacks(helper.getCallbacks());
+        enhancer.setCallbackFilter(filter);
+        enhancer.setCallbacks(filter.getCallbacks());
         Object obj = enhancer.create();
         return (T) obj;
     }
 
 
 
+
+    private static class CatCallbackHelper {
+        
+        private CatClientInfo clientInfo;
+        private CatClientFactoryAdapter factoryAdapter;
+        private Map<String, Method> methodMap;
+
+        public CatCallbackHelper setClientInfo(CatClientInfo clientInfo) {
+            this.clientInfo = clientInfo;
+            return this;
+        }
+        public CatCallbackHelper setFactoryAdapter(CatClientFactoryAdapter factoryAdapter) {
+            this.factoryAdapter = factoryAdapter;
+            return this;
+        }
+        public CatCallbackHelper setMethodMap(Map<String, Method> methodMap) {
+            this.methodMap = methodMap;
+            return this;
+        }
+    }
+
+
+    private static class CatCallbackFilter implements CallbackFilter {
+
+        private Map<Method, Integer> methodIndexMap = new HashMap<>();
+        private List<Callback> callbacks = new ArrayList<>();
+
+        public void parse(CatCallbackHelper helper, Class superclass, Class[] interfaces) {
+
+            List<Method> methods = new ArrayList();
+            Enhancer.getMethods(superclass, interfaces, methods);
+            Map<Callback, Integer> indexes = new HashMap();
+
+            for(int index = 0, size = methods.size(); index < size; index ++ ) {
+                Method method = methods.get(index); // method为增强后的方法 asm-method
+                Callback callback = this.getCallback(helper, method);
+                if (indexes.get(callback) == null) {
+                    indexes.put(callback, index);
+                }
+                this.methodIndexMap.put(method, index);
+                this.callbacks.add(callback);
+            }
+        }
+
+        private Callback getCallback (CatCallbackHelper helper, Method method) {
+            CatClientDepend clientDepend = helper.clientInfo.getClientDepend();
+            CatSendInterceptor sendInterceptor = helper.clientInfo.getSendInterceptor();
+            EnvironmentAdapter envProp = clientDepend.getEnvironment();
+
+            if( CatToosUtil.isObjectMethod(method) ){//默认方法
+                return clientDepend.getObjectMethodInterceptor();
+            } else {
+
+                /**
+                 * 是否使用了 fallback？
+                 * 如果使用了回调模式，入参Method，为fallback类中的方法
+                 * 需要切换成interface上的方法
+                 * */
+                Method info = helper.methodMap.get(CatToosUtil.signature(method));
+                if( info != null ){
+                    method = info;
+                }
+
+                CatMethodInfo methodInfo = CatMethodInfo.builder(method, helper.clientInfo, envProp).build();
+
+                CatMethodAopInterceptor interceptor = CatMethodAopInterceptor.builder()
+                        .clientInfo(helper.clientInfo)
+                        .methodInfo(methodInfo)
+                        .method(method)
+                        .factoryAdapter(helper.factoryAdapter)
+                        .methodInterceptor(sendInterceptor)
+                        .build();
+
+                return interceptor; //代理方法=aop
+            }
+        }
+
+        @Override
+        public int accept(Method method) {
+            return this.methodIndexMap.get(method);
+        }
+
+        public Callback[] getCallbacks() {
+            return this.callbacks.toArray(new Callback[callbacks.size()]);
+        }
+
+    }
+    
+    
+    
 
 
 

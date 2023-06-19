@@ -15,7 +15,6 @@ public class CatApiInfo {
     public CatResponesWrapper getWrapper() {
         return wrapper;
     }
-
     public void setWrapper(CatResponesWrapper wrapper) {
         this.wrapper = wrapper;
     }
@@ -23,8 +22,8 @@ public class CatApiInfo {
     public Catface getCatface() {
         return catface;
     }
-
     public void setCatface(Catface catface) {
         this.catface = catface;
     }
+
 }

@@ -4,21 +4,17 @@ import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.Type;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 
@@ -30,7 +26,6 @@ import java.util.function.Function;
  * */
 public class CatServerUtil implements ApplicationContextAware{
 
-
     /**
      * 通过cglib动态生成的类名、方法名后缀
      * */
@@ -41,6 +36,7 @@ public class CatServerUtil implements ApplicationContextAware{
      * */
     public static final String REQUEST_MAPPING = RequestMapping.class.getName();
 
+    
     /**
      * 自定义组件容器
      * 非spring容器时使用
@@ -122,13 +118,12 @@ public class CatServerUtil implements ApplicationContextAware{
     /**
      * 检测 className 是否存在，存在则执行consumer
      * */
-    public static boolean existClassAndExecute(String className, Consumer<Class> consumer){
+    public static <R> R existClassAndExecute(String className, Function<Class, R> function){
         try {
             Class clazz = CatServerUtil.class.getClassLoader().loadClass(className);
-            consumer.accept(clazz);
-            return true;
+            return function.apply(clazz);
         } catch ( Exception ex ) {
-            return false;
+            return function.apply(null);
         }
     }
 
@@ -136,13 +131,14 @@ public class CatServerUtil implements ApplicationContextAware{
     /**
      * 获取方法签名id
      * */
-    public static String typeSignatureId(Method method){
+    public static String methodSignature(Method method){
         return method.getName() + "@" + CatInterfaceEnhancer.transformReturn(Type.getMethodDescriptor(method));
     }
-    public static String typeSignatureId(String methodName, String descriptor){
+    public static String methodSignature(String methodName, String descriptor){
         return methodName + "@" + CatInterfaceEnhancer.transformReturn(descriptor);
     }
 
+    
     /**
      * 给AnnotationVisitor添加注解
      * */
@@ -177,11 +173,13 @@ public class CatServerUtil implements ApplicationContextAware{
             return;
         }
         Class clazz = value.getClass();
-        if( Proxy.isProxyClass(clazz)){// 如果是jdk动态代理
-            return;
-        }
-        String descriptor = Type.getDescriptor(clazz);
-        if( clazz.isEnum() ){
+        if( value instanceof Annotation ){// 如果是jdk动态代理
+            Annotation ann = (Annotation) value;
+            AnnotationVisitor van = anv.visitAnnotation(key, Type.getDescriptor(ann.annotationType()));
+            visitAnnotation(van, AnnotationUtils.getAnnotationAttributes(ann));
+            van.visitEnd();
+        } else if( clazz.isEnum() ){
+            String descriptor = Type.getDescriptor(clazz);
             anv.visitEnum(key, descriptor, ((Enum)value).toString() );
         } else if( clazz.isArray() ){
             AnnotationVisitor array = anv.visitArray(key);

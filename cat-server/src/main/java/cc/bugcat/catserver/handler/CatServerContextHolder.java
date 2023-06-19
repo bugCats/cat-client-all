@@ -111,7 +111,7 @@ public class CatServerContextHolder {
      * */
     public Object onErrorToWrapper(Throwable throwable) {
         try {
-            Method method = methodInfo.getInterMethod().getIntrospectedMethod();
+            Method method = methodInfo.getInterfaceMethod().getIntrospectedMethod();
             Class<?> returnType = method.getReturnType();
             return resultHandler.onError(throwable, returnType);
         } catch ( Throwable ex ) {

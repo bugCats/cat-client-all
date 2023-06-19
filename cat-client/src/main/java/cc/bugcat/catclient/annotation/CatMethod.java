@@ -2,6 +2,7 @@ package cc.bugcat.catclient.annotation;
 
 import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catface.annotation.CatNote;
+import cc.bugcat.catface.annotation.CatNotes;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -44,7 +45,7 @@ public @interface CatMethod {
 
 
     /**
-     * 追加的其他自定义参数、或标记。 
+     * 追加的其他自定义参数、或标记。会被{@link CatNotes}覆盖！当方法上有{@code @CatNotes}注解时，会忽略该属性。
      * <pre>
      *  {@code @CatNote(key="name", value="bugcat")}：直接字符串；
      *  {@code @CatNote(key="host", value="${host}")}：从环境变量中获取；

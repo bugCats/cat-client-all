@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -64,7 +65,7 @@ public class ApiRemoteController {
 
 
     @GetMapping("/cat/demo4")
-    public ResponseEntity<Demo> demo14(String name, String mark){
+    public ResponseEntity<Demo> demo14(@RequestParam("name") String name, @RequestParam("mark") String mark){
 
         System.out.println("demo4 >>> req: name=" + name + " mark=" + mark);
 
@@ -95,7 +96,7 @@ public class ApiRemoteController {
 
 
     @GetMapping("/cat/demo7")
-    public ResponseEntity<Demo> demo17(String name){
+    public ResponseEntity<Demo> demo17(@RequestParam("name") String name){
         Demo resp = creart();
         resp.setName(name);
         resp.setMark("正常拆包转器类");
@@ -118,7 +119,7 @@ public class ApiRemoteController {
 
     // 实际使用post访问，测试异常回调
     @GetMapping(value = "/cat/demo22")
-    String demo2(Demo req) {
+    String demo2(@ModelAttribute Demo req) {
         return "";
     }
 

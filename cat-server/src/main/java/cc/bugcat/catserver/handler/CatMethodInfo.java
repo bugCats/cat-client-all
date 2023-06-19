@@ -1,15 +1,10 @@
 package cc.bugcat.catserver.handler;
 
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
-import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.spi.CatInterceptorGroup;
-import cc.bugcat.catserver.spi.CatParameterResolver;
-import cc.bugcat.catserver.spi.CatResultHandler;
-import cc.bugcat.catserver.spi.CatServerInterceptor;
 import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * 方法描述信息
@@ -21,7 +16,7 @@ public class CatMethodInfo {
     /**
      * 原interface的方法
      * */
-    private final StandardMethodMetadata interMethod;
+    private final StandardMethodMetadata interfaceMethod;
 
     /**
      * cglib生成的ctrl类方法
@@ -38,44 +33,29 @@ public class CatMethodInfo {
      * */
     private final CatServiceMethodProxy serviceMethodProxy;
 
+    /**
+     * {@code @CatNote}注解信息
+     * */
+    private final Map<String, String> noteMap;
 
     /**
-     * 运行时拦截器组
-     * @see CatServerConfiguration#getInterceptorGroup()
+     * 方法上参数列表
      * */
-    private final List<CatServerInterceptor> interceptors;
-
-    /**
-     * 拦截器组。
-     * 运行时可动态添加移除的拦截器
-     * */
-    private final List<CatInterceptorGroup> interceptorGroups;
-
-    /**
-     * 配置的结果处理类
-     * */
-    private final CatResultHandler resultHandler;
+    private final Map<String, Integer> paramIndex;
     
-    /**
-     * 精简模式下参数预处理器
-     * */
-    private final CatParameterResolver parameterResolver;
-
-
+    
     protected CatMethodInfo(CatMethodInfoBuilder builder){
-        this.interMethod = builder.interMethod;
+        this.interfaceMethod = builder.interfaceMethod;
         this.controllerMethod = builder.controllerMethod;
         this.serverMethod = builder.serverMethod;
         this.serviceMethodProxy = builder.serviceMethodProxy;
-        this.interceptors = builder.interceptors;
-        this.resultHandler = builder.resultHandler;
-        this.interceptorGroups = builder.interceptorGroups;
-        this.parameterResolver = builder.parameterResolver;
+        this.noteMap = Collections.unmodifiableMap(builder.noteMap);
+        this.paramIndex = Collections.unmodifiableMap(builder.paramIndex);
     }
 
     
-    public StandardMethodMetadata getInterMethod() {
-        return interMethod;
+    public StandardMethodMetadata getInterfaceMethod() {
+        return interfaceMethod;
     }
     public Method getControllerMethod() {
         return controllerMethod;
@@ -86,18 +66,11 @@ public class CatMethodInfo {
     public CatServiceMethodProxy getServiceMethodProxy() {
         return serviceMethodProxy;
     }
-    public List<CatServerInterceptor> getInterceptors() {
-        return interceptors;
-    }
-    public List<CatInterceptorGroup> getInterceptorGroups() {
-        return interceptorGroups;
-    }
-    public CatResultHandler getResultHandler() {
-        return resultHandler;
-    }
-    public CatParameterResolver getParameterResolver() {
-        return parameterResolver;
-    }
     
-
+    protected Map<String, Integer> getParamIndex() {
+        return paramIndex;
+    }
+    protected Map<String, String> getNoteMap() {
+        return noteMap;
+    }
 }

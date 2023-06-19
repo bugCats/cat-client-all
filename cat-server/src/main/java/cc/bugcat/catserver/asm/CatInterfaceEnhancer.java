@@ -1,7 +1,7 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
+import cc.bugcat.catserver.handler.CatServerInfo;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.ClassReader;
 import org.springframework.asm.ClassVisitor;
@@ -44,7 +44,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
     /**
      * 是否存在Valid验证框架
      * */
-    public final static boolean HAS_VAILD = CatServerUtil.existClassAndExecute("javax.validation.Valid", clazz -> {});
+    public final static boolean HAS_VAILD = CatServerUtil.existClassAndExecute("javax.validation.Valid", clazz -> clazz != null);
 
     /**
      * 精简模式下
@@ -162,7 +162,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
         for ( Method method : interfaceClass.getMethods() ) {
 
             String methodName = method.getName();
-            String signatureId = CatServerUtil.typeSignatureId(method);
+            String signatureId = CatServerUtil.methodSignature(method);
 
             // 得到原interface的方法描述信息
             AsmDescriptor methodDescriptor = methodDescriptorMap.get(signatureId);
@@ -205,7 +205,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
                     }
 
                     //创建虚拟入参
-                    CatVirtualParameterEnhancer.generator(method, resolverStrategy); 
+                    CatVirtualParameterEnhancer.generator(method, enhancerDepend, resolverStrategy); 
                 }
             } else {
                 // 将原方法入参上的注解，转移到增强方法、或者虚拟入参对象上
@@ -220,7 +220,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
             }
             methodVisitor.visitEnd();
 
-            CatAsmMethod methodInfo = new CatAsmMethod(signatureId, CatServerUtil.typeSignatureId(methodName, methodSign.getDesc()), resolverStrategy.parameterResolver());
+            CatAsmMethod methodInfo = new CatAsmMethod(signatureId, CatServerUtil.methodSignature(methodName, methodSign.getDesc()), resolverStrategy.parameterResolver());
             result.putCatMethodInfo(methodInfo);
         }
 
@@ -259,7 +259,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
             String desc = transformReturn(descriptor);
             String sign = transformReturn(signature);
             AsmDescriptor methodDescriptor = new AsmDescriptor(ACC_PUBLIC | ACC_ABSTRACT, desc, sign, exceptions);
-            classDescriptor.putMethodDescriptor(CatServerUtil.typeSignatureId(name, desc), methodDescriptor);
+            classDescriptor.putMethodDescriptor(CatServerUtil.methodSignature(name, desc), methodDescriptor);
             return null;
         }
 
@@ -285,14 +285,16 @@ public final class CatInterfaceEnhancer implements Opcodes {
 
 
     /**
-     * 如果方法返回参数为void，则修改成Void，否则不变。
+     * 如果方法返回参数如果基础数据类型，转换成对应包装类。
      * */
     public static String transformReturn(String desc){
-        if( desc != null && desc.endsWith(")V") ){
-            return desc.replace(")V", ")Ljava/lang/Void;");
-        } else {
-            return desc;
+        if( desc == null ){
+            return null;
         }
+        int index = desc.indexOf(")") + 1;
+        String argsDesc = desc.substring(0, index);
+        String returnDesc = desc.substring(index);
+        return argsDesc + CatTypeTools.getReturnType(returnDesc);
     }
 
     /**

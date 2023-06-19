@@ -4,7 +4,8 @@ import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatEnhancerDepend;
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
+import cc.bugcat.catserver.handler.CatServerDepend;
+import cc.bugcat.catserver.handler.CatServerInfo;
 import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
@@ -39,14 +40,8 @@ public class CatServerFactoryBean implements InitializingBean {
      * 全局配置项
      * */
     @Autowired
-    private CatServerConfiguration serverConfig;
+    private CatServerDepend serverDepend;
 
-    /**
-     * 环境变量
-     * */
-    @Autowired
-    private ConfigurableListableBeanFactory configurableBeanFactory;
-    
             
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -54,12 +49,11 @@ public class CatServerFactoryBean implements InitializingBean {
             return;
         }
 
-        EnvironmentAdapter envProp = EnvironmentAdapter.environmentProperty(configurableBeanFactory);
-        CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(serverConfig, envProp, serverClassSet.size());
+        CatEnhancerDepend enhancerDepend = new CatEnhancerDepend(serverClassSet.size());
         List<CatCtrlInfoBuilder> ctrlInfoBuilders = new ArrayList<>(serverClassSet.size());
         
         for(Class serverClass : serverClassSet){
-            CatCtrlInfoBuilder builder = CatCtrlInfoBuilder.builder(serverClass, enhancerDepend);
+            CatCtrlInfoBuilder builder = new CatCtrlInfoBuilder(serverClass, serverDepend, enhancerDepend);
             ctrlInfoBuilders.add(builder);
         }
 

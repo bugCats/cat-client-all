@@ -1,9 +1,8 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catserver.beanInfos.CatServerInfo;
+import cc.bugcat.catserver.handler.CatServerInfo;
 
 import java.lang.reflect.Method;
-import java.util.function.Function;
 
 
 /**
