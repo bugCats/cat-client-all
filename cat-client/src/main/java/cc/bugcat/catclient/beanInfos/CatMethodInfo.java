@@ -343,27 +343,26 @@ public class CatMethodInfo {
 
         private AnnotationAttributes getAttributes(Method method) {
             StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-            Map<String, Object> methodAttributes = metadata.getAnnotationAttributes(CatMethod.class.getName());
-            
+            Map<String, Object> methodAttr = metadata.getAnnotationAttributes(CatMethod.class.getName());
+
             Catface catface = clientInfo.getCatface();
-            if ( catface != null ) {
-                //是精简模式
-
-                if ( methodAttributes == null ) {
-
+            this.isCatface = catface != null;
+            
+            if ( isCatface ) {//是精简模式
+                if ( methodAttr == null ) {
                     //其他使用interface上的注解
-                    methodAttributes = new HashMap<>();
-                    methodAttributes.put("notes", new CatNote[0]);
-                    methodAttributes.put("socket", clientInfo.getSocket());
-                    methodAttributes.put("connect", clientInfo.getConnect());
-                    methodAttributes.put("logsMod", clientInfo.getLogsMod());
+                    methodAttr = new HashMap<>();
+                    methodAttr.put("notes", new CatNote[0]);
+                    methodAttr.put("socket", clientInfo.getSocket());
+                    methodAttr.put("connect", clientInfo.getConnect());
+                    methodAttr.put("logsMod", clientInfo.getLogsMod());
                 }
+                
                 String path = CatToosUtil.getDefaultRequestUrl(catface, clientInfo.getClientClassName(), method);
-                methodAttributes.put("value", path);
-                methodAttributes.put("method", RequestMethod.POST);
-                isCatface = true;
+                methodAttr.put("value", path);
+                methodAttr.put("method", RequestMethod.POST);
+                
             }
-
             
             /**
              * 当存在CatNotes时，会直接覆盖{@link CatMethod#notes()}
@@ -371,10 +370,10 @@ public class CatMethodInfo {
             CatNotes.Group noteGroup = method.getAnnotation(CatNotes.Group.class);
             if( noteGroup != null ){
                 CatNote[] catNotes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
-                methodAttributes.put("notes", catNotes);
+                methodAttr.put("notes", catNotes);
             }
             
-            AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttributes);
+            AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttr);
             return attrs;
         }
 
@@ -389,7 +388,7 @@ public class CatMethodInfo {
 
             // /user/save
             String url = attrs.getString("value");
-            this.path = "/" + envProp.getProperty(url, String.class).replaceAll("^/", "");
+            this.path = clientInfo.getBasePath() + envProp.getProperty(url, String.class);
 
             // post | get
             this.requestType = attrs.getEnum("method");
@@ -428,7 +427,6 @@ public class CatMethodInfo {
 
             //是否已经出现过主要入参对象
             boolean hasPrimary = false;
-            boolean isCatface = clientInfo.getCatface() != null;
 
             Parameter[] parameters = method.getParameters();
             for ( int idx = 0; idx < parameters.length; idx++ ) {
@@ -462,10 +460,10 @@ public class CatMethodInfo {
 
                 //获取参数名称 interface被编译之后，方法上的参数名会被擦除，只能使用注解标记别名
                 String pname = CatToosUtil.getAnnotationValue(parameter, RequestParam.class, ModelAttribute.class, CatNote.class);
-                if ( CatToosUtil.isBlank(pname) ) {
-                    if ( isCatface ) { // 如果是精简模式，所有的入参统一使用arg0、arg1、arg2、argX...命名
+                if ( CatToosUtil.isBlank(pname) ) { //如果没有为入参取别名
+                    if ( isCatface ) { // catface模式，入参统一使用arg0、arg1、arg2、argX...命名
                         pname = "arg" + idx;
-                    } else {
+                    } else { //普通模式，使用编译后的入参名
                         pname = parameter.getName();
                     }
                 }

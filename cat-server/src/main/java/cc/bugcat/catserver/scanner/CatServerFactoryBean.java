@@ -104,7 +104,7 @@ public class CatServerFactoryBean implements InitializingBean {
                 }
 
                 RequestMappingInfo mappingInfo = RequestMappingInfo
-                        .paths(getValue(attributes, "value", stringToArray))
+                        .paths(getValue(attributes, "value", serverInfo.getBasePath(), stringToArray))
                         .methods(getValue(attributes, "method", requestMethodToArray))
                         .params(getValue(attributes, "params", stringToArray))
                         .headers(getValue(attributes, "headers", stringToArray))
@@ -117,8 +117,14 @@ public class CatServerFactoryBean implements InitializingBean {
             }
         }
     }
-    
-    
+
+    private final String[] getValue(Map<String, Object> map, String key, String prefix, IntFunction<String[]> func){
+        String[] values = getValue(map, key, func);
+        for ( int idx = 0; idx < values.length; idx++ ) {
+            values[idx] = prefix + values[idx];
+        }
+        return values;
+    }
 
     private final <T> T[] getValue(Map<String, Object> map, String key, IntFunction<T[]> func){
         Object value = map.get(key);

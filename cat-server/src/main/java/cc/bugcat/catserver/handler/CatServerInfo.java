@@ -12,6 +12,7 @@ import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.spi.CatResultHandler;
 import cc.bugcat.catserver.spi.CatServerInterceptor;
 import cc.bugcat.catserver.utils.CatServerUtil;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,6 +62,11 @@ public class CatServerInfo {
      * */
     private final Catface catface;
     private final boolean isCatface;
+
+    /**
+     * 在interface上的RequestMapping注解
+     * */
+    private final String basePath;
 
 
 
@@ -114,6 +120,16 @@ public class CatServerInfo {
         this.catface = apiInfo.getCatface();
         this.isCatface = catface != null;
 
+        if( isCatface ){
+            this.basePath = "";
+        } else {
+            RequestMapping requestMapping = apiInfo.getRequestMapping();
+            String basePath = "";
+            if ( requestMapping != null && requestMapping.value().length > 0 ) {
+                basePath = requestMapping.value()[0];
+            }
+            this.basePath = envProp.getProperty(basePath, "");
+        }
     }
 
 
@@ -170,5 +186,7 @@ public class CatServerInfo {
     public boolean isCatface() {
         return isCatface;
     }
-    
+    public String getBasePath() {
+        return basePath;
+    }
 }

@@ -239,6 +239,7 @@ public class CatToosUtil {
         CatApiInfo apiInfo = supplier.get();
         apiInfo.setCatface(catface);
         apiInfo.setWrapper(wrapper);
+        apiInfo.setRequestMapping(requestMapping);
         return (T) apiInfo;
     }
 

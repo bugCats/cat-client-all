@@ -4,6 +4,7 @@ import cc.bugcat.catclient.handler.CatLogsMod;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatNotes;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -14,12 +15,14 @@ import java.lang.annotation.Target;
 
 
 /**
- * 定义http请求方法
+ * 定义http请求方法。
+ * 如果在类上，则只有value属性生效！
  *
  * @author bugcat
  * */
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
+@Component
 @RequestMapping
 public @interface CatMethod {
 

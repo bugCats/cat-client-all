@@ -17,6 +17,12 @@ public class CatApiInfo {
      * */
     private Catface catface;
 
+    /**
+     * 在interface上的RequestMapping注解
+     * */
+    private RequestMapping requestMapping;
+    
+    
     
     public CatResponesWrapper getWrapper() {
         return wrapper;
@@ -32,4 +38,10 @@ public class CatApiInfo {
         this.catface = catface;
     }
 
+    public RequestMapping getRequestMapping() {
+        return requestMapping;
+    }
+    public void setRequestMapping(RequestMapping requestMapping) {
+        this.requestMapping = requestMapping;
+    }
 }

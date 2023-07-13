@@ -14,6 +14,7 @@ import cc.bugcat.catface.handler.CatApiInfo;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -104,7 +105,11 @@ public final class CatClientInfo {
      * {@link Catface}
      * */
     private final Catface catface;
-
+    
+    /**
+     * 在interface上的RequestMapping注解
+     * */
+    private final String basePath;
     
 
 
@@ -118,7 +123,7 @@ public final class CatClientInfo {
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
 
         String host = client.host();
-        this.host = envProp.getProperty(host, String.class);
+        this.host = envProp.getProperty(host, "");
 
         int connect = client.connect();
         connect = connect < 0 ? -1 : connect;
@@ -179,6 +184,18 @@ public final class CatClientInfo {
         }
 
         this.catface = apiInfo.getCatface();
+        
+        if( catface != null ){
+            this.basePath = "";
+        } else {
+            RequestMapping requestMapping = apiInfo.getRequestMapping();
+            String basePath = "";
+            if ( requestMapping != null && requestMapping.value().length > 0 ) {
+                basePath = requestMapping.value()[0];
+            }
+            this.basePath = envProp.getProperty(basePath, "");
+        }
+
     }
 
 
@@ -269,8 +286,7 @@ public final class CatClientInfo {
     public Catface getCatface() {
         return catface;
     }
-
-
-
-
+    public String getBasePath() {
+        return basePath;
+    }
 }
