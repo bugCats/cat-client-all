@@ -9,19 +9,12 @@ import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.env.PropertyResolver;
-import org.springframework.core.env.PropertySourcesPropertyResolver;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -33,7 +26,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -241,8 +233,9 @@ public class CatToosUtil {
      * 从interface上获取注解
      * */
     public static <T extends CatApiInfo> T getAttributes(Class inter, Supplier<T> supplier) {
-        CatResponesWrapper wrapper = responesWrap(inter, CatResponesWrapper.class);
-        Catface catface = responesWrap(inter, Catface.class);
+        RequestMapping requestMapping = findAnnotation(inter, RequestMapping.class);
+        CatResponesWrapper wrapper = findAnnotation(inter, CatResponesWrapper.class);
+        Catface catface = findAnnotation(inter, Catface.class);
         CatApiInfo apiInfo = supplier.get();
         apiInfo.setCatface(catface);
         apiInfo.setWrapper(wrapper);
@@ -253,11 +246,11 @@ public class CatToosUtil {
     /**
      * 递归遍历interface、以及父类，获取第一次出现的annotationType注解
      * */
-    public static <A extends Annotation> A responesWrap(Class inter, Class<A> annotationType) {
+    public static <A extends Annotation> A findAnnotation(Class inter, Class<A> annotationType) {
         A annotation = AnnotationUtils.findAnnotation(inter, annotationType);
         if ( annotation == null ) {
             for ( Class clazz : inter.getInterfaces() ) {
-                annotation = responesWrap(clazz, annotationType);
+                annotation = findAnnotation(clazz, annotationType);
                 if ( annotation != null ) {
                     return annotation;
                 }
