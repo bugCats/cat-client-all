@@ -169,7 +169,7 @@ public final class CatMethodInfoBuilder {
         if( noteGroup != null ){
             notes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
         } else {
-            CatClientBridge clientBridge = CatClientBridge.loadService();
+            CatClientBridge clientBridge = CatToosUtil.getClientBridge();
             notes = clientBridge.findCatNotes(method);
         }
         // 其他自定义参数、标记

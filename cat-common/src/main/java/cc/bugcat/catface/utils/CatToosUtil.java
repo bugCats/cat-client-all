@@ -5,6 +5,7 @@ import cc.bugcat.catface.annotation.CatNotes;
 import cc.bugcat.catface.annotation.CatResponesWrapper;
 import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.CatApiInfo;
+import cc.bugcat.catface.spi.CatClientBridge;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -24,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -40,16 +43,31 @@ public class CatToosUtil {
     
     public final static String GROUP_ID = "cc.bugcat";
 
+    
     /**
      * Object.class中的方法
      * */
     private static final Set<String> objectDefaultMethod;
+
+    /**
+     * 兼容客户端扩展组件
+     * */
+    private static final CatClientBridge clientBridge;
+    
     static {
         Set<String> methodSet = new HashSet<>();
         for ( Method method : Object.class.getDeclaredMethods() ) {
             methodSet.add(signature(method));
         }
         objectDefaultMethod = Collections.unmodifiableSet(methodSet);
+
+        final ServiceLoader<CatClientBridge> loaders = ServiceLoader.load(CatClientBridge.class);
+        final Iterator<CatClientBridge> iterators = loaders.iterator();
+        if (iterators.hasNext()) {
+            clientBridge = iterators.next();
+        } else {
+            clientBridge = new CatClientBridge() {};
+        }
     }
 
 
@@ -211,6 +229,9 @@ public class CatToosUtil {
         }
     }
 
+    public static CatClientBridge getClientBridge() {
+        return clientBridge;
+    }
 
     /**
      * 按顺序，获取第一个存在的注解的value值
@@ -232,15 +253,13 @@ public class CatToosUtil {
     /**
      * 从interface上获取注解
      * */
-    public static <T extends CatApiInfo> T getAttributes(Class inter, Supplier<T> supplier) {
-        RequestMapping requestMapping = findAnnotation(inter, RequestMapping.class);
+    public static void parseInterfaceAttributes(Class inter, CatApiInfo apiInfo) {
+        String basePath = clientBridge.findBasePath(inter);
         CatResponesWrapper wrapper = findAnnotation(inter, CatResponesWrapper.class);
         Catface catface = findAnnotation(inter, Catface.class);
-        CatApiInfo apiInfo = supplier.get();
         apiInfo.setCatface(catface);
         apiInfo.setWrapper(wrapper);
-        apiInfo.setRequestMapping(requestMapping);
-        return (T) apiInfo;
+        apiInfo.setBasePath(basePath);
     }
 
     

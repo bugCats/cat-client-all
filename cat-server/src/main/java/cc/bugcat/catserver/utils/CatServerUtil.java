@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.utils;
 
+import cc.bugcat.catface.spi.CatClientBridge;
 import cc.bugcat.catserver.asm.CatInterfaceEnhancer;
 import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.Type;
@@ -48,7 +49,6 @@ public class CatServerUtil implements ApplicationContextAware{
      * */
     private static ApplicationContext context;
 
-
     @Override
     public synchronized void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         if ( context == null ) {
@@ -59,9 +59,9 @@ public class CatServerUtil implements ApplicationContextAware{
 
 
     /**
-     * 优先从Spring容器中获取
-     * 其次catClinetMap
-     * 都没有则返回null
+     * 优先从Spring容器中获取；
+     * 其次catServerMap；
+     * 都没有则返回null。
      * */
     public static <T> T getBean(Class<T> clazz){
         try {
@@ -94,14 +94,14 @@ public class CatServerUtil implements ApplicationContextAware{
     }
 
     /**
-     * catClinetMap注册bean
+     * catServerMap注册bean
      * */
     public static void registerBean(Class type, Object bean){
         catServerMap.putIfAbsent(type, bean);
     }
 
     /**
-     * catClinetMap是否包含
+     * catServerMap是否包含
      * */
     public static boolean contains(Class key) {
         return catServerMap.containsKey(key);
@@ -111,7 +111,7 @@ public class CatServerUtil implements ApplicationContextAware{
 
 
     public static ClassLoader getClassLoader(){
-        return context.getClassLoader();
+        return CatServerUtil.class.getClassLoader();
     }
 
     
@@ -120,7 +120,7 @@ public class CatServerUtil implements ApplicationContextAware{
      * */
     public static <R> R existClassAndExecute(String className, Function<Class, R> function){
         try {
-            Class clazz = CatServerUtil.class.getClassLoader().loadClass(className);
+            Class clazz = getClassLoader().loadClass(className);
             return function.apply(clazz);
         } catch ( Exception ex ) {
             return function.apply(null);

@@ -123,21 +123,17 @@ public class CatServerInfo {
         if( isCatface ){
             this.basePath = "";
         } else {
-            RequestMapping requestMapping = apiInfo.getRequestMapping();
-            String basePath = "";
-            if ( requestMapping != null && requestMapping.value().length > 0 ) {
-                basePath = requestMapping.value()[0];
-            }
-            this.basePath = envProp.getProperty(basePath, "");
+            this.basePath = envProp.getProperty(apiInfo.getBasePath(), "");
         }
     }
 
 
     public final static CatServerInfo build(Class<?> serverClass, CatServerDepend serverDepend) {
         CatServer catServer = serverClass.getAnnotation(CatServer.class);
-        CatServerApiInfo apiInfo = CatToosUtil.getAttributes(serverClass, CatServerApiInfo::new);
+        CatServerApiInfo apiInfo = new CatServerApiInfo();
         apiInfo.setServerClass(serverClass);
         apiInfo.setServerDepend(serverDepend);
+        CatToosUtil.parseInterfaceAttributes(serverClass, apiInfo);
         CatServerInfo serverInfo = new CatServerInfo(catServer, apiInfo);
         return serverInfo;
     }

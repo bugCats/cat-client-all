@@ -18,9 +18,9 @@ public class CatApiInfo {
     private Catface catface;
 
     /**
-     * 在interface上的RequestMapping注解
+     * 在interface上的RequestMapping注解value值
      * */
-    private RequestMapping requestMapping;
+    private String basePath;
     
     
     
@@ -38,10 +38,10 @@ public class CatApiInfo {
         this.catface = catface;
     }
 
-    public RequestMapping getRequestMapping() {
-        return requestMapping;
+    public String getBasePath() {
+        return basePath;
     }
-    public void setRequestMapping(RequestMapping requestMapping) {
-        this.requestMapping = requestMapping;
+    public void setBasePath(String basePath) {
+        this.basePath = basePath;
     }
 }

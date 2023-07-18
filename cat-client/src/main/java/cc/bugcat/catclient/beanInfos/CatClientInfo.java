@@ -188,12 +188,7 @@ public final class CatClientInfo {
         if( catface != null ){
             this.basePath = "";
         } else {
-            RequestMapping requestMapping = apiInfo.getRequestMapping();
-            String basePath = "";
-            if ( requestMapping != null && requestMapping.value().length > 0 ) {
-                basePath = requestMapping.value()[0];
-            }
-            this.basePath = envProp.getProperty(basePath, "");
+            this.basePath = envProp.getProperty(apiInfo.getBasePath(), "");
         }
 
     }
@@ -202,17 +197,18 @@ public final class CatClientInfo {
     /**
      * 构建CatClientInfo对象
      *
-     * @param interfaceClass    interface
+     * @param clineClass    interface
      * @param catClient         可以为null，不一定是interface上的注解。也可以是CatClients实例
      * @param depend            默认依赖
      * */
-    public static CatClientInfo build(Class interfaceClass, CatClient catClient, CatClientDepend depend ) {
+    public static CatClientInfo build(Class clineClass, CatClient catClient, CatClientDepend depend ) {
         if( catClient == null ){
-            catClient = (CatClient) interfaceClass.getAnnotation(CatClient.class);
+            catClient = (CatClient) clineClass.getAnnotation(CatClient.class);
         }
-        CatClientApiInfo apiInfo = CatToosUtil.getAttributes(interfaceClass, CatClientApiInfo::new);
-        apiInfo.setClientClass(interfaceClass);
+        CatClientApiInfo apiInfo = new CatClientApiInfo();
+        apiInfo.setClientClass(clineClass);
         apiInfo.setClientDepend(depend);
+        CatToosUtil.parseInterfaceAttributes(clineClass, apiInfo);
         CatClientInfo clientInfo = new CatClientInfo(catClient, apiInfo);
         return clientInfo;
     }
