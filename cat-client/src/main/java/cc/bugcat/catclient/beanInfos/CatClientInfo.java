@@ -122,8 +122,8 @@ public final class CatClientInfo {
         EnvironmentAdapter envProp = clientDepend.getEnvironment();
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
 
-        String host = client.host();
-        this.host = envProp.getProperty(host, "");
+        String host = envProp.getProperty(client.host(), "");
+        this.host = host.startsWith("http") ? host : "http://" + host;
 
         int connect = client.connect();
         connect = connect < 0 ? -1 : connect;

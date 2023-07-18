@@ -243,7 +243,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
         private AsmInterfaceDescriptor classDescriptor;
 
         public OnlyReaderClassVisitor(ClassVisitor classVisitor) {
-            super(ASM6, classVisitor);
+            super(ASM5, classVisitor);
             this.classDescriptor = new AsmInterfaceDescriptor();
         }
 
@@ -270,14 +270,12 @@ public final class CatInterfaceEnhancer implements Opcodes {
 
 
 
-
-
     /**
      * 增强interface ClassVisitor
      * */
     private static class EnhancerInterfaceClassVisitor extends ClassVisitor implements Opcodes{
         public EnhancerInterfaceClassVisitor(ClassVisitor cv) {
-            super(ASM6, cv);
+            super(ASM5, cv);
         }
     }
 

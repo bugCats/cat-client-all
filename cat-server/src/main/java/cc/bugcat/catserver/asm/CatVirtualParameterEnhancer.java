@@ -169,7 +169,7 @@ public class CatVirtualParameterEnhancer implements Constants {
         private String className;
 
         public VirtualParameterClassVisitor(ClassVisitor cv, String className) {
-            super(ASM6, cv);
+            super(ASM5, cv);
             this.className = className.replace(".", "/");
         }
 

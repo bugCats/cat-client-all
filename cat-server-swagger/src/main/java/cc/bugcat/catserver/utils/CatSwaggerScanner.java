@@ -7,9 +7,10 @@ import cc.bugcat.catserver.asm.CatServerInstance;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Multimaps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import springfox.documentation.RequestHandler;
 import springfox.documentation.service.ResourceGroup;
 import springfox.documentation.spi.service.contexts.DocumentationContext;
 import springfox.documentation.spi.service.contexts.RequestMappingContext;
@@ -39,65 +40,74 @@ import static springfox.documentation.spring.web.paths.Paths.splitCamelCase;
  * */
 public class CatSwaggerScanner extends ApiListingReferenceScanner {
 
+    private final Logger logger = LoggerFactory.getLogger(CatSwaggerScanner.class);
+    
     @Override
     public ApiListingReferenceScanResult scan(DocumentationContext context) {
         
-        ArrayListMultimap<ResourceGroup, RequestMappingContext> resourceGroupRequestMappings = ArrayListMultimap.create();
+        try {
+            SwaggerAdapter swaggerAdapter = SwaggerAdapter.getAdapter(context.getClass().getClassLoader());
 
-        Iterable<RequestHandler> iterable = FluentIterable.from(context.getRequestHandlers())
-                .filter(context.getApiSelector().getRequestHandlerSelector());
+            ArrayListMultimap<ResourceGroup, RequestMappingContext> resourceGroupRequestMappings = ArrayListMultimap.create();
 
-        Map<CatSwaggerEntry, List<RequestHandler>> requestGroup = StreamSupport.stream(iterable.spliterator(), false)
-                .collect(Collectors.groupingBy(handler -> new CatSwaggerEntry(handler.getHandlerMethod())));
+            Iterable<Object> iterable = (Iterable) FluentIterable.from(context.getRequestHandlers())
+                    .filter(context.getApiSelector().getRequestHandlerSelector());
+            
+            Map<CatSwaggerEntry, List<Object>> requestGroup = StreamSupport.stream(iterable.spliterator(), false)
+                    .collect(Collectors.groupingBy(handler -> new CatSwaggerEntry(swaggerAdapter.getHandlerMethod(handler))));
 
-        for ( Map.Entry<CatSwaggerEntry, List<RequestHandler>> entry : requestGroup.entrySet() ) {
+            for ( Map.Entry<CatSwaggerEntry, List<Object>> entry : requestGroup.entrySet() ) {
 
-            CatSwaggerEntry swaggerEntry = entry.getKey();
-            List<RequestHandler> handlers = entry.getValue();
+                CatSwaggerEntry swaggerEntry = entry.getKey();
+                List handlers = entry.getValue();
 
-            if( CatInterfaceEnhancer.isBridgeClass(swaggerEntry.ctrlClass) ){
-                // 是asm增强后Interface
-                
-                // gclib创建的ctrl对象
-                CatServerInstance ctrlBean = (CatServerInstance) swaggerEntry.ctrlBean;
-                Class serverClass = ctrlBean.getServerProperty().getServerClass();
-                CatSwaggerHandler swaggerHandler = swaggerEntry.parseMethodFrom(serverClass);
-                
-                for (RequestHandler handler : handlers) {
+                if( CatInterfaceEnhancer.isBridgeClass(swaggerEntry.ctrlClass) ){
+                    // 是asm增强后Interface
 
-                    RequestMappingInfo requestMappingInfo = handler.getRequestMapping();
-                    HandlerMethod handlerMethod = handler.getHandlerMethod();
-                    Method method = handlerMethod.getMethod();
+                    // gclib创建的ctrl对象
+                    CatServerInstance ctrlBean = (CatServerInstance) swaggerEntry.ctrlBean;
+                    Class serverClass = ctrlBean.getServerProperty().getServerClass();
+                    CatSwaggerHandler swaggerHandler = swaggerEntry.parseMethodFrom(serverClass);
 
-                    // 原feign-interface
-                    Class realInterClass = swaggerHandler.getMethodFrom(method);
-                    
-                    // asm增强后的Interface
-                    Class ctrlInterClass = swaggerHandler.getCtrlInterface(realInterClass);
+                    for (Object handler : handlers) {
 
-                    ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(realInterClass), realInterClass, 0);
+                        RequestMappingInfo requestMappingInfo = swaggerAdapter.getRequestMapping(handler);
+                        HandlerMethod handlerMethod = swaggerAdapter.getHandlerMethod(handler);
 
-                    CatHandlerMethod catHandlerMethod = new CatHandlerMethod(ctrlInterClass, handlerMethod);
+                        Method method = handlerMethod.getMethod();
 
-                    RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, catHandlerMethod);
-                    resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+                        // 原feign-interface
+                        Class realInterClass = swaggerHandler.getMethodFrom(method);
 
-                }
-                
-            } else {
-                // 普通controller
-                
-                for (RequestHandler handler : handlers) {
-                    RequestMappingInfo requestMappingInfo = handler.getRequestMapping();
-                    HandlerMethod handlerMethod = handler.getHandlerMethod();
-                    ResourceGroup resourceGroup = new ResourceGroup(ControllerNamingUtils.controllerNameAsGroup(handlerMethod), handlerMethod.getBeanType(), 0);
-                    RequestMappingContext requestMappingContext = new RequestMappingContext(context, requestMappingInfo, handlerMethod);
-                    resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+                        // asm增强后的Interface
+                        Class ctrlInterClass = swaggerHandler.getCtrlInterface(realInterClass);
+
+                        ResourceGroup resourceGroup = new ResourceGroup(controllerNameAsGroup(realInterClass), realInterClass, 0);
+
+                        CatHandlerMethod catHandlerMethod = new CatHandlerMethod(ctrlInterClass, handlerMethod);
+
+                        RequestMappingContext requestMappingContext = swaggerAdapter.createRequestMappingContext(context, handler, requestMappingInfo, catHandlerMethod);
+                        resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+                    }
+
+                } else {
+                    // 普通controller
+                    for (Object handler : handlers) {
+                        RequestMappingInfo requestMappingInfo = swaggerAdapter.getRequestMapping(handler);
+                        HandlerMethod handlerMethod = swaggerAdapter.getHandlerMethod(handler);
+                        ResourceGroup resourceGroup = new ResourceGroup(ControllerNamingUtils.controllerNameAsGroup(handlerMethod), handlerMethod.getBeanType(), 0);
+                        RequestMappingContext requestMappingContext = swaggerAdapter.createRequestMappingContext(context, handler, requestMappingInfo, handlerMethod);
+                        resourceGroupRequestMappings.put(resourceGroup, requestMappingContext);
+                    }
                 }
             }
-        }
 
-        return new ApiListingReferenceScanResult(Multimaps.asMap(resourceGroupRequestMappings));
+            return new ApiListingReferenceScanResult(Multimaps.asMap(resourceGroupRequestMappings));
+            
+        } catch ( Exception ex ) {
+            logger.error("CatSwaggerScanner 执行失败：{}；使用默认模式！" + ex.getMessage());
+            return super.scan(context);
+        }
     }
 
 
@@ -108,6 +118,9 @@ public class CatSwaggerScanner extends ApiListingReferenceScanner {
                 .toLowerCase();
     }
 
+    
+
+    
 
     private static class CatSwaggerEntry {
         
