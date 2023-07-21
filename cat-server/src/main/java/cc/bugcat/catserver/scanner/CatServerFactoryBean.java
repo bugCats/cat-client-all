@@ -1,16 +1,13 @@
 package cc.bugcat.catserver.scanner;
 
 import cc.bugcat.catface.annotation.Catface;
-import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.asm.CatEnhancerDepend;
 import cc.bugcat.catserver.handler.CatServerDepend;
 import cc.bugcat.catserver.handler.CatServerInfo;
-import cc.bugcat.catserver.config.CatServerConfiguration;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -42,7 +39,11 @@ public class CatServerFactoryBean implements InitializingBean {
     @Autowired
     private CatServerDepend serverDepend;
 
-            
+    
+    @Autowired
+    private RequestMappingHandlerMapping handlerMapping;
+           
+    
     @Override
     public void afterPropertiesSet() throws Exception {
         if( serverClassSet == null ){
@@ -79,7 +80,6 @@ public class CatServerFactoryBean implements InitializingBean {
         
         IntFunction<RequestMethod[]> requestMethodToArray = RequestMethod[]::new;
         IntFunction<String[]> stringToArray = String[]::new;
-        RequestMappingHandlerMapping mapper = CatServerUtil.getBean(RequestMappingHandlerMapping.class);
 
         for( CatCtrlInfoBuilder builder : ctrlInfoBuilders ){
             CatCtrlInfo ctrlInfo = builder.build();
@@ -112,8 +112,8 @@ public class CatServerFactoryBean implements InitializingBean {
                         .consumes(getValue(attributes, "consumes", stringToArray))
                         .build();
 
-                mapper.unregisterMapping(mappingInfo);
-                mapper.registerMapping(mappingInfo, ctrlInfo.getController(), method); // 注册映射处理
+                handlerMapping.unregisterMapping(mappingInfo);
+                handlerMapping.registerMapping(mappingInfo, ctrlInfo.getController(), method); // 注册映射处理
             }
         }
     }

@@ -116,7 +116,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             
             // http异常，或者反序列化异常了
             CatContextHolder.setException(ex);
-
+            
             if ( clientInfo.isFallbackMod() ) { //开启了异常回调模式，执行自定义http异常处理
                 if( method.isDefault() ){ // interface默认方法
                     try {
@@ -164,8 +164,12 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
 
             try {
 
+                // 最后结束
+                respObj = context.postComplete(respObj, CatContextHolder.currentException());
+                
                 // 如果开启了包装器模式，拆包装
                 respObj = resultHandler.onFinally(respObj, context);
+                
 
             } catch ( Throwable ex ) {
 

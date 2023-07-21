@@ -80,9 +80,10 @@ public class CatClientContextHolder {
      * 1、设置参数
      * */
     protected void executeConfigurationResolver(CatParameter parameter) throws Exception {
-        interceptor.executeConfigurationResolver(this, parameter, () -> {
-            CatSendProcessor sendHandler = this.getSendHandler();
-            sendHandler.doConfigurationResolver(this, parameter);
+        final CatClientContextHolder contextHolder = this;
+        interceptor.executeConfigurationResolver(contextHolder, parameter, () -> {
+            CatSendProcessor sendHandler = contextHolder.getSendHandler();
+            sendHandler.doConfigurationResolver(contextHolder, parameter);
         });
     }
     
@@ -90,10 +91,11 @@ public class CatClientContextHolder {
      * 2、http参数处理切入点
      * */
     protected void executeVariableResolver() throws Exception {
-        interceptor.executeVariableResolver(this, () -> {
-            CatSendProcessor sendHandler = this.getSendHandler();
-            sendHandler.doVariableResolver(this);
-            sendHandler.postVariableResolver(this);
+        final CatClientContextHolder contextHolder = this;
+        interceptor.executeVariableResolver(contextHolder, () -> {
+            CatSendProcessor sendHandler = contextHolder.getSendHandler();
+            sendHandler.doVariableResolver(contextHolder);
+            sendHandler.postVariableResolver(contextHolder);
         });
     }
     
@@ -101,8 +103,21 @@ public class CatClientContextHolder {
      * 3、http请求切入点
      * */
     protected String executeRequest() throws CatHttpException {
-        this.responseBody = interceptor.executeHttpSend(sendHandler, () -> sendHandler.postHttpSend());
+        final CatClientContextHolder contextHolder = this;
+        this.responseBody = interceptor.executeHttpSend(sendHandler, () -> {
+            CatSendProcessor sendHandler = contextHolder.getSendHandler();
+            return sendHandler.postHttpSend();
+        });
         return responseBody;
+    }
+
+    /**
+     * 在成功或之后执行；
+     * @param result 响应结果；如果发生异常，为回调熔断后对象；
+     * @param throwable 调用过程中http异常；
+     * */
+    protected Object postComplete(Object result, Throwable throwable) throws Throwable {
+        return interceptor.postComplete(result, throwable);
     }
 
 
