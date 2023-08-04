@@ -254,12 +254,12 @@ public class CatToosUtil {
      * 从interface上获取注解
      * */
     public static void parseInterfaceAttributes(Class inter, CatApiInfo apiInfo) {
-        CatNote catNote = findAnnotation(inter, CatNote.class);
+        String basePath = clientBridge.findBasePath(inter);
         CatResponesWrapper wrapper = findAnnotation(inter, CatResponesWrapper.class);
         Catface catface = findAnnotation(inter, Catface.class);
         apiInfo.setCatface(catface);
         apiInfo.setWrapper(wrapper);
-        apiInfo.setBasePath(catNote != null ? catNote.value() : "");
+        apiInfo.setBasePath(basePath);
     }
 
 

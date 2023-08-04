@@ -20,8 +20,9 @@ import java.lang.annotation.Target;
  *
  * @author bugcat
  * */
-@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
+@Component
 @RequestMapping
 public @interface CatMethod {
 

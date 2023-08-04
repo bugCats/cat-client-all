@@ -11,10 +11,9 @@ import java.lang.annotation.Target;
 /**
  * 1、为方法添加特殊标记
  * 2、为方法的入参起别名
- * 3、在interface上，添加url前缀
  * @author bugcat
  * */
-@Target({ ElementType.PARAMETER, ElementType.TYPE})
+@Target({ ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface CatNote {
