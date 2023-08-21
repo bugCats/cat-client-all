@@ -1,5 +1,6 @@
 package cc.bugcat.catserver.scanner;
 
+import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.asm.CatAsmInterface;
@@ -25,6 +26,7 @@ import org.springframework.cglib.proxy.CallbackFilter;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
@@ -139,7 +141,7 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
             if ( CatInterfaceEnhancer.isBridgeClass(interfaceClass) ) { //判断是否为增强后的Interface
                 for( Method method : interfaceClass.getMethods() ){ // 增强后的Method
                     String signatureId = CatServerUtil.methodSignature(method);
-                    if( serverClassMethodMap.containsKey(signatureId) ){
+                    if( serverInfo.isCatface() || serverClassMethodMap.containsKey(signatureId) ){
                         bridgeMethods.add(method);
                     }
                 }
