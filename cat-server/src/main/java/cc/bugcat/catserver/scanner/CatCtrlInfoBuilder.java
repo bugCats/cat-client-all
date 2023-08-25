@@ -1,6 +1,5 @@
 package cc.bugcat.catserver.scanner;
 
-import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.annotation.CatServer;
 import cc.bugcat.catserver.asm.CatAsmInterface;
@@ -26,7 +25,6 @@ import org.springframework.cglib.proxy.CallbackFilter;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardMethodMetadata;
 
 import java.lang.reflect.Method;
@@ -363,12 +361,12 @@ class CatCtrlInfoBuilder implements Comparable<CatCtrlInfoBuilder> {
             if ( serverPropertyMethodName.equals(method.getName()) ){ // 返回CatServer类的class
                 return new PropertyMethodInterceptor(helper.serverProperty);
             } else {
-                CatMethodAopInterceptor interceptor = helper.interceptorMap.get(method);
-                if( interceptor != null ){
+                CatMethodAopInterceptor interceptor = helper.interceptorMap.get(method); 
+                if( interceptor != null ){ //interface与对应的方法拦截器
                     return interceptor;
                 } else {
-                    // object默认方法
-                    return helper.enhancerDepend.getObjectMethodInterceptor();
+                    // object默认方法 toString、hashCode、equals
+                    return helper.enhancerDepend.getSuperObjectInterceptor();
                 }
             }
         }

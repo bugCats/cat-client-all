@@ -5,16 +5,18 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.scanner.CatClientDependFactoryBean;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatClientMockProvide;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.SimpleClientFactory;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.cglib.proxy.MethodInterceptor;
-import org.springframework.cglib.proxy.MethodProxy;
 
-import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * CatClientInfoFactoryBean 相关依赖，单例。
@@ -51,7 +53,7 @@ public class CatClientDepend {
     /**
      * Object的默认方法拦截器：toString、hashCode...
      * */
-    private final MethodInterceptor objectMethodInterceptor;
+    private final MethodInterceptor superObjectInterceptor;
 
     /**
      * 全局默认的client工厂
@@ -68,13 +70,19 @@ public class CatClientDepend {
      * */
     private final EnvironmentAdapter environment;
     
+    /**
+     * mock类
+     * */
+    private final Map<Class, Class> mockProvideMap;
+    
     private CatClientDepend(Builder builder) {
         this.retryConfigurer = builder.retryConfigurer;
         this.clientConfig = builder.clientConfig;
         this.clientFactory = builder.clientFactory;
         this.sendInterceptor = builder.sendInterceptor;
         this.environment = builder.environment;
-        this.objectMethodInterceptor = CatToosUtil.defaultMethodInterceptor();
+        this.mockProvideMap = builder.mockProvideMap;
+        this.superObjectInterceptor = CatToosUtil.superObjectInterceptor();
     }
 
 
@@ -84,8 +92,8 @@ public class CatClientDepend {
     public CatClientConfiguration getClientConfig() {
         return clientConfig;
     }
-    public MethodInterceptor getObjectMethodInterceptor() {
-        return objectMethodInterceptor;
+    public MethodInterceptor getSuperObjectInterceptor() {
+        return superObjectInterceptor;
     }
     public CatClientFactory getClientFactory() {
         return clientFactory;
@@ -96,7 +104,11 @@ public class CatClientDepend {
     public EnvironmentAdapter getEnvironment() {
         return environment;
     }
+    public Class getClientMock(Class interfaceClass) {
+        return mockProvideMap.get(interfaceClass);
+    }
 
+    
     /**
      * 如果使用main方法调用，需要手动创建该对象
      * */
@@ -111,8 +123,10 @@ public class CatClientDepend {
         private CatClientConfiguration clientConfig;
         private CatClientFactory clientFactory;
         private CatSendInterceptor sendInterceptor;
-        
         private EnvironmentAdapter environment;
+        private Map<Class, Class> mockProvideMap;
+        
+        private CatClientMockProvide mockProvide;
         
         public Builder retryConfigurer(CatHttpRetryConfigurer retryConfigurer) {
             this.retryConfigurer = retryConfigurer;
@@ -143,6 +157,11 @@ public class CatClientDepend {
             return this;
         }
 
+        public Builder mockProvide(CatClientMockProvide mockProvide) {
+            this.mockProvide = mockProvide;
+            return this;
+        }
+
         public CatClientDepend build(){
 
             if( retryConfigurer == null ){
@@ -162,6 +181,22 @@ public class CatClientDepend {
                 clientFactory = new SimpleClientFactory();
             }
             
+            if( mockProvide == null ){
+                mockProvide = new CatClientMockProvide(){};
+            }
+
+            mockProvideMap = new HashMap<>();
+            
+            boolean enableMock = mockProvide.enableMock();
+            if( enableMock ){
+                Set<Class> clients = mockProvide.mockClients();
+                for ( Class client : clients ) {
+                    Class[] interfaces = client.getInterfaces();
+                    for ( Class inter : interfaces ) {
+                        mockProvideMap.put(inter, client);
+                    }
+                }
+            }
             return new CatClientDepend(this);
         }
 

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.CallbackFilter;
 import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.lang.reflect.Method;
@@ -33,7 +34,7 @@ import java.util.Map;
 public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
 
-    private final Log log = LogFactory.getLog(CatClientInfoFactoryBean.class);
+    private final static Log log = LogFactory.getLog(CatClientInfoFactoryBean.class);
 
     /**
      * 被{@code @CatClient}标记的interface
@@ -79,7 +80,22 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
     public final static <T> T createCatClient(Class<T> interfaceClass, CatClientInfo clientInfo) {
 
         Class[] interfaces = new Class[]{interfaceClass};
+        
+        CatClientDepend clientDepend = clientInfo.getClientDepend();
+        
+        //判断是否存在mock功能
+        Class clientMock = clientDepend.getClientMock(interfaceClass);
+        if ( clientMock != null ) { //获取到mock
+            clientInfo.getLogger().warn("[" + interfaceClass.getName() + "]启用mock功能");
+            Enhancer enhancer = new Enhancer();
+            enhancer.setInterfaces(interfaces);
+            enhancer.setSuperclass(clientMock);
+            enhancer.setCallback(clientDepend.getSuperObjectInterceptor());
+            Object obj = enhancer.create();
+            return (T) obj;
+        }
 
+        //没有mock类
         final Map<String, Method> methodMap = new HashMap<>();
         if( clientInfo.isFallbackMod() ){
             for( Method method : interfaceClass.getMethods() ){
@@ -104,8 +120,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
         Object obj = enhancer.create();
         return (T) obj;
     }
-
-
+    
 
 
     private static class CatCallbackHelper {
@@ -136,7 +151,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
 
         public void parse(CatCallbackHelper helper, Class superclass, Class[] interfaces) {
 
-            List<Method> methods = new ArrayList();
+            List<Method> methods = new ArrayList(30);
             Enhancer.getMethods(superclass, interfaces, methods);
             Map<Callback, Integer> indexes = new HashMap();
 
@@ -157,7 +172,7 @@ public class CatClientInfoFactoryBean<T> extends AbstractFactoryBean<T> {
             EnvironmentAdapter envProp = clientDepend.getEnvironment();
 
             if( CatToosUtil.isObjectMethod(method) ){//默认方法
-                return clientDepend.getObjectMethodInterceptor();
+                return clientDepend.getSuperObjectInterceptor();
             } else {
 
                 /**

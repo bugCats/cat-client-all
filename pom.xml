@@ -6,7 +6,7 @@
 
     <groupId>cc.bugcat</groupId>
 	<artifactId>cat-client-all</artifactId>
-	<version>2.1.0</version>
+	<version>2.2.0</version>
 	<packaging>pom</packaging>
 	<name>cat-client-all</name>
 	<description>猫脸</description>

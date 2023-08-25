@@ -6,6 +6,7 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.slf4j.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -30,13 +31,14 @@ public class CatClientLogger {
      * 日志记录方案
      */
     private CatLogsMod logsMod;
-
+    
+    private Class clientClass;
+    private Logger logger;
+    
     private long executeTime;       //调用http耗时
 
     private String errorMessge;             //错误信息，如果不为null，说明调用失败
     private CatHttpException exception;     //错误信息，如果不为null，说明调用失败
-
-    private Class clientClass;
     
     private String apiName;     //方法名
 
@@ -148,6 +150,13 @@ public class CatClientLogger {
     }
     public void setClientClass(Class clientClass) {
         this.clientClass = clientClass;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+    public void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
     public String getApiName() {

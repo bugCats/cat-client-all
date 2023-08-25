@@ -156,6 +156,7 @@ public class CatSendProcessor {
         catLog.setTracerId(this.getTracerId());
         catLog.setLogsMod(methodInfo.getLogsMod());
         catLog.setClientClass(clientInfo.getClientClass());
+        catLog.setLogger(clientInfo.getLogger());
         catLog.setApiName(methodInfo.getMethodName());
         catLog.setApiUrl(httpPoint.getHost() + httpPoint.getUrl());
         catLog.setRequest(httpPoint.getRequestBody());
@@ -295,7 +296,9 @@ public class CatSendProcessor {
         return httpPoint;
     }
 
-
+    /**
+     * 日志id；用于日志追踪，如果没有赋值，则自动生成；
+     * */
     public String getTracerId() {
         return tracerId;
     }

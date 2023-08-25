@@ -15,7 +15,6 @@ import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 
 /**
@@ -212,23 +210,28 @@ public class CatToosUtil {
         return objectDefaultMethod.contains(sign);
     }
 
+    
     /**
-     * object方法拦截器
+     * 执行父类方法
      * */
-    public static MethodInterceptor defaultMethodInterceptor(){
-        return new DefaultMethodInterceptor();
+    public static MethodInterceptor superObjectInterceptor(){
+        return new SuperObjectInterceptor();
     }
-
+    
     /**
-     * 默认的拦截器
+     * 执行父类方法，默认的拦截器；
      * */
-    private static class DefaultMethodInterceptor implements MethodInterceptor {
+    private static class SuperObjectInterceptor implements MethodInterceptor {
         @Override
         public Object intercept (Object target, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
             return methodProxy.invokeSuper(target, args);
         }
     }
 
+    /**
+     * 在服务端模块，需要使用客户端一些方法；
+     * 如果服务端模块引入了cat-client，那么直接使用；否则返回默认的处理方式；
+     * */
     public static CatClientBridge getClientBridge() {
         return clientBridge;
     }

@@ -1,6 +1,7 @@
 package cc.bugcat.catserver.asm;
 
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
+import cc.bugcat.catface.utils.CatToosUtil;
 import cc.bugcat.catserver.handler.CatServerInfo;
 import cc.bugcat.catserver.utils.CatServerUtil;
 import org.springframework.asm.ClassReader;
@@ -24,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.function.BiConsumer;
 
 
 /**
@@ -41,6 +43,11 @@ import java.util.Stack;
  * */
 public final class CatInterfaceEnhancer implements Opcodes {
 
+    /**
+     * 输出路径，优先取环境变量‘catserver.debugLocation’，其次是‘cglib.debugLocation’；
+     * */
+    public final static String DEBUG_LOCATION_PROPERTY = "catserver.debugLocation";
+    
     /**
      * 是否存在Valid验证框架
      * */
@@ -64,11 +71,34 @@ public final class CatInterfaceEnhancer implements Opcodes {
      * */
     public final static String RESPONSE_BODY = Type.getDescriptor(ResponseBody.class);
     
+    
     /**
-     * 设置动态生成扩展interface的文件路径
+     * 打印生成的class类；
      * */
-    private final static String debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
-
+    private final static BiConsumer<String, byte[]> print;
+    static {
+        String debugDir = System.getProperty(DEBUG_LOCATION_PROPERTY);
+        if( CatToosUtil.isBlank(debugDir) ){
+            debugDir = System.getProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY);
+        }
+        if( CatToosUtil.isBlank(debugDir) ){
+            print = (className, bytes) -> {};
+        } else {
+            final String printPath = debugDir;
+            print = (className, bytes) -> {
+                File dir = new File(printPath + "/" + className.replace(".", "/") + ".class");
+                if( dir.getParentFile().exists() == false ){
+                    dir.getParentFile().mkdirs();
+                }
+                try (FileOutputStream fos = new FileOutputStream(dir)){
+                    fos.write(bytes);
+                } catch ( Exception ex ) {
+                    System.err.println("CatInterfaceEnhancer's print has an error. " + ex.getMessage());
+                }
+            };
+        }
+    }
+    
 
 
     /**
@@ -328,18 +358,8 @@ public final class CatInterfaceEnhancer implements Opcodes {
     /**
      * 打印动态生成的interface
      * */
-    public static void printClass(String enhancerClass, byte[] newbs){
-        if( debugDir != null ){
-            File dir = new File(debugDir + "/" + enhancerClass.replace(".", "/") + ".class");
-            if( !dir.getParentFile().exists() ){
-                dir.getParentFile().mkdirs();
-            }
-            try (FileOutputStream fos = new FileOutputStream(dir)){
-                fos.write(newbs);
-            } catch ( Exception ex ) {
-                System.err.println("CatInterfaceEnhancer's print has an error. " + ex.getMessage());
-            }
-        }
+    public static void printClass(String className, byte[] bytes){
+        print.accept(className, bytes);
     }
 
 }

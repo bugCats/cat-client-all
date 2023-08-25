@@ -1,14 +1,9 @@
 package cc.bugcat.catserver.asm;
 
-import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
-import cc.bugcat.catserver.config.CatServerConfiguration;
-import cc.bugcat.catserver.handler.CatMethodAopInterceptor;
 import cc.bugcat.catserver.spi.CatVirtualProprietyPolicy;
 import org.springframework.cglib.proxy.MethodInterceptor;
-import org.springframework.cglib.proxy.MethodProxy;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +15,7 @@ public class CatEnhancerDepend {
     /**
      * object默认方法拦截器
      * */
-    private final MethodInterceptor objectMethodInterceptor;
+    private final MethodInterceptor superObjectInterceptor;
     
     /**
      * getter、setter方法生成规则
@@ -40,7 +35,7 @@ public class CatEnhancerDepend {
     
     
     public CatEnhancerDepend(int serverSize) {
-        this.objectMethodInterceptor = CatToosUtil.defaultMethodInterceptor();
+        this.superObjectInterceptor = CatToosUtil.superObjectInterceptor();
         this.ctrlAsmMap = new HashMap<>(serverSize * 2);
         this.classDescMap = new HashMap<>(serverSize * 4);
         this.proprietyPolicy = CatVirtualProprietyPolicy.loadService();
@@ -52,8 +47,8 @@ public class CatEnhancerDepend {
     }
 
 
-    public MethodInterceptor getObjectMethodInterceptor() {
-        return objectMethodInterceptor;
+    public MethodInterceptor getSuperObjectInterceptor() {
+        return superObjectInterceptor;
     }
     public CatVirtualProprietyPolicy getProprietyPolicy() {
         return proprietyPolicy;

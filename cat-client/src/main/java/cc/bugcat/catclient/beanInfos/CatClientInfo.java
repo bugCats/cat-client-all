@@ -14,6 +14,8 @@ import cc.bugcat.catface.handler.CatApiInfo;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.spi.AbstractResponesWrapper;
 import cc.bugcat.catface.utils.CatToosUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
@@ -40,6 +42,11 @@ public final class CatClientInfo {
      * CatClient客户端interface类
      * */
     private final Class clientClass;
+    
+    /**
+     * 对应的logger对象
+     * */
+    private final Logger logger;
     
     /**
      * CatClient客户端interface类名，默认首字母小写
@@ -118,6 +125,7 @@ public final class CatClientInfo {
         this.clientDepend = apiInfo.getClientDepend();
         this.clientClass = apiInfo.getClientClass();
         this.clientClassName = CatToosUtil.defaultIfBlank(client.value(), CatToosUtil.uncapitalize(clientClass.getSimpleName()));
+        this.logger = LoggerFactory.getLogger(clientClass);
         
         EnvironmentAdapter envProp = clientDepend.getEnvironment();
         CatClientConfiguration clientConfig = clientDepend.getClientConfig();
@@ -245,6 +253,9 @@ public final class CatClientInfo {
     }
     public Class getClientClass() {
         return clientClass;
+    }
+    public Logger getLogger() {
+        return logger;
     }
     public String getClientClassName() {
         return clientClassName;

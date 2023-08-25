@@ -4,6 +4,7 @@ import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.spi.CatClientFactory;
+import cc.bugcat.catclient.spi.CatClientMockProvide;
 import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.utils.CatClientUtil;
@@ -43,6 +44,12 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
     @Autowired
     private CatClientConfiguration clientConfig;
 
+    @Autowired
+    private ConfigurableListableBeanFactory configurableBeanFactory;
+
+    @Autowired(required = false)
+    private CatClientMockProvide mockProvide;
+    
     @Autowired(required = false)
     private List<AbstractResponesWrapper> wrappers;
     
@@ -57,9 +64,7 @@ public class CatClientDependFactoryBean extends AbstractFactoryBean<CatClientDep
 
     @Autowired(required = false)
     private List<RestTemplate> restTemplates;
-    
-    @Autowired
-    private ConfigurableListableBeanFactory configurableBeanFactory;
+ 
     
     
     

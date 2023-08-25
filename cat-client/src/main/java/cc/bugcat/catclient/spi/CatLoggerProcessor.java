@@ -19,15 +19,16 @@ import org.slf4j.LoggerFactory;
 public interface CatLoggerProcessor {
 
 
-    default void printLog(CatClientLogger logger) {
-        if ( CatLogsMod.Off.equals(logger.getLogsMod()) ) {
+    default void printLog(CatClientLogger catLog) {
+        if ( CatLogsMod.Off.equals(catLog.getLogsMod()) ) {
             // 关闭所有http日志
         } else {
-            Logger log = LoggerFactory.getLogger(logger.getClientClass());
-            if( logger.isFail() ){
-                log.error(logger.toJson());
+//            Logger logger = LoggerFactory.getLogger(logger.getClientClass()); // 会存在大量logger对象导致内存溢出？
+            Logger logger = catLog.getLogger();
+            if( catLog.isFail() ){
+                logger.error(catLog.toJson());
             } else {
-                log.info(logger.toJson());
+                logger.info(catLog.toJson());
             }
         }
     }
