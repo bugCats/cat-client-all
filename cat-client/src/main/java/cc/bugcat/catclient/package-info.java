@@ -99,7 +99,7 @@ package cc.bugcat.catclient;
  *
  *  8、使用DefaultResultHandler#resultToBean(..)解析响应字符串
  *
- *  9、SimpleResultHandler#doFinally(..)做最后结果处理
+ *  9、SimpleResultHandler#onFinally(..)做最后结果处理
  *
  *  10、如果发生http异常，可通过MethodProxy#invokeSuper(..)执行回调类方法，返回默认异常值；或者通过DefaultResultHandler#onHttpError(..)统一处理
  *

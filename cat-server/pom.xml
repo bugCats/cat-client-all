@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>cc.bugcat</groupId>
-		<artifactId>cat-client-all</artifactId>
-		<version>2.2.0</version>
+		<artifactId>cat-face</artifactId>
+		<version>2.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>cc.bugcat</groupId>
@@ -35,15 +35,8 @@
 		<dependency>
 			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-common</artifactId>
-			<version>${cat-version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
 			<scope>compile</scope>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -61,7 +54,12 @@
 			<scope>compile</scope>
 		</dependency>
 
-
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>

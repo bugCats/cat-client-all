@@ -5,8 +5,8 @@
 
 	<parent>
 		<groupId>cc.bugcat</groupId>
-		<artifactId>cat-client-all</artifactId>
-		<version>2.2.0</version>
+		<artifactId>cat-face</artifactId>
+		<version>2.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -30,13 +30,14 @@
 		<dependency>
 			<groupId>cc.bugcat</groupId>
 			<artifactId>cat-server</artifactId>
-			<version>${cat-version}</version>
+			<scope>compile</scope>
 		</dependency>
 
 
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
+			<scope>compile</scope>
 		</dependency>
 
 	</dependencies>
