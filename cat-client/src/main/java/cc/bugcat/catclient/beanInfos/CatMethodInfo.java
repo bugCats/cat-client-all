@@ -11,6 +11,7 @@ import cc.bugcat.catface.annotation.Catface;
 import cc.bugcat.catface.handler.EnvironmentAdapter;
 import cc.bugcat.catface.utils.CatToosUtil;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.StandardMethodMetadata;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -26,6 +28,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * interface上的{@link CatMethod}注解描述信息
@@ -35,10 +39,11 @@ import java.util.Map;
  * */
 public class CatMethodInfo {
 
+    
     /**
-     * 方法名称
+     * 方法
      * */
-    private final String methodName;
+    private final Method method;
 
     /**
      * 域名：http://${host}/ctx
@@ -109,9 +114,14 @@ public class CatMethodInfo {
      * */
     private final Integer handlerIndex;
 
-
+    /**
+     * 方法上包含的注解
+     * */
+    private final ConcurrentMap<Class, Annotation> annMap = new ConcurrentHashMap<>();
+    
+    
     private CatMethodInfo(CatMethodInfoBuilder builder) {
-        this.methodName = builder.methodName;
+        this.method = builder.method;
         this.host = builder.host;
         this.path = builder.path;
 
@@ -208,7 +218,7 @@ public class CatMethodInfo {
         return handlerIndex;
     }
     public String getMethodName() {
-        return methodName;
+        return method.getName();
     }
     public String getHost() {
         return host;
@@ -234,7 +244,14 @@ public class CatMethodInfo {
     public boolean isPostString() {
         return postString;
     }
-
+    public <A> A findAnnotation(Class<A> annotationType){
+        Annotation ann = annMap.get(annotationType);
+        if( ann == null ){
+            ann = AnnotationUtils.findAnnotation(method, (Class) annotationType);
+            annMap.putIfAbsent(annotationType, ann);
+        }
+        return (A) ann;
+    }
 
 
 
@@ -259,11 +276,6 @@ public class CatMethodInfo {
             this.clientInfo = clientInfo;
             this.envProp = envProp;
         }
-
-        /**
-         * 方法名称
-         * */
-        private String methodName;
 
         /**
          * 域名  eq：http://xxxx，此时${host}已经被变量填充
@@ -380,15 +392,12 @@ public class CatMethodInfo {
 
         private void postProcess(AnnotationAttributes attrs) {
 
-            // userSave
-            this.methodName = method.getName();
-
             // http://www.bugcat.cc
             this.host = clientInfo.getHost();
 
             // /user/save
             String url = attrs.getString("value");
-            this.path = clientInfo.getBasePath() + envProp.getProperty(url, String.class);
+            this.path = clientInfo.getBasePath() + envProp.getProperty(url);
 
             // post | get
             this.requestType = attrs.getEnum("method");

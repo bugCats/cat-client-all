@@ -8,6 +8,7 @@ import cc.bugcat.catclient.spi.CatResultProcessor;
 import cc.bugcat.catclient.spi.CatSendInterceptor;
 import cc.bugcat.catclient.spi.CatSendProcessor;
 import cc.bugcat.catface.handler.CatContextHolder;
+import com.alibaba.fastjson.JSONObject;
 
 import java.util.List;
 
@@ -31,34 +32,20 @@ public class CatClientContextHolder {
     }
     
 
+    
+    
+    
     /**
-     * http原始响应内容，不一定有值
+     * http返回的原始响应。
+     * 当发生Http异常时，没有值！
      * */
     private String responseBody;
-
     /**
      * 最终方法返回的对象
      * 如果发生异常，可以在异常回调模式中，返回默认结果；
      * 或者在{@link CatResultProcessor#onHttpError(CatClientContextHolder)}方法中赋默认值；
      * */
-    private Object result;
-
-    
-    public String getResponseBody() {
-        return responseBody;
-    }
-    public Throwable getException() {
-        return CatContextHolder.currentException();
-    }
-    
-    public Object getResult() {
-        return result;
-    }
-    public void setResult(Object result) {
-        this.result = result;
-    }
-
-    
+    private Object responseObject;
     
     
     private final CatSendProcessor sendHandler;
@@ -66,6 +53,7 @@ public class CatClientContextHolder {
     private final CatMethodInfo methodInfo;
     private final CatClientFactoryAdapter factoryAdapter;
     private final CatSendInterceptor interceptor;
+    private final JSONObject attribute = new JSONObject();
     
     protected CatClientContextHolder(CatClientContextHolderBuilder builder) {
         this.sendHandler = builder.sendHandler;
@@ -104,7 +92,7 @@ public class CatClientContextHolder {
      * */
     protected String executeRequest() throws CatHttpException {
         final CatClientContextHolder contextHolder = this;
-        this.responseBody = interceptor.executeHttpSend(sendHandler, () -> {
+        responseBody = interceptor.executeHttpSend(sendHandler, () -> {
             CatSendProcessor sendHandler = contextHolder.getSendHandler();
             return sendHandler.postHttpSend();
         });
@@ -113,11 +101,10 @@ public class CatClientContextHolder {
 
     /**
      * 在成功或之后执行；
-     * @param result 响应结果；如果发生异常，为回调熔断后对象；
      * @param throwable 调用过程中http异常；
      * */
-    protected Object postComplete(Object result, Throwable throwable) throws Throwable {
-        return interceptor.postComplete(result, throwable);
+    protected Object postComplete(Throwable throwable) throws Throwable {
+        return interceptor.postComplete(responseObject, throwable);
     }
 
 
@@ -130,6 +117,24 @@ public class CatClientContextHolder {
         catLogs.forEach(catLog -> factoryAdapter.getLoggerProcessor().printLog(catLog));
     }
 
+    /**
+     * 获取最后一个异常信息
+     * */
+    public Throwable getException() {
+        return CatContextHolder.currentException();
+    }
+
+
+    public Object getResponseObject() {
+        return responseObject;
+    }
+    public void setResponseObject(Object responseObject) {
+        this.responseObject = responseObject;
+    }
+
+    public String getResponseBody() {
+        return responseBody;
+    }
     public CatSendProcessor getSendHandler() {
         return sendHandler;
     }
@@ -142,7 +147,9 @@ public class CatClientContextHolder {
     public CatClientFactoryAdapter getFactoryAdapter() {
         return factoryAdapter;
     }
-
+    public JSONObject getAttribute() {
+        return attribute;
+    }
 
 
     /****************************************************************************************************************/
