@@ -50,10 +50,15 @@ public interface CatSendInterceptor {
         return result;
     }
 
+    
+    
 
+    @FunctionalInterface
     static interface Intercepting {
         void executeInternal() throws Exception;
     }
+    
+    @FunctionalInterface
     static interface HttpIntercepting {
         String executeInternal() throws CatHttpException;
     }

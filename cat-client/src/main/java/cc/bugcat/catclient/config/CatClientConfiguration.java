@@ -62,7 +62,7 @@ public class CatClientConfiguration implements InitializingBean {
     protected CatHttp globalCatHttp;
     
     @Autowired(required = false)
-    protected CatPayloadResolver globalJsonResolver;
+    protected CatPayloadResolver globalPayloadResolver;
     
     @Autowired(required = false)
     protected CatLoggerProcessor globalLoggerProcessor;
@@ -76,8 +76,8 @@ public class CatClientConfiguration implements InitializingBean {
         if( globalCatHttp == null ){
             globalCatHttp = new CatRestHttp();
         }
-        if( globalJsonResolver == null ){
-            globalJsonResolver = new CatJacksonResolver(objectMapper);
+        if( globalPayloadResolver == null ){
+            globalPayloadResolver = new CatJacksonResolver(objectMapper);
         }
         if( globalLoggerProcessor == null ){
             globalLoggerProcessor = new CatLoggerProcessor(){};
@@ -150,7 +150,7 @@ public class CatClientConfiguration implements InitializingBean {
      * 可以在{@link CatClientFactory#getPayloadResolver()}中修改
      * */
     public CatPayloadResolver getPayloadResolver(){
-        return globalJsonResolver;
+        return globalPayloadResolver;
     }
 
 

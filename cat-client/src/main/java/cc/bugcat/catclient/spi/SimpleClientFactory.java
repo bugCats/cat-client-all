@@ -15,7 +15,6 @@ public class SimpleClientFactory implements CatClientFactory {
 
 
     private CatClientConfiguration configuration;
-    private CatResultProcessor simpleResultHandler;
 
     /**
      * 全局配置对象
@@ -23,7 +22,6 @@ public class SimpleClientFactory implements CatClientFactory {
     @Override
     public void setClientConfiguration(CatClientConfiguration clientConfiguration) {
         this.configuration = clientConfiguration;
-        this.simpleResultHandler = new SimpleResultHandler();
     }
 
     /**
@@ -56,7 +54,7 @@ public class SimpleClientFactory implements CatClientFactory {
      * */
     @Override
     public CatResultProcessor getResultHandler() {
-        return simpleResultHandler;
+        return new SimpleResultHandler();
     }
 
     /**

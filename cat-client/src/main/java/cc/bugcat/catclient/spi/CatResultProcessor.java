@@ -28,14 +28,8 @@ public interface CatResultProcessor {
 
     /**
      * 如果发生了40x、50x等异常处理方式，默认继续抛出；
-     *
-     * 可以给CatClientContextHolder.result赋默认值
-     *
-     * 方法如果结果返回true，会继续执行 resultToBean、doFinally 方法；
-     * 返回false，则直接执行doFinally
-     *
-     * @return true => 执行 resultToBean、doFinally 方法；
-     *         false => 直接执行 doFinally 方法；
+     * 可以给CatClientContextHolder.responseObject赋默认值。
+     * @return true，执行{@link CatResultProcessor#resultToBean(String, CatClientContextHolder)}方法；false 跳过；
      * */
     boolean onHttpError(CatClientContextHolder context) throws Throwable;
 
@@ -44,9 +38,9 @@ public interface CatResultProcessor {
      * 在resultToBean之后执行
      * 获取到对象之后，再进行拆包装器处理{@link AbstractResponesWrapper}
      *
-     * @param resp 经过resultToBean方法转换后的参数
+     * @param result 经过resultToBean方法转换后的参数
      * */
-    Object onFinally(Object resp, CatClientContextHolder context) throws Exception;
+    Object onFinally(Object result, CatClientContextHolder context) throws Exception;
 
 
 
