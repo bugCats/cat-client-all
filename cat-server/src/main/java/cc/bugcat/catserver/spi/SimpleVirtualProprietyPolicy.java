@@ -5,15 +5,15 @@ import cc.bugcat.catface.utils.CatToosUtil;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
+public class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
 
     // 首字母小写，第二字母大写
-    private final static Pattern pattern = Pattern.compile("^[a-z][A-Z]]");
+    protected final static Pattern pattern = Pattern.compile("^[a-z][A-Z]]");
     
     
-    private final NomalPolicy nomal = new NomalPolicy();
-    private final BooleanPolicy1 bool = new BooleanPolicy1();
-    private final BooleanPolicy2 BOOL = new BooleanPolicy2();
+    protected final NomalPolicy nomal = new NomalPolicy();
+    protected final BooleanPolicy1 bool = new BooleanPolicy1();
+    protected final BooleanPolicy2 BOOL = new BooleanPolicy2();
     
     
     /**
@@ -39,11 +39,11 @@ class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
         return policy.setterPrefix() + policy.fieldAliasName(fieldName);
     }
 
-    
-    
-    
-    
-    private NomalPolicy getNomalPolicy(Class type){
+
+
+
+
+    protected NomalPolicy getNomalPolicy(Class type){
         NomalPolicy policy = null;
         if( "boolean".equals(type.getSimpleName().toLowerCase()) ){
             if( type.isPrimitive() ){
@@ -57,8 +57,8 @@ class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
         return policy;
     }
 
-    
-    private static class NomalPolicy {
+
+    protected static class NomalPolicy {
         protected String getterPrefix(){
             return "get";
         }
@@ -79,7 +79,7 @@ class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
     /**
      * 小boolean
      * */
-    private static class BooleanPolicy1 extends NomalPolicy {
+    protected static class BooleanPolicy1 extends NomalPolicy {
         @Override
         protected String getterPrefix() {
             return "is";
@@ -97,7 +97,7 @@ class SimpleVirtualProprietyPolicy implements CatVirtualProprietyPolicy {
     /**
      * 大Boolean
      * */
-    private static class BooleanPolicy2 extends NomalPolicy {
+    protected static class BooleanPolicy2 extends NomalPolicy {
         @Override
         protected String fieldAliasName(String fieldName) {
             if( fieldName.startsWith("is") ){
