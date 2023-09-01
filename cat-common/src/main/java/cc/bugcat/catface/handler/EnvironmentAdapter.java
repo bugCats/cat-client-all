@@ -1,8 +1,6 @@
 package cc.bugcat.catface.handler;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -19,7 +17,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -27,14 +24,14 @@ public abstract class EnvironmentAdapter {
 
 
     /**
-     * 适配Spring环境变量为Properties
+     * 适配Spring环境变量
      * */
     public static EnvironmentAdapter environmentProperty(ConfigurableListableBeanFactory configurableBeanFactory){
         return new ContainerEnvironment(configurableBeanFactory);
     }
     
     /**
-     * 适配自定义环境变量为Properties
+     * 适配自定义环境变量
      * */
     public static EnvironmentAdapter environmentProperty(Properties property){
         return new StandardsEnvironment(property);
@@ -42,13 +39,21 @@ public abstract class EnvironmentAdapter {
 
 
     /**
-     * 创建新的容器
+     * 基于adapter创建新的容器
      * */
     public static EnvironmentAdapter newAdapter(EnvironmentAdapter adapter, Map<?, Object> container){
         return adapter.newAdapter(container);
     }
 
 
+    /**
+     * 从容器中读取参数。
+     * @param express ${user.id} or springEL
+     * */
+    public String getProperty(String express) {
+        return getProperty(express, String.class);
+    }
+    
     /**
      * 从容器中读取参数。
      * @param express ${user.id} or springEL
@@ -64,11 +69,6 @@ public abstract class EnvironmentAdapter {
      * */
     public abstract <T> T getProperty(String express, T defaultValue);
 
-
-    /**
-     * 合并自定义容器
-     * */
-    public abstract Object evaluateValue(String express, Map<?, Object> container);
 
     
     /**
@@ -103,14 +103,6 @@ public abstract class EnvironmentAdapter {
             String expressValue = configurableBeanFactory.resolveEmbeddedValue(express);
             Object value = evaluateValue(expressValue, evaluationContext);
             return value == null ? defaultValue : (T) value;
-        }
-
-        @Override
-        public Object evaluateValue(String express, Map<?, Object> container) {
-            String expressValue = configurableBeanFactory.resolveEmbeddedValue(express);
-            EvaluationContext context = getEvaluationContext(container);
-            Object value = evaluateValue(expressValue, context);
-            return value;
         }
 
         @Override
@@ -175,14 +167,6 @@ public abstract class EnvironmentAdapter {
         }
 
         @Override
-        public Object evaluateValue(String express, Map<?, Object> container) {
-            String expressValue = resolver.resolvePlaceholders(express);
-            EvaluationContext context = getEvaluationContext(container);
-            Object value = evaluateValue(expressValue, context);
-            return value;
-        }
-
-        @Override
         protected EnvironmentAdapter newAdapter(Map<?, Object> container) {
             EvaluationContext context = getEvaluationContext(container);
             Function<String, Object> randerExpress = express -> {
@@ -225,11 +209,6 @@ public abstract class EnvironmentAdapter {
         public <T> T getProperty(String express, T defaultValue) {
             Object value = randerExpress.apply(express);
             return value == null ? defaultValue : (T) value;
-        }
-
-        @Override
-        public Object evaluateValue(String express, Map<?, Object> container) {
-            throw new UnsupportedOperationException();
         }
 
         @Override

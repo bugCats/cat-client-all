@@ -151,7 +151,7 @@ public final class CatClientInfo {
             String value = CatToosUtil.defaultIfBlank(tag.value(), "");
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
-            tagsMap.put(key, envProp.getProperty(value, String.class));
+            tagsMap.put(key, envProp.getProperty(value));
         }
         this.tagsMap = Collections.unmodifiableMap(tagsMap);
 

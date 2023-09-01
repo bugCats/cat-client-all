@@ -86,7 +86,7 @@ public class CatServerInfo {
             //如果 key属性为空，默认赋值value
             String key = CatToosUtil.isBlank(tag.key()) ? value : tag.key();
             
-            String tagsNote = envProp.getProperty(value, String.class);
+            String tagsNote = envProp.getProperty(value);
             tagsMap.put(key, tagsNote);
         }
         this.tagsMap = Collections.unmodifiableMap(tagsMap);
