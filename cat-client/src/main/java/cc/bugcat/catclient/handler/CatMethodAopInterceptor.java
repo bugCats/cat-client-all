@@ -67,18 +67,16 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             //在方法上，传入了 SendHandler 或其子类
             sendHandler = (CatSendProcessor) args[handlerIndex];
         } else {
-            //否则通过工厂创建一个发送类
+            //否则通过工厂创建一个发送类。每次Http调用，都会执行该部分代码，因此自动创建CatSendProcessor必须是多例
             sendHandler = factoryAdapter.newSendHandler();
         }
-
-
 
         //原始响应字符串
         String respStr = null;
 
         //响应对象
         Object respObj = null;
-
+        
         // 响应处理类
         CatResultProcessor resultHandler = factoryAdapter.getResultHandler();
 
@@ -109,13 +107,14 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
 
             //执行字符串转对象，此时对象，为方法的返回值类型
             respObj = resultHandler.resultToBean(respStr, context);
-            
+
         } catch ( Throwable throwable ) {
 
-            Throwable ex = CatToosUtil.getCause(throwable);
+            // 获取原始异常
+            Throwable exception = CatToosUtil.getCause(throwable);
             
-            // http异常，或者反序列化异常了
-            CatContextHolder.setException(ex);
+            // http异常，或者反序列化异常了，存储到ThreadLocal中
+            CatContextHolder.setException(exception);
             
             if ( clientInfo.isFallbackMod() ) { //开启了异常回调模式，执行自定义http异常处理
                 if( method.isDefault() ){ // interface默认方法
@@ -136,40 +135,37 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
                 }
             }
 
-            //没有定义回调模式、或者回调模式继续抛出异常
+            //没有定义回调模式、或者回调模式继续抛出异常，执行兜底处理
             if ( respObj == null ) {
 
-                //执行默认的http异常处理类
-                boolean donext = resultHandler.onHttpError(context);
-                Object result = context.getResult();
+                //执行默认的http异常处理类，默认情况下，继续抛出异常
+                boolean needResultToBean = resultHandler.onHttpError(context);
+                Object result = context.getResponseObject();
 
-                if ( donext ) {
-                    //返回true，会继续执行resultToBean、doFinally方法；
-
+                if ( needResultToBean ) { // 是否需要执行resultToBean
                     if ( result instanceof String ) {
                         respStr = (String) result;
                         respObj = resultHandler.resultToBean(respStr, context);
                     } else {
                         respObj = result;
                     }
-                    
-                } else {
-                    // 返回false，则直接执行doFinally
-                    
+                } else { // 返回false，则跳过
                     respObj = result;
                 }
             }
 
         } finally {
 
+
+            context.setResponseObject(respObj);
+            
             try {
 
                 // 最后结束
-                respObj = context.postComplete(respObj, CatContextHolder.currentException());
-                
+                respObj = context.postComplete(CatContextHolder.currentException());
+
                 // 如果开启了包装器模式，拆包装
                 respObj = resultHandler.onFinally(respObj, context);
-                
 
             } catch ( Throwable ex ) {
 
@@ -224,11 +220,12 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
         /**
          * 执行interface默认方法
          * */
-        private static Constructor<MethodHandles.Lookup> constructor;
+        private static MethodHandles.Lookup lookup;
         static {
             try {
-                constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
+                Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
                 constructor.setAccessible(true);
+                lookup = constructor.newInstance(Object.class, -1);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
             }
@@ -271,10 +268,7 @@ public final class CatMethodAopInterceptor implements MethodInterceptor {
             if ( method.isDefault() ) {
                 try {
                     Class<?> declaringClass = method.getDeclaringClass();
-                    this.methodHandle = constructor.newInstance(declaringClass,
-                                    MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED |
-                                    MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC)
-                            .unreflectSpecial(method, declaringClass);
+                    this.methodHandle = lookup.in(declaringClass).unreflectSpecial(method, declaringClass);
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
                 }
