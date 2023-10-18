@@ -15,9 +15,11 @@ import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -39,10 +41,10 @@ import java.util.function.Function;
  * */
 public class CatToosUtil {
 
-    
+
     public final static String GROUP_ID = "cc.bugcat";
 
-    
+
     /**
      * Object.class中的方法
      * */
@@ -52,7 +54,13 @@ public class CatToosUtil {
      * 兼容客户端扩展组件
      * */
     private static final CatClientBridge clientBridge;
-    
+
+    /**
+     * Throwable 错误描述字段
+     * */
+    private static final Field messageField;
+
+
     static {
         Set<String> methodSet = new HashSet<>();
         for ( Method method : Object.class.getDeclaredMethods() ) {
@@ -67,22 +75,25 @@ public class CatToosUtil {
         } else {
             clientBridge = new CatClientBridge() {};
         }
+
+        messageField = ReflectionUtils.findField(Throwable.class, "detailMessage");
+        ReflectionUtils.makeAccessible(messageField);
     }
 
 
-    
+
     /**
      * 得到原始异常
      * */
     public static Throwable getCause(final Throwable throwable){
         Throwable last = throwable;
-        for( Throwable error = null; (error = getTargetException(last)) != null; ){
-            last = error;
+        for( Throwable temp = null; (temp = getTargetException(last)) != null; ){
+            last = temp;
         }
-        Throwable error = new Throwable(throwable.getMessage());
-        error.setStackTrace(last.getStackTrace());
-        return error;
+        ReflectionUtils.setField(messageField, last, throwable.getMessage());
+        return last;
     }
+
     private static Throwable getTargetException(Throwable throwable){
         if( throwable == null ){
             return null;
@@ -93,7 +104,7 @@ public class CatToosUtil {
             return throwable.getCause();
         }
     }
-    
+
     /**
      * 过滤堆栈
      * */
@@ -128,9 +139,9 @@ public class CatToosUtil {
         return scan;
     }
 
-    
 
-    
+
+
     public static boolean isBlank(String str) {
         int strLen = 0;
         if (str == null || (strLen = str.length()) == 0) {
@@ -210,7 +221,7 @@ public class CatToosUtil {
         }
         return method.getName() + "([" + sbr + "])";
     }
-    
+
     /**
      * 是否为object内置方法
      */
@@ -221,14 +232,14 @@ public class CatToosUtil {
         return objectDefaultMethod.contains(sign);
     }
 
-    
+
     /**
      * 执行父类方法
      * */
     public static MethodInterceptor superObjectInterceptor(){
         return new SuperObjectInterceptor();
     }
-    
+
     /**
      * 执行父类方法，默认的拦截器；
      * */
@@ -307,7 +318,7 @@ public class CatToosUtil {
         return path;
     }
 
-    
+
     public static CatNote[] getCatNotes(CatNotes.Group group, CatNotes.Scope scope){
         CatNotes[] notes = group.value();
         List<CatNote[]> noteList = new ArrayList<>(notes.length);
@@ -364,7 +375,7 @@ public class CatToosUtil {
         });
         return valueMap;
     }
-    
-    
+
+
 
 }
