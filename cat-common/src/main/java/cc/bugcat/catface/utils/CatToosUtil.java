@@ -18,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -73,14 +74,24 @@ public class CatToosUtil {
     /**
      * 得到原始异常
      * */
-    public static Throwable getCause(Throwable throwable){
-        Throwable error = throwable;
-        while ( error.getCause() != null ) {
-            error = error.getCause();
+    public static Throwable getCause(final Throwable throwable){
+        Throwable last = throwable;
+        for( Throwable error = null; (error = getTargetException(last)) != null; ){
+            last = error;
         }
-        Throwable newThrowable = new Throwable(throwable.getMessage());
-        newThrowable.setStackTrace(error.getStackTrace());
-        return newThrowable;
+        Throwable error = new Throwable(throwable.getMessage());
+        error.setStackTrace(last.getStackTrace());
+        return error;
+    }
+    private static Throwable getTargetException(Throwable throwable){
+        if( throwable == null ){
+            return null;
+        }
+        if( throwable instanceof InvocationTargetException ){
+            return ((InvocationTargetException) throwable).getTargetException();
+        } else {
+            return throwable.getCause();
+        }
     }
     
     /**
