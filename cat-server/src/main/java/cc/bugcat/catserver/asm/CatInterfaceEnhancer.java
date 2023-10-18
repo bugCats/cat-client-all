@@ -47,7 +47,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
      * 输出路径，优先取环境变量‘catserver.debugLocation’，其次是‘cglib.debugLocation’；
      * */
     public final static String DEBUG_LOCATION_PROPERTY = "catserver.debugLocation";
-    
+
     /**
      * 是否存在Valid验证框架
      * */
@@ -70,8 +70,8 @@ public final class CatInterfaceEnhancer implements Opcodes {
      * 为interface添加@ResponseBody注解
      * */
     public final static String RESPONSE_BODY = Type.getDescriptor(ResponseBody.class);
-    
-    
+
+
     /**
      * 打印生成的class类；
      * */
@@ -98,7 +98,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
             };
         }
     }
-    
+
 
 
     /**
@@ -141,7 +141,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
 
         // interfaceClass的直接父类
         AsmInterfaceDescriptor asmDescriptor = null;
-        
+
         //从最上级开始解析
         while ( interfaceParents.empty() == false ) {
             Class parentInterface = interfaceParents.pop();
@@ -155,7 +155,7 @@ public final class CatInterfaceEnhancer implements Opcodes {
                 asmDescriptor = onlyReader.getClassDescriptor();
                 enhancerDepend.putClassDescriptor(parentInterface, asmDescriptor);
             }
-            
+
             // 子类会覆盖父类同名方法
             methodDescriptorMap.putAll(asmDescriptor.getMethodDescriptorMap());
         }
@@ -167,11 +167,11 @@ public final class CatInterfaceEnhancer implements Opcodes {
 
         ClassWriter enhancerWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         EnhancerInterfaceClassVisitor visitor = new EnhancerInterfaceClassVisitor(enhancerWriter);
-        visitor.visit(asmDescriptor.getVersion(), 
-                classDescriptor.getAccess(), 
-                enhancerInterfaceName.replace(".", "/"), 
-                null, 
-                classDescriptor.getDescriptor(), 
+        visitor.visit(asmDescriptor.getVersion(),
+                classDescriptor.getAccess(),
+                enhancerInterfaceName.replace(".", "/"),
+                null,
+                classDescriptor.getDescriptor(),
                 new String[0]);
 
         // 将原interface类上的注解转移到增强类上
@@ -229,13 +229,13 @@ public final class CatInterfaceEnhancer implements Opcodes {
                 if ( method.getParameterCount() > 0 ) {
                     // 原方法上存在有效入参，添加 REQUEST_BODY、VALID 注解
                     methodVisitor.visitParameterAnnotation(0, REQUEST_BODY, true);
-                    
+
                     if( HAS_VAILD ){ //如果存在验证框架，为入参添加@Valid注解
                         methodVisitor.visitParameterAnnotation(0, VALID, true);
                     }
 
                     //创建虚拟入参
-                    CatVirtualParameterEnhancer.generator(method, enhancerDepend, resolverStrategy); 
+                    CatVirtualParameterEnhancer.generator(method, enhancerDepend, resolverStrategy);
                 }
             } else {
                 // 将原方法入参上的注解，转移到增强方法、或者虚拟入参对象上
@@ -335,17 +335,17 @@ public final class CatInterfaceEnhancer implements Opcodes {
     /**
      * 增强后简称
      * */
-    public static String bridgeClassSimpleNam(Class clazz){
+    public static String bridgeClassSimpleName(Class clazz){
         return clazz.getSimpleName() + CatServerUtil.BRIDGE_NAME;
     }
-    
+
     /**
      * 生成增强后全称
      * */
     public static String enhancerInterfaceName(Class inter){
         return inter.getName() + CatServerUtil.BRIDGE_NAME;
     }
-    
+
 
     /**
      * class 转资源路径
