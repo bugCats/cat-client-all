@@ -16,6 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.UUID;
+import java.util.function.Supplier;
+
 
 /**
  * 全局默认值
@@ -143,7 +146,13 @@ public class CatClientConfiguration implements InitializingBean {
     public CatHttp getCatHttp(){
         return globalCatHttp;
     }
-    
+
+    /**
+     * 日志追踪id。可以结合ThreadLocal使用
+     * */
+    public Supplier<String> tracerProvide(){
+        return () -> UUID.randomUUID().toString();
+    }
     
     /**
      * 默认序列化对象，建议为单例。
@@ -162,4 +171,6 @@ public class CatClientConfiguration implements InitializingBean {
         return globalLoggerProcessor;
     }
 
+
+    
 }

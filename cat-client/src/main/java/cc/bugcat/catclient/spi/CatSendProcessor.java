@@ -3,6 +3,7 @@ package cc.bugcat.catclient.spi;
 import cc.bugcat.catclient.beanInfos.CatClientInfo;
 import cc.bugcat.catclient.beanInfos.CatMethodInfo;
 import cc.bugcat.catclient.beanInfos.CatParameter;
+import cc.bugcat.catclient.config.CatClientConfiguration;
 import cc.bugcat.catclient.config.CatHttpRetryConfigurer;
 import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catclient.handler.CatClientDepend;
@@ -47,9 +48,9 @@ public class CatSendProcessor {
     private CatHttpPoint httpPoint;
 
     /**
-     * 日志追踪id
+     * 日志追踪id。可以结合ThreadLocal使用
      * */
-    protected String tracerId = UUID.randomUUID().toString();
+    protected String tracerId = null;
     /**
      * 其他自定义参数、标记
      * */
@@ -60,12 +61,15 @@ public class CatSendProcessor {
      * 1、初始化http相关配置，每次调用interface的方法，仅执行一次
      * */
     public void doConfigurationResolver(CatClientContextHolder context, CatParameter parameter){
+        CatClientInfo clientInfo = context.getClientInfo();
         CatMethodInfo methodInfo = context.getMethodInfo();
-        CatClientDepend clientDepend = context.getClientInfo().getClientDepend();
+        CatClientDepend clientDepend = clientInfo.getClientDepend();
+        CatClientConfiguration clientConfig = clientDepend.getClientConfig();
         EnvironmentAdapter envAdapter = clientDepend.getEnvironment();
+        CatHttpRetryConfigurer retry = clientDepend.getRetryConfigurer();
 
         this.context = context;
-        this.retryCount = clientDepend.getRetryConfigurer().isEnable() ? clientDepend.getRetryConfigurer().getRetries() : 0;
+        this.retryCount = retry.isEnable() ? retry.getRetries() : 0;
 
         httpPoint = newCatHttpPoint();
         httpPoint.setPostString(methodInfo.isPostString()); //是否使用post发送字符流
@@ -78,6 +82,7 @@ public class CatSendProcessor {
         httpPoint.setHeaderMap(parameter.getHeaderMap());
         httpPoint.setParameter(parameter);
 
+        this.tracerId = CatToosUtil.defaultIfBlank(this.getTracerId(), clientConfig.tracerProvide());
         this.notes = new JSONObject();
         EnvironmentAdapter newAdapter = EnvironmentAdapter.newAdapter(envAdapter, parameter.getArgsMap());
         methodInfo.getNoteMap().forEach((key, value) -> {

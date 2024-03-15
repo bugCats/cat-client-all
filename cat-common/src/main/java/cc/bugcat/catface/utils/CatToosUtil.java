@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -159,6 +160,9 @@ public class CatToosUtil {
     }
     public static String defaultIfBlank(String str, String def) {
         return isNotBlank(str) ? str : def;
+    }
+    public static String defaultIfBlank(String str, Supplier<String> supplier) {
+        return isNotBlank(str) ? str : supplier.get();
     }
     public static String toStringIfBlank(Object str, String def) {
         return str != null ? str.toString() : def;
