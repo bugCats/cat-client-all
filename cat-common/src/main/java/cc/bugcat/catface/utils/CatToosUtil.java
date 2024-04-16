@@ -322,9 +322,23 @@ public class CatToosUtil {
         return path;
     }
 
-
-    public static CatNote[] getCatNotes(CatNotes.Group group, CatNotes.Scope scope){
-        CatNotes[] notes = group.value();
+    
+    
+    public static CatNote[] getCatNotes(Method method, CatNotes.Scope scope){
+        CatNotes[] notes = null;
+        CatNotes.Group noteGroup = AnnotationUtils.findAnnotation(method, CatNotes.Group.class);
+        if( noteGroup != null  ){
+            notes = noteGroup.value();
+        } else {
+            CatNotes catNote = AnnotationUtils.findAnnotation(method, CatNotes.class);
+            if( catNote != null ){
+                notes = new CatNotes[]{catNote};
+            }
+        }
+        if( notes == null ){
+            return null;
+        }
+        
         List<CatNote[]> noteList = new ArrayList<>(notes.length);
         int length = 0;
         for ( CatNotes note : notes ) {

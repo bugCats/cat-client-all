@@ -379,9 +379,8 @@ public class CatMethodInfo {
             /**
              * 当存在CatNotes时，会直接覆盖{@link CatMethod#notes()}
              * */
-            CatNotes.Group noteGroup = method.getAnnotation(CatNotes.Group.class);
-            if( noteGroup != null ){
-                CatNote[] catNotes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
+            CatNote[] catNotes = CatToosUtil.getCatNotes(method, CatNotes.Scope.Cilent);
+            if( catNotes != null ){
                 methodAttr.put("notes", catNotes);
             }
             

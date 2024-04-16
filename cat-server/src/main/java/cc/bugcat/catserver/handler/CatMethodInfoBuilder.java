@@ -16,6 +16,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
@@ -163,15 +164,12 @@ public final class CatMethodInfoBuilder {
             paramIndex.put(pname,Integer.valueOf(idx));
         }
 
-        
-        CatNote[] notes = null;
-        CatNotes.Group noteGroup = AnnotationUtils.findAnnotation(method, CatNotes.Group.class);
-        if( noteGroup != null ){
-            notes = CatToosUtil.getCatNotes(noteGroup, CatNotes.Scope.Cilent);
-        } else {
+        CatNote[] notes = CatToosUtil.getCatNotes(method, CatNotes.Scope.Server);
+        if( notes == null ){
             CatClientBridge clientBridge = CatToosUtil.getClientBridge();
             notes = clientBridge.findCatNotes(method);
         }
+        
         // 其他自定义参数、标记
         Map<String, String> noteMap = new LinkedHashMap<>();
         if( notes != null ){
