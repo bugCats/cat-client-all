@@ -1,6 +1,6 @@
 package cc.bugcat.example.catclient.token;
 
-import cc.bugcat.catclient.beanInfos.CatClientInstance;
+import cc.bugcat.catclient.beanInfos.CatClients;
 import cc.bugcat.catclient.handler.CatClientDepend;
 import cc.bugcat.catclient.utils.CatClientBuilders;
 import cc.bugcat.example.dto.Demo;
@@ -43,12 +43,7 @@ public class TokenRemoteTest {
                 .build();
         remote = CatClientBuilders.builder(TokenRemote.class)
                 .clientDepend(clientDepend)
-                .catClient(new CatClientInstance(){
-                    @Override
-                    public String host() { // 在运行时，动态修改
-                        return "http://127.0.0.1:8012";
-                    }
-                })
+                .catClient(CatClients.builder().host("http://127.0.0.1:8012").build())
                 .build();
     }
     
