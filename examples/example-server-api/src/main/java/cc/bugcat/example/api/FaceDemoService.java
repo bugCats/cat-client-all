@@ -1,5 +1,6 @@
 package cc.bugcat.example.api;
 
+import cc.bugcat.catclient.annotation.CatMethod;
 import cc.bugcat.catclient.handler.CatClientContextHolder;
 import cc.bugcat.catface.annotation.CatNote;
 import cc.bugcat.catface.annotation.CatNotes;
@@ -15,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -54,6 +56,7 @@ public interface FaceDemoService{
 
     UserInfo param7(UserPageVi vi1, UserPageVi vi2, Integer status, Map<String, Object> map);
 
+    @CatMethod(value = "/domethod8", method = RequestMethod.POST)
     UserInfo param8(@ApiParam("参数map") Map<String, Object> map,
                     @ApiParam("参数vi1") @Valid UserPageVi vi1,
                     @ApiParam("参数vi2") UserPageVi vi2,

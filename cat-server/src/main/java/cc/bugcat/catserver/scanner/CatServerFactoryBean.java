@@ -96,8 +96,7 @@ public class CatServerFactoryBean implements InitializingBean {
                 if( serverInfo.isCatface() ){ //使用精简模式
                     attributes = new HashMap<>();
                     String serviceName = method.getDeclaringClass().getSimpleName().replace(CatServerUtil.BRIDGE_NAME, "");
-                    attributes.put("value", new String[]{ CatToosUtil.getDefaultRequestUrl(catface, serviceName, method)});
-                    attributes.put("method", new RequestMethod[]{RequestMethod.POST});
+                    CatToosUtil.parseDefaultRequest(catface, serviceName, method, attributes);
                 }
                 if( attributes == null ){
                     continue;

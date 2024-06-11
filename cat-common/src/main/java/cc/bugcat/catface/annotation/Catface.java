@@ -73,7 +73,7 @@ public @interface Catface {
     /**
      * interface类别名，默认是首字母小写。
      *
-     * 最终url => /namespace/value/method.name
+     * 最终url => /命名空间/interface类别名/方法名
      * */
     String value() default "";
 

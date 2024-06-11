@@ -1115,7 +1115,7 @@ CatServer组件中内置了`CatControllerAssist`异常处理类，可以通过`c
                     @ApiParam("参数vi3") @Valid ResponseEntity<PageInfo<UserPageVi>> vi3);
 	
 	/**
-     * 最后服务端cglib-controller
+	 * 最后服务端cglib-controller
 	 * url：/feign-interface别名/param8
 	 * class Virtual {
 	 * 	 private Map<String, Object> arg0;
@@ -1142,14 +1142,14 @@ catface中主要使用<b>`方案2`</b>转换参数；
 
 标记feign-interface为catface模式；表示将feign-interface中的所有方法都注册成客户端API，方法上、方法入参上可以没有任何注解！
 
-在客户端，方法上的入参列表，会先转换成Map，Map键为`arg0`~`argX`按顺序自动生成，值为入参对象；然后再转换成Json字符串，POST + Json方式发起Http请求。请求的url为：配置的命名空间 + feign-interface别名 + 方法名，因此，这需要feign-interface中的方法名不能相同，即不能存在重载方法！
+在客户端，方法上的入参列表，会先转换成Map，Map键为`arg0`~`argX`按顺序自动生成，值为入参对象；然后再转换成Json字符串，POST + Json方式发起Http请求。请求的url为：配置的命名空间 + feign-interface别名 + 方法名。因此，如果feign-interface中存在相同名称的方法，需要使用@CatMethod注解为方法取别名！
 
 在服务端，会为每个方法自动生成一个虚拟入参对象，方法入参会转换成虚拟入参对象的属性；这样Http入参Json字符串，可以直接转换成方法入参对应的数据类型；
 
-+ <u>value</u>: feign-interface别名；默认是首字母小写。
++ <u>value</u>: feign-interface别名；默认是类名首字母小写。
 + <u>namespace</u>: 命名空间；统一的url前缀，默认空；
 
-> 最终生成的url为：[/命名空间]/feign-interface别名/方法名
+> 最终生成的url为：[/命名空间]/feign-interface别名/方法名或方法别名
 
 <br>
 
@@ -1162,6 +1162,13 @@ catface中主要使用<b>`方案2`</b>转换参数；
   :: All: 适用于客户端、服务端； <br>
   :: Cilent: 标记仅在作为客户端使用时生效； <br>
   :: Server: 标记仅在作为服务端使用时生效； <br>
+
+
+<br>
+
+### @CatClient
+
+在catface模式下，为feign-interface的方法添加别名；
 
 
 <br>
@@ -1188,6 +1195,7 @@ public interface FaceDemoService{
     
     PageInfo<UserPageVi> queryByBean(String userId, UserInfo  vi, @CatNote("isStatus")  Boolean status);
 
+    @CatMethod(value = "/domethod8", method = RequestMethod.POST)
     int param8(@ApiParam("参数map") Map<String, Object> map,
                     @ApiParam("参数vi1") @Valid UserPageVi vi1,
                     @ApiParam("参数vi2") UserPageVi vi2,
@@ -1212,9 +1220,11 @@ public interface FaceDemoService{
 
 ### 其他说明
 
-除了feign-interface中方法不能重载，还要注意一点的是：如果在生产环境上迭代升级feign-interface，假设将<i>FaceDemoService#dosomething</i>方法入参有增减，无论是先更新客户端、还是先更新服务端，都会造成该API接口参数接收会错位！
+除了feign-interface中方法重载后，要为同名方法取别名，还要注意一点的是：如果在生产环境上迭代升级feign-interface，假设将<i>FaceDemoService#dosomething</i>方法入参有增减，无论是先更新客户端、还是先更新服务端，都会造成该API接口参数接收会错位！
 
-一般这种情况，可以事先给入参取别名，这样在接收入参时，会根据参数名匹配，而不是参数顺序；或者采用面向对象开发，保持方法入参上只有一个入参对象，增减参数数量，转换成增减对象属性多少的问题。
+一般这种情况，可以事先给入参取别名，这样在接收入参时，会根据参数名匹配，而不是参数顺序；或者采用面向对象开发，保持方法入参上只有一个入参对象，增减参数数量，转换成增减对象属性多少的问题。 
+
+或者旧方法不要修改，重载一个新方法，单独为此方法取别名；先更新服务端，再更新客户端，实现平滑升级；
 
 
 <br>

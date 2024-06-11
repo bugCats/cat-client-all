@@ -16,6 +16,8 @@ import org.springframework.core.type.classreading.AnnotationMetadataReadingVisit
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -309,17 +311,33 @@ public class CatToosUtil {
     }
 
     /**
-     * 精简模式下，获取url
+     * 精简模式下，获取url、请求方式；
+     * 兼容使用@RequestMapping、@CatMethod注解；
      * */
-    public static String getDefaultRequestUrl(Catface catface, String serviceName, Method method) {
+    public static void parseDefaultRequest(Catface catface, String serviceName, Method method, Map<String, Object> methodAttrs) {
         String namespace = "";
         String aliasValue = CatToosUtil.uncapitalize(serviceName);
+        String methodPath = null;
+        RequestMethod requestType = null;
+        
         if ( catface != null ) {
             namespace = CatToosUtil.isBlank(catface.namespace()) ? "" : "/" + catface.namespace();
             aliasValue = CatToosUtil.isBlank(catface.value()) ? aliasValue : catface.value();
         }
-        String path = namespace + "/" + aliasValue + "/" + method.getName();
-        return path;
+        // 在精简模式下，为方法取别名
+        RequestMapping mapping = clientBridge.findMethodPath(method);
+        if( mapping != null ){
+            String value = mapping.value()[0];
+            methodPath = value.startsWith("/") ? value.substring(1) : value;
+            requestType = mapping.method()[0];
+        } else {
+            methodPath = method.getName();
+            requestType = RequestMethod.POST;
+        }
+        String requestPath = namespace + "/" + aliasValue + "/" + methodPath;
+
+        methodAttrs.put("value", requestPath);
+        methodAttrs.put("method", requestType);
     }
 
     

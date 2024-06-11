@@ -355,25 +355,22 @@ public class CatMethodInfo {
 
         private AnnotationAttributes getAttributes(Method method) {
             StandardMethodMetadata metadata = new StandardMethodMetadata(method);
-            Map<String, Object> methodAttr = metadata.getAnnotationAttributes(CatMethod.class.getName());
+            Map<String, Object> methodAttrs = metadata.getAnnotationAttributes(CatMethod.class.getName());
 
             Catface catface = clientInfo.getCatface();
             this.isCatface = catface != null;
             
             if ( isCatface ) {//是精简模式
-                if ( methodAttr == null ) {
+                if ( methodAttrs == null ) {
                     //其他使用interface上的注解
-                    methodAttr = new HashMap<>();
-                    methodAttr.put("notes", new CatNote[0]);
-                    methodAttr.put("socket", clientInfo.getSocket());
-                    methodAttr.put("connect", clientInfo.getConnect());
-                    methodAttr.put("logsMod", clientInfo.getLogsMod());
+                    methodAttrs = new HashMap<>();
+                    methodAttrs.put("notes", new CatNote[0]);
+                    methodAttrs.put("socket", clientInfo.getSocket());
+                    methodAttrs.put("connect", clientInfo.getConnect());
+                    methodAttrs.put("logsMod", clientInfo.getLogsMod());
                 }
                 
-                String path = CatToosUtil.getDefaultRequestUrl(catface, clientInfo.getClientClassName(), method);
-                methodAttr.put("value", path);
-                methodAttr.put("method", RequestMethod.POST);
-                
+                CatToosUtil.parseDefaultRequest(catface, clientInfo.getClientClassName(), method, methodAttrs);
             }
             
             /**
@@ -381,10 +378,10 @@ public class CatMethodInfo {
              * */
             CatNote[] catNotes = CatToosUtil.getCatNotes(method, CatNotes.Scope.Cilent);
             if( catNotes != null ){
-                methodAttr.put("notes", catNotes);
+                methodAttrs.put("notes", catNotes);
             }
             
-            AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttr);
+            AnnotationAttributes attrs = AnnotationAttributes.fromMap(methodAttrs);
             return attrs;
         }
 

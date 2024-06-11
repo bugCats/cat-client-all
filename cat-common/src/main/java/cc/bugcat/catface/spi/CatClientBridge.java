@@ -29,4 +29,14 @@ public interface CatClientBridge {
         return value.length > 0 ? value[0] : "";
     }
 
+
+    /**
+     * 从方法上获取{@code RequestMapping}的value
+     * */
+    default RequestMapping findMethodPath(Method method){
+        RequestMapping requestMapping = AnnotationUtils.findAnnotation(method, RequestMapping.class);
+        return requestMapping;
+    }
+
+
 }

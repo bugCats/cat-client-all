@@ -93,7 +93,8 @@ public class ApiRemote2Test {
         Demo demo = creart();
         CatSendProcessor sendHandler = new CatSendProcessor();
         String resp = remote.demo2(sendHandler, demo);
-        System.err.println("resp=" + resp);
+        System.out.println("Mock 测试，不出意外会出现空指针");
+        System.out.println("resp=" + resp);
 
         CatHttpPoint httpPoint = sendHandler.getHttpPoint();
         System.err.println("req=" + httpPoint.getRequestBody());
